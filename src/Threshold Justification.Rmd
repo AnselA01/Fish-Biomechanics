@@ -1,0 +1,223 @@
+---
+title: "Threshold Justificaiton"
+author: "Abby Hahs, Otto Schmidt "
+date: "2024-09-18"
+output: pdf
+editor_options: 
+  chunk_output_type: console
+---
+This document provides a justification for the chosen threshold value of 0.8 N of which all values lower than this threshold are cutoff from the dataset as they occur before the lever makes significant contact/significant contact with the bone.
+
+**Set Up**
+
+```{r setup, include=FALSE}
+library(tidyverse)
+setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+source('src/script/data.R')
+```
+
+**Graphical Investigation**
+
+Below are a set of graphs for randomly selected bones. For each bone there are two graphs, the first is the graph of the value to the lowest tenth at which all noise prior to the machine's contact with the bone is cut off. If this threshold value is something other than 0.8 N, a second graph follows with the threshold value of 0.8 N. Comparing the plots using a threshold of 0.6 vs 0.8, there don't appear to be any visible differences. So, we think 0.8 can be used as the universal threshold.
+
+#pf04cp03
+```{r}
+load = 0.8
+
+pf04cp03 <- read_tsv("data/pf04/pf04cp03.csv", skip = 15)
+data_clean(pf04cp03, 6.110520e-06, 2.87, load)
+plot(pf04cp03)
+```
+
+#pf07mt01
+```{r}
+load = 0.6
+
+pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+data_clean(pf07mt01, 2.111340e-06, 1.94, load)
+plot(pf07mt01)
+
+load = 0.8
+
+pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+data_clean(pf07mt01, 2.111340e-06, 1.94, load)
+plot(pf07mt01)
+```
+
+#pf09ut03
+```{r}
+load = 0.6
+
+pf09ut03 <- read_tsv("data/pf09/pf09ut03.csv", skip = 15)
+data_clean(pf09ut03 , 4.789210e-06, 2.58, load)
+plot(pf09ut03)
+
+load = 0.8
+
+pf09ut03 <- read_tsv("data/pf09/pf09ut03.csv", skip = 15)
+data_clean(pf09ut03 , 4.789210e-06, 2.58, load)
+plot(pf09ut03)
+```
+
+#pf10ut03
+```{r}
+load = 0.6
+
+pf10ut03 <- read_tsv("data/pf10/pf10ut03.csv", skip = 15)
+data_clean(pf10ut03 , 4.597270e-06, 1.86, load)
+plot(pf10ut03)
+
+load = 0.8
+
+pf10ut03 <- read_tsv("data/pf10/pf10ut03.csv", skip = 15)
+data_clean(pf10ut03 , 4.597270e-06, 1.86, load)
+plot(pf10ut03)
+```
+
+#pf12mt02
+```{r}
+load = 0.6
+
+pf12mt02 <- read_tsv("data/pf12/pf12mt02.csv", skip = 15)
+data_clean(pf12mt02 , 5.807740e-06, 2.85, load)
+plot(pf12mt02)
+
+load = 0.8
+
+pf12mt02 <- read_tsv("data/pf12/pf12mt02.csv", skip = 15)
+data_clean(pf12mt02 , 5.807740e-06, 2.85, load)
+plot(pf12mt02)
+```
+
+#pf16mt03
+```{r}
+load = 0.6
+
+pf16mt03 <- read_tsv("data/pf16/pf16mt03.csv", skip = 15)
+data_clean(pf16mt03 , 4.335160e-06, 2.43, load)
+plot(pf16mt03)
+
+load = 0.8
+
+pf16mt03 <- read_tsv("data/pf16/pf16mt03.csv", skip = 15)
+data_clean(pf16mt03 , 4.335160e-06, 2.43, load)
+plot(pf16mt03)
+```
+
+#pf17cp01
+```{r}
+load = 0.6
+
+pf17cp01 <- read_tsv("data/pf17/pf17cp01.csv", skip = 15)
+data_clean(pf17cp01 , 6.242630e-06, 2.48, load)
+plot(pf17cp01)
+
+load = 0.8
+
+pf17cp01 <- read_tsv("data/pf17/pf17cp01.csv", skip = 15)
+data_clean(pf17cp01 , 6.242630e-06, 2.48, load)
+plot(pf17cp01)
+```
+
+#pf18lt01
+```{r}
+load = 0.8
+
+pf18lt01 <- read_tsv("data/pf18/pf18lt01.csv", skip = 15)
+data_clean(pf18lt01 , 8.088720e-06, 2.99, load)
+plot(pf18lt01)
+```
+
+#pf20cp02
+```{r}
+load = 0.8
+
+pf20cp02 <- read_tsv("data/pf20/pf20cp02.csv", skip = 15)
+data_clean(pf20cp02 , 1.627780e-06, 1.74, load)
+plot(pf20cp02)
+```
+
+Through this random sampling of graphs we found that the optimal threshold of 0.6 N was most common, however there with multiple graphs with a needed threshold of 0.8 N. When exploring the difference between the graphs when using of 0.6 N vs. a 0.8 N threshold, very little difference is found except for the removal of a few data points a the beginning of the initial curve of the graph. Since we have noted that this initial curve will not be used in our analysis and that in no graph did a threshold of 0.8 N fully remove this curve. We believe we can use the threshold of 0.8 N in our analysis without detriment to obtaining the proper results.
+
+**Standard Deviation Investigation**
+We also tested using the std. deviation method for finding the threshold using data from 3 fish. The std deviation was about 0.14 and the averages were basically 0. Multiplying the std deviation by 3 should include most values in a normal distribution, we get 0.42. However, when we use this value as the threshold we still get a lot of values at or near 0, making the plot unreadable. Thus, we think it is best to use a threshold of 0.8 N, since it accommodates the majority of the data.
+
+```{r}
+pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+std <- sd(pf07mt01$"Load [N]"[1:2000], na.rm = FALSE)
+avg <- mean(pf07mt01$"Load [N]"[1:2000], na.rm = FALSE)
+
+# std dev = 0.14 and avg = 0.0025
+
+pf10ut03 <- read_tsv("data/pf10/pf10ut03.csv", skip = 15)
+std <- sd(pf10ut03$"Load [N]"[1:2000], na.rm = FALSE)
+avg <- mean(pf10ut03$"Load [N]"[1:2000], na.rm = FALSE)
+
+# std dev = 0.14 and avg = -0.0071
+
+pf18lt01 <- read_tsv("data/pf18/pf18lt01.csv", skip = 15)
+std <- sd(pf18lt01$"Load [N]"[1:2000], na.rm = FALSE)
+avg <- mean(pf18lt01$"Load [N]"[1:2000], na.rm = FALSE)
+
+# std dev = 0.135 and avg = -0.0139
+```
+
+```{r}
+# checking the plots with a load of 0.42
+
+load = 0.42
+
+pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+data_clean(pf07mt01, 2.111340e-06, 1.94, load)
+plot(pf07mt01)
+
+pf10ut03 <- read_tsv("data/pf10/pf10ut03.csv", skip = 15)
+data_clean(pf10ut03 , 4.597270e-06, 1.86, load)
+plot(pf10ut03)
+
+pf18lt01 <- read_tsv("data/pf18/pf18lt01.csv", skip = 15)
+data_clean(pf18lt01 , 8.088720e-06, 2.99, load)
+plot(pf18lt01)
+```
+
+# working on a function to calculate the sd of all Load columns and make a histogram.
+```{r}
+compute_std <- function(data_name, col_name, rows){
+  std <- sd(as.double(col_name), na.rm = F)
+}
+
+std <- compute_std(pf07mt01, "Load [N]", 1:2000)
+```
+
+#Investigation of Distribution of Noise
+```{r}
+pf04cp03_1 <- read_tsv("data/pf04/pf04cp03.csv", skip = 15)
+
+filtered_data <- pf04cp03_1 %>%  
+  filter(`Load [N]` < 1.2)
+
+ggplot(filtered_data, aes(x = `Load [N]`)) +
+  geom_histogram(binwidth = 0.1) +
+  labs(title = "Histogram of Load Values (load < 0.8)",
+       x = "Load",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+Looks to be normally distributed
+
+```{r}
+pf07mt01_1 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+
+filtered_data <- pf07mt01_1 %>%  
+  filter(`Load [N]` < 1.2)
+
+ggplot(filtered_data, aes(x = `Load [N]`)) +
+  geom_histogram(binwidth = 0.1) +
+  labs(title = "Histogram of Load Values (load < 0.8)",
+       x = "Load",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+Looks to be normally distributed
