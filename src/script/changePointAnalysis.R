@@ -36,12 +36,27 @@ cpa.changepoint <- function(df) {
     return(changepoint::cpt.var(class = TRUE))
 }
 
-# finds the nearest observed point to each predicted breakpoint. Uses euclidean distance.
+# Finds closest observed point to each predicted breakpoint using pairwise euclidean distance.
 # * arg df: data used to fit arg 2
 # * arg fit_segmented: fitted segmented model
-cpa.nearest_points <- function(df, fit_segmented) {
+cpa.nearest_points <- function(df, fit_segmented) { 
   breakpoints <- fit_segmented$psi[,2]
-  return(df[apply(crossdist(breakpoints, predict(fit_segmented, newdata = data.frame(Strain = breakpoints)), df$Strain, df$Stress), 1, FUN = which.min),] %>% na.omit())
+  obs_scale <- scale(cbind(df$Strain, df$Stress))
+  
+  # we scale the breakpoints with the same scaling factors as the observed data. If we just
+  # scale the breakpoint locations willy nilly, the observed and predicted scaling will be inconsistent.
+  breakpoints_scale <- scale(breakpoints, center = attr(obs_scale, "scaled:center")[1], 
+                              scale = attr(obs_scale, "scaled:scale")[1])
+  breakpoints_pred_scale <- scale(predict(fit_segmented, newdata = data.frame(Strain = breakpoints)), 
+                         center = attr(obs_scale, "scaled:center")[2], 
+                         scale = attr(obs_scale, "scaled:scale")[2])
+
+  return(df[apply(
+                # euclidean distance calculation here: sqrt((x2-x1)^2 + (y2-y1)^2)
+                sqrt(
+                  outer(obs_scale[, 1], breakpoints_scale, function(x1, x2) (x2 - x1)^2) +
+                  outer(obs_scale[, 2], breakpoints_pred_scale, function(y1, y2) (y2 - y1)^2)),
+                2, which.min),] %>% na.omit())
 }
 
 
