@@ -12,6 +12,7 @@ This document provides a justification for the chosen threshold value of 0.8 N o
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(dplyr)
 setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
 source('src/script/data.R')
 ```
@@ -221,3 +222,13 @@ ggplot(filtered_data, aes(x = `Load [N]`)) +
 ```
 
 Looks to be normally distributed
+
+
+EXTRA
+```{r}
+load = 0.8
+
+pf20cp02 <- read_tsv("data/pf20/pf20cp02.csv", skip = 15)
+data_clean(pf20cp02 , 1.627780e-06, 1.74, load)
+plot(pf20cp02)
+```

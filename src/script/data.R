@@ -52,7 +52,7 @@ recalculate <- function(df, load_filter, metadata, area_data) {
            recalculate_stress_strain(metadata, area_data))
 }
 
-reclaculate_distance <- function(df, loadFilter) {
+recalculate_distance <- function(df, loadFilter) {
   return(
     df %>% 
       filter(Load > loadFilter) %>% 
@@ -62,19 +62,33 @@ reclaculate_distance <- function(df, loadFilter) {
 
 recalculate_stress_strain <- function(df, metadata, area_data) {
   new_values <- find_area_initial_length(metadata, area_data)
-  area <- new_values[1]
-  length_initial <- new_values[2]
+  area <- new_values[1]$Area
+  length_initial <- new_values[2]$Length
   return(df %>% 
            mutate(
              Stress = (Load / area)/10^6,
-             Strain = (length_initial - Distance) / length_initial))
+             Strain = abs(length_initial - (length_initial - Distance)) / length_initial))
 }
 
-clean_area_data 
-function(df) {
+find_area_initial_length <- function(metadata, area_data) {
+  return (
+    area_data %>% 
+      filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) %>% 
+      summarise(
+        Area = first(Area),
+        Length = first(Length)
+      )
+  )
+}
+
+attach_metadata <- function(df, metadata) {
+  return(df %>% mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
+}
+
+clean_area_data <- function(df) {
   return (
     df %>% 
-      rename(Segment = "Segment (UT, MT, LT or CP)",
+      dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
              Trial = "Trial # (at least 01-03)",
              Area = "Area (m^2)",
              Length = "Length (mm)",
@@ -84,12 +98,50 @@ function(df) {
 
 clean_fish_data <- function(df) {
   return(df %>%
-           rename(Load = "Load [N]",
+           dplyr::rename(Load = "Load [N]",
                   Time = "Time [s]",
                   Stress = "Stress [MPa]",
                   Strain = "Strain [%]",
                   Distance = "Distance [mm]") %>% 
            dplyr::select(-7))
+}
+
+
+data_clean <- function(data_name, area, length_initial, load) {
+  
+  data_string <- deparse(substitute(data_name))
+  
+  data <- get(data_string)
+  
+  processed_data <- data %>%
+    dplyr::select(-7) %>%
+    rename(Load = "Load [N]",
+           Time = "Time [s]",
+           Stress = "Stress [MPa]",
+           Strain = "Strain [%]",
+           Distance = "Distance [mm]") %>%
+    filter(Load > load) %>%
+    mutate(Area = area,
+           Distance = Distance - first(Distance),
+           LengthInitial = length_initial,
+           Stress = 10^-6 * Load / Area,
+           Strain = abs((length_initial - (length_initial - Distance)) / length_initial),
+           Fish_Type = substr(data_string, 0, 2),
+           Fish_Num = substr(data_string, 3, 4),
+           Bone_Type = substr(data_string, 5 ,6),
+           Bone_Num = substr(data_string, 7 ,8)) 
+  
+  assign(data_string, processed_data, envir = .GlobalEnv)
+}
+
+plot <- function(data) {
+  return(ggplot(data, aes(x = Strain, y = Stress)) +
+           geom_point() +        # Points for the data
+           labs(caption = paste("Fish number: ", data$Individual, ", Segment: ",  data$Segment, ", Trial Number: ", data$Trial_Number, sep = ""),
+                x = "Strain",
+                y = "Stress") +
+           theme_minimal()) +
+    plot.caption = element_text(hjust = 0, size = 10)
 }
 
 

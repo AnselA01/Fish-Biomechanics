@@ -13,7 +13,7 @@ cpa.segment <- function(df, npointsmax, refit = FALSE) {
         stopifnot(inherits(fit, "segmented")) # stop if fit does not inherit "segmented". The alternative is inherits "lm" which we do not want.
         return(fit)
       }, error = function(e) {
-        message("Error: Refitting segmented model with ", npoints - 1, " breakpoints.")
+        message("Error fitting: Refitting segmented model with ", npoints - 1, " breakpoints.")
         npoints <<- npoints - 1
       })
     }
@@ -44,12 +44,13 @@ cpa.nearest_points <- function(df, fit_segmented) {
   obs_scale <- scale(cbind(df$Strain, df$Stress))
   
   # we scale the breakpoints with the same scaling factors as the observed data. If we just
-  # scale the breakpoint locations willy nilly, the observed and predicted scaling will be inconsistent.
-  breakpoints_scale <- scale(breakpoints, center = attr(obs_scale, "scaled:center")[1], 
-                              scale = attr(obs_scale, "scaled:scale")[1])
+  # scale the breakpoint locations willy nilly, the scaling will be inconsistent.
+  breakpoints_scale <- scale(breakpoints, 
+                             center = attr(obs_scale, "scaled:center")[1], 
+                             scale = attr(obs_scale, "scaled:scale")[1])
   breakpoints_pred_scale <- scale(predict(fit_segmented, newdata = data.frame(Strain = breakpoints)), 
-                         center = attr(obs_scale, "scaled:center")[2], 
-                         scale = attr(obs_scale, "scaled:scale")[2])
+                                    center = attr(obs_scale, "scaled:center")[2], 
+                                    scale = attr(obs_scale, "scaled:scale")[2])
 
   return(df[apply(
                 # euclidean distance calculation here: sqrt((x2-x1)^2 + (y2-y1)^2)

@@ -16,6 +16,8 @@ library(segmented)
 library(changepoint)
 library(spatstat.geom) # crossdist function in cpa.find_closest_point
 library(matrixStats)
+library(scales)
+#library(ggdark) 
 
 setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
 data_directory <- "./data"
@@ -31,9 +33,7 @@ map(paste0(source_files), source)
 
 ## Test fish
 ```{r}
-test_data_iterator <- (fish_overlay <- plot.grid(fish_number = 16, segment = TRUE, npointsmax = 10, refit = TRUE, grid_by = "Segment"))
-(fish_overlay <- plot.grid(fish_number = 16, segment = TRUE, npointsmax = 10, refit = TRUE, grid_by = "Segment"))
-
+test_data_iterator <- data.generator(data_directory)
 test_fish <- test_data_iterator()
 test_data_iterator <- NULL # throw away the iterator
 ```
@@ -44,9 +44,9 @@ test_data_iterator <- NULL # throw away the iterator
 ```{r}
 loop(for (fish in data.generator(data_directory)) {
   fit_segmented <- cpa.segment(fish, 10) # n is arbitrary. for our purposes, higher (10) is better because we want more resolution
-  nearest_points <- cpa.nearest_points(fish, fit_segmented) # not the nearest points...??
+  nearest_points <- cpa.nearest_points(fish, fit_segmented)
   print(plot.predicted(fish, fit_segmented, nearest_points))
-  slopes <- cpa.slope(nearest_points)
+  #slopes <- cpa.slope(nearest_points)
   break
 })
 ```
@@ -67,7 +67,7 @@ loop(for (fish in data_iterator) {
 
 ## Breakpoints overlaid, gridded by trial or segment
 ```{r}
-fish_plots <- plot.grid(fish_numbers = c(1,2,3,4), segment = TRUE, npointsmax = 10, refit = TRUE, grid_by = "Segment")
+fish_plots <- plot.grid(fish_numbers = c(9), segment = TRUE, npointsmax = 10, refit = TRUE, grid_by = "Segment")
 
 grid.arrange(grobs = fish_plots, nrow = 2)
 ```

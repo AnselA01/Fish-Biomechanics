@@ -1,0 +1,284 @@
+---
+title: "pf09 Segmenting"
+author: "Abby Hahs, Otto Schmidt "
+date: "2024-09-18"
+output: pdf
+editor_options: 
+  chunk_output_type: plots
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(coro)
+library(gridExtra)
+library(ggtext)
+library(segmented)
+library(changepoint)
+library(spatstat.geom) # crossdist function in cpa.find_closest_point
+library(matrixStats)
+library(scales)
+library(ggdark) 
+library(splines)
+```
+
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae')
+```
+
+```{r}
+source('src/script/data.R')
+source('src/script/changePointAnalysis.R')
+source('src/script/plot.R')
+```
+
+
+#pf09cp01
+```{r}
+pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
+
+
+area = 3.203110e-06
+length_initial = 2.60
+load = 0.8
+data_clean(pf09cp01, area, length_initial, load)
+plot(pf09cp01)
+```
+
+```{r}
+pf09cp01segments <- segmented(lm(Stress ~ Strain, data = pf09cp01), seg.Z = ~Strain, npsi = 10)
+summary(pf09cp01segments)
+
+fit_segmented <- cpa.segment(pf09cp01, 10) 
+nearest_points <- cpa.nearest_points(pf09cp01, fit_segmented)
+
+nearest_points1 <- nearest_points %>%
+  mutate(slope = (Stress - lag(Stress)) / (Strain - lag(Strain))) %>%
+  mutate(slope = ifelse(is.na(slope), Stress[1] / Strain[1], slope))
+
+nearest_points1 %>%
+  dplyr::select(slope)
+
+print(plot.predicted(pf09cp01, fit_segmented, nearest_points))
+```
+
+#pf09mt01
+```{r}
+pf09mt01 <- read_tsv("data/pf09/pf09mt01.csv", skip = 15)
+area <- read_csv("data/area.csv")
+pf09 <- area |>
+  filter(Individual == "pf09")
+
+area = 7.93823e-06
+length_initial = 2.82
+load = 0.8
+data_clean(pf09mt01, area, length_initial, load)
+
+plot(pf09mt01)
+```
+
+# 5 breakpoints
+```{r}
+pf09mt01segments <- segmented(lm(Stress ~ Strain, data = pf09mt01), seg.Z = ~Strain, npsi = 5)
+summary(pf09mt01segments)
+
+fit_segmented <- cpa.segment(pf09mt01, 5) 
+nearest_points <- cpa.nearest_points(pf09mt01, fit_segmented)
+print(plot.predicted(pf09mt01, fit_segmented, nearest_points))
+```
+
+# 10 breakpoints
+```{r}
+pf09mt01segments <- segmented(lm(Stress ~ Strain, data = pf09mt01), seg.Z = ~Strain, npsi = 10)
+summary(pf09mt01segments)
+
+fit_segmented <- cpa.segment(pf09mt01, 10) 
+nearest_points <- cpa.nearest_points(pf09mt01, fit_segmented)
+
+nearest_points1 <- nearest_points %>%
+  mutate(slope = (Stress - lag(Stress)) / (Strain - lag(Strain))) %>%
+  mutate(slope = ifelse(is.na(slope), Stress[1] / Strain[1], slope))
+
+nearest_points1 %>%
+  dplyr::select(slope)
+
+print(plot.predicted(pf09mt01, fit_segmented, nearest_points))
+```
+
+# 15 breakpoints
+```{r}
+pf09mt01segments <- segmented(lm(Stress ~ Strain, data = pf09mt01), seg.Z = ~Strain, npsi = 15)
+summary(pf09mt01segments)
+
+fit_segmented <- cpa.segment(pf09mt01, 15) 
+nearest_points <- cpa.nearest_points(pf09mt01, fit_segmented)
+print(plot.predicted(pf09mt01, fit_segmented, nearest_points))
+
+breakpoint <- pf09mt01segments$psi[, "Est."]# Estimated location of the breakpoint (x-coordinate)
+y_breakpoints <- predict(pf09mt01segments, newdata = data.frame(Strain = breakpoint))
+
+breakpoint_coords <- data.frame(Strain = breakpoint, Stress = y_breakpoints)
+
+(2.620283-1.099786)/(0.07524951-0.03812057)  # slope between 1st and 2nd breakpoint is 40.95... should be 5.096
+
+(6.249910-1.099786)/(0.23843067-0.03812057)  #first peak and 1st breakpt
+
+(3.669549-2.620283)/(0.14518459-0.07524951) #2nd and 3rd breakpt
+
+# this method isn't really working - slopes
+```
+
+```{r}
+# filtered to just have the strain values up to the 2nd breakpoint
+strain <- pf09mt01$Strain
+stress <- pf09mt01$Stress
+linear_strain <- strain[strain < 0.07524951]
+linear_stress <- stress[strain < 0.07524951]
+
+# Refit the linear model
+linear_model_refined <- lm(linear_stress ~ linear_strain)
+youngs_modulus_refined <- coef(linear_model_refined)[2]
+cat("Refined Young's Modulus:", youngs_modulus_refined, "MPa\n")
+```
+
+
+# pf09mt02
+```{r}
+pf09mt02 <- read_tsv("data/pf09/pf09mt02.csv", skip = 15)
+
+area = 5.42977e-06
+length_initial = 2.88
+load = 0.8
+data_clean(pf09mt02, area, length_initial, load)
+
+plot(pf09mt02)
+```
+
+```{r}
+pf09mt02segments <- segmented(lm(Stress ~ Strain, data = pf09mt02), seg.Z = ~Strain, npsi = 12)
+summary(pf09mt02segments)
+
+fit_segmented <- cpa.segment(pf09mt02, 12) 
+nearest_points <- cpa.nearest_points(pf09mt02, fit_segmented)
+
+slopes <- cpa.slope(nearest_points)
+slopes
+
+
+nearest_points1 <- nearest_points %>%
+  mutate(slope = (Stress - lag(Stress)) / (Strain - lag(Strain))) %>%
+  mutate(slope = ifelse(is.na(slope), Stress[1] / Strain[1], slope))
+
+nearest_points1 %>%
+  dplyr::select(slope)
+
+print(plot.predicted(pf09mt02, fit_segmented, nearest_points))
+```
+
+# pf09mt03
+```{r}
+pf09mt03 <- read_tsv("data/pf09/pf09mt03.csv", skip = 15)
+
+area = 5.89347e-06
+length_initial = 2.81
+load = 0.8
+data_clean(pf09mt03, area, length_initial, load)
+
+plot(pf09mt03)
+```
+
+```{r}
+pf09mt03segments <- segmented(lm(Stress ~ Strain, data = pf09mt03), seg.Z = ~Strain, npsi = 12)
+summary(pf09mt03segments)
+
+fit_segmented <- cpa.segment(pf09mt03, 12) 
+nearest_points <- cpa.nearest_points(pf09mt03, fit_segmented)
+print(plot.predicted(pf09mt03, fit_segmented, nearest_points))
+```
+
+
+#Let's Try Cutting Out Some of the Data
+```{r}
+pf09mt03 <- read_tsv("data/pf09/pf09mt03.csv", skip = 15)
+
+area = 5.89347e-06
+length_initial = 2.81
+load = 0.8
+data_clean(pf09mt03, area, length_initial, load)
+
+pf09mt03short <- pf09mt03 %>%
+  filter(Strain < 0.2)
+
+
+pf09mt03segments <- segmented(lm(Stress ~ Strain, data = pf09mt03short), seg.Z = ~Strain, npsi = 5)
+summary(pf09mt03segments)
+
+fit_segmented <- cpa.segment(pf09mt03short,5) 
+nearest_points <- cpa.nearest_points(pf09mt03short, fit_segmented)
+print(plot.predicted(pf09mt03short, fit_segmented, nearest_points))
+```
+
+# splines
+```{r}
+cp01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09cp01)
+
+pf09cp01$spline_fit <- predict(cp01spline_model)
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+mt02spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09mt02)
+
+pf09mt02$spline_fit <- predict(mt02spline_model)
+ggplot(pf09mt02, aes(x = Strain)) +Tg
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+```{r}
+loop(for (fish in data.generator("./data", 9)) {
+  fish <- fish %>% filter(Strain < 0.2)
+  basis_mat <- ns(fish$Strain, df = 5)
+  spline_model <- lm(Stress ~ basis_mat, data = fish)
+  fish$spline_fit <- predict(spline_model)
+  plot <- ggplot(fish, aes(x = Strain)) +
+    geom_point(aes(y = Stress)) +
+    geom_line(aes(y = spline_fit), color = "blue") + 
+    theme_minimal()
+  
+  print(paste("Fish number: ", fish$Individual, ", Segment: ",  fish$Segment, ", Trial Number: ", fish$Trial, sep = ""))
+  print(plot)
+})
+```
+
+
+
+```{r}
+cp01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09cp01)
+
+# Create a sequence of values for Strain for prediction
+strain_seq <- seq(min(pf09cp01$Strain), max(pf09cp01$Strain), length.out = 100)
+
+# Predict fitted values
+fitted_values <- predict(cp01spline_model, newdata = data.frame(Strain = strain_seq))
+
+# Calculate numerical derivatives
+# Using finite difference method for derivative
+delta <- 1e-5  # A small number for numerical differentiation
+predicted_derivative <- (predict(cp01spline_model, newdata = data.frame(Strain = strain_seq + delta)) -
+                          predict(cp01spline_model, newdata = data.frame(Strain = strain_seq - delta))) / (2 * delta)
+
+predicted_second_derivative <- (predict(cp01spline_model, newdata = data.frame(Strain = strain_seq + delta)) +
+                                  predict(cp01spline_model, newdata = data.frame(Strain = strain_seq - delta)) -
+                                  2 * fitted_values) / (delta^2)
+
+# Combine results
+results <- data.frame(Strain = strain_seq, Fitted = fitted_values, 
+                      First_Derivative = predicted_derivative, 
+                      Second_Derivative = predicted_second_derivative)
+
+# View the results
+head(results)
+```
+
