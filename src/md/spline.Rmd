@@ -1,4 +1,9 @@
 ```{r}
+library(splines)
+```
+
+
+```{r}
 pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
 
 area = 3.203110e-06
@@ -30,7 +35,7 @@ loop(for (fish in data.generator("./data", 9)) {
   fish <- fish %>% filter(Strain < 0.2)
   basis_mat <- ns(fish$Strain, df = 5)
   spline_model <- lm(Stress ~ basis_mat, data = fish)
-  fish$spline_fit <- predict(spline_model)
+  fish$spline_fit <- predict(spline_ model)
   plot <- ggplot(fish, aes(x = Strain)) +
     geom_point(aes(y = Stress)) +
     geom_line(aes(y = spline_fit), color = "blue") + 

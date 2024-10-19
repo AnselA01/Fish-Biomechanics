@@ -212,7 +212,10 @@ pf09mt03short <- pf09mt03 %>%
 pf09mt03segments <- segmented(lm(Stress ~ Strain, data = pf09mt03short), seg.Z = ~Strain, npsi = 5)
 summary(pf09mt03segments)
 
-fit_segmented <- cpa.segment(pf09mt03short,5) 
+slopes <- cpa.slope(nearest_points)
+slopes
+
+fit_segmented <- cpa.segment(pf09mt03short,9) 
 nearest_points <- cpa.nearest_points(pf09mt03short, fit_segmented)
 print(plot.predicted(pf09mt03short, fit_segmented, nearest_points))
 ```
