@@ -22,14 +22,22 @@ currently only the autogit log file. Look here if something doesn't look right i
 
         -   `main` - Your entry point for testing and using any .R scripts.
 
-        -   `spline` - 
+        -   `spline` - Exploration of spline method with pf09 bones
+        
+        -   `thresholdjustification` -Justiifcaiton for chosen thresholdhold to filter noise out of data
+        
+        -   `pf09segmenting` - Exploration of segmenting method with pf09 bones.
 
     -   `script`
 
         R script files. 
 
-        -   `file 1`
+        -   `changePointAnalysis` - Functions for use with segmenting method
 
-        -   `file 2`
+        -   `data` - 
+        
+        -   `image` - 
+        
+        -   `plot` - Functions used for plotting data
 
 R source files.

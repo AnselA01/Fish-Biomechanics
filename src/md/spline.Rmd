@@ -1,5 +1,14 @@
 ```{r}
 library(splines)
+library(tidyverse)
+library(coro)
+library(gridExtra)
+library(ggtext)
+library(segmented)
+library(changepoint)
+library(spatstat.geom) # crossdist function in cpa.find_closest_point
+library(matrixStats)
+library(scales)
 ```
 
 
