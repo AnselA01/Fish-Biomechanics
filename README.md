@@ -4,15 +4,15 @@
 
 -   `data`
 
-bone .csv files here (they are tab, not comma separated)
+    bone .csv files here (they are tab, not comma separated)
 
 -   `img`
 
-all generated images here
+    all generated images here
 
 -   `log`
 
-currently only the autogit log file. Look here if something doesn't look right in the repo.
+    currently only the autogit log file. Look here if the repo doesn't look right.
 
 -   `src`
 
@@ -30,14 +30,15 @@ currently only the autogit log file. Look here if something doesn't look right i
 
     -   `script`
 
-        R script files. 
+        R source files. 
 
         -   `changePointAnalysis` - Functions for use with segmenting method
 
-        -   `data` - 
+        -   `data` - wrangling data from raw bone to useful stress/strain data.
         
-        -   `image` - 
+        -   `image` - function to save ggplots to images
         
         -   `plot` - Functions used for plotting data
+        
 
-R source files.
+

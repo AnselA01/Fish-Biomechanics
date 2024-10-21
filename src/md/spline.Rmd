@@ -30,21 +30,22 @@ ggplot(pf09cp01, aes(x = Strain)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
 
-mt02spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09mt02)
+mt01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09mt01)
 
-pf09mt02$spline_fit <- predict(mt02spline_model)
-ggplot(pf09mt02, aes(x = Strain)) +Tg
+pf09mt01$spline_fit <- predict(mt01spline_model)
+ggplot(pf09mt01, aes(x = Strain)) + #Tg
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
 ```
+
 
 ```{r}
 loop(for (fish in data.generator("./data", 9)) {
   fish <- fish %>% filter(Strain < 0.2)
   basis_mat <- ns(fish$Strain, df = 5)
   spline_model <- lm(Stress ~ basis_mat, data = fish)
-  fish$spline_fit <- predict(spline_ model)
+  fish$spline_fit <- predict(spline_model)
   plot <- ggplot(fish, aes(x = Strain)) +
     geom_point(aes(y = Stress)) +
     geom_line(aes(y = spline_fit), color = "blue") + 
@@ -84,3 +85,41 @@ results <- data.frame(Strain = strain_seq, Fitted = fitted_values,
 # View the results
 head(results)
 ```
+
+
+#Polynomial Regression Model Testing
+```{r}
+deg_of_poly = 10
+
+pf09cp01short <- pf09cp01 %>%
+  filter(Strain < 0.2)
+
+regression_cp01pf09<- lm(Stress ~ poly(Strain, deg_of_poly, raw=TRUE), data = pf09cp01short)
+
+pf09cp01short$spline_fit <- predict(regression_cp01pf09)
+ggplot(pf09cp01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+coefficients <- coef(regression_cp01pf09)
+
+first_derivative_function <- function(strain) {
+  sum(sapply(1:deg_of_poly, function(i) i * coefficients[i + 1] * strain^(i - 1)))}
+
+second_derivative_function <- function(strain) {
+  sum(sapply(1:deg_of_poly, function(i) i * (i - 1) * coefficients[i + 1] * strain^(i - 2)))
+}
+
+
+for (i in 1:nrow(pf09cp01)) {
+  strain_value <- pf09cp01$Strain[i]  # Get the Strain value
+  pf09cp01$Derivative[i] <- first_derivative_function(strain_value)  # Compute the derivative
+  pf09cp01$SecondDerivative[i] <-second_derivative_function(strain_value)
+}
+
+first_derivative_function(0.023)
+
+first_derivative_function(0.026)
+```
+
