@@ -12,7 +12,7 @@
 
 -   `log`
 
-    currently only the autogit log file. Look here if the repo doesn't look right.
+    currently only the autogit log file.
 
 -   `src`
 
@@ -33,6 +33,8 @@
         R source files. 
 
         -   `changePointAnalysis` - Functions for use with segmenting method
+        
+            - `data.generator` is the function you should use for getting any bones.
 
         -   `data` - wrangling data from raw bone to useful stress/strain data.
         

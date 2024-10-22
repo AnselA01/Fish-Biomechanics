@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 ```{r}
 library(splines)
 library(tidyverse)
@@ -6,10 +11,16 @@ library(gridExtra)
 library(ggtext)
 library(segmented)
 library(changepoint)
-library(spatstat.geom) # crossdist function in cpa.find_closest_point
+library(spatstat.geom)
 library(matrixStats)
 library(scales)
 ```
+
+```{r}
+source_files <- list.files("./src/script/", full.names = TRUE, pattern = "*.R")
+map(paste0(source_files), source)
+```
+
 
 
 ```{r}
@@ -51,7 +62,7 @@ loop(for (fish in data.generator("./data", 9)) {
     geom_line(aes(y = spline_fit), color = "blue") + 
     theme_minimal()
   
-  print(paste("Fish number: ", fish$Individual, ", Segment: ",  fish$Segment, ", Trial Number: ", fish$Trial, sep = ""))
+  #print(paste("Fish number: ", fish$Individual, ", Segment: ",  fish$Segment, ", Trial Number: ", fish$Trial, sep = ""))
   print(plot)
 })
 ```
@@ -94,7 +105,8 @@ deg_of_poly = 10
 pf09cp01short <- pf09cp01 %>%
   filter(Strain < 0.2)
 
-regression_cp01pf09<- lm(Stress ~ poly(Strain, deg_of_poly, raw=TRUE), data = pf09cp01short)
+regression_cp01pf09 <- polyreg.plm(pf09cp01short, deg_of_poly)
+regression_cp01pf09
 
 pf09cp01short$spline_fit <- predict(regression_cp01pf09)
 ggplot(pf09cp01short, aes(x = Strain)) +
@@ -102,24 +114,15 @@ ggplot(pf09cp01short, aes(x = Strain)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
 
-coefficients <- coef(regression_cp01pf09)
-
-first_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * coefficients[i + 1] * strain^(i - 1)))}
-
-second_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * (i - 1) * coefficients[i + 1] * strain^(i - 2)))
-}
-
 
 for (i in 1:nrow(pf09cp01)) {
   strain_value <- pf09cp01$Strain[i]  # Get the Strain value
-  pf09cp01$Derivative[i] <- first_derivative_function(strain_value)  # Compute the derivative
-  pf09cp01$SecondDerivative[i] <-second_derivative_function(strain_value)
+  pf09cp01$Derivative[i] <- polyreg.first_derivative(regression_cp01pf09, strain_value)  # Compute the derivative
+  pf09cp01$SecondDerivative[i] <- polyreg.second_derivative(regression_cp01pf09, strain_value) # 2nd
 }
 
-first_derivative_function(0.023)
+polyreg.first_derivative(regression_cp01pf09, 0.023)
 
-first_derivative_function(0.026)
+polyreg.first_derivative(regression_cp01pf09, 0.026)
 ```
 
