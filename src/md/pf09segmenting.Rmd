@@ -68,7 +68,7 @@ area <- read_csv("data/area.csv")
 pf09 <- area |>
   filter(Individual == "pf09")
 
-area = 7.93823e-06
+area = 5.47114e-06
 length_initial = 2.82
 load = 0.8
 data_clean(pf09mt01, area, length_initial, load)
