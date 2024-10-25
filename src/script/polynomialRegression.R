@@ -13,6 +13,8 @@ polyreg.plm <- function(bone, deg) {
 # * returns number representing 1st derivative
 #
 polyreg.first_derivative <- function(model, strain) {
+  print(coef(model))
+  print(strain)
   return(sum(sapply(1:model$rank-1, function(i) i * coef(model)[i + 1] * strain^(i - 1))))
 }
 
@@ -22,14 +24,15 @@ polyreg.first_derivative <- function(model, strain) {
 # * returns number representing 2nd derivative
 #
 polyreg.second_derivative <- function(model, strain) {
-  (sum(sapply(1:model$rank-1, function(i) i * (i - 1) * coef(model)[i + 1] * strain^(i - 2))))
+  print(coef(model))
+  print(strain)
+  return(sum(sapply(1:model$rank-1, function(i) i * (i - 1) * coef(model)[i + 1] * strain^(i - 2))))
 }
 
 # slope location of the two second derivative values that straddle 0
 polyreg.slope_location <- function(derivatives, strains) {
   sorted <- sort(derivatives)
-  print(sorted)
-  
+
   neg_idx <- max(which(sorted < 0))
   pos_idx <- min(which(sorted > 0))
   
