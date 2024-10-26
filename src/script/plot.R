@@ -1,11 +1,11 @@
-#plots a cleaned data set for strain vs. stress
+#plots strain vs. stress
 plot.plot <- function(data) {
   return(ggplot(data, aes(x = Strain, y = Stress)) +
-           geom_point() +        # Points for the data
-           labs(caption = paste("Fish number: ", data$Individual, ", Segment: ",  data$Segment, ", Trial Number: ", data$Trial, sep = ""),
+           geom_line(size = 1) +
+           labs(caption = paste(data$Individual, data$Segment, data$Trial, sep = " "),
                 x = "Strain",
                 y = "Stress") +
-           theme_minimal()) +
+           theme_bw()) +
     plot.caption = element_text(hjust = 0, size = 10)
 }
 

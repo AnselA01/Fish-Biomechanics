@@ -5,6 +5,7 @@ editor_options:
 ---
 ```{r}
 library(splines)
+library(splines2)
 library(tidyverse)
 library(coro)
 library(gridExtra)
@@ -53,8 +54,8 @@ ggplot(pf09mt01, aes(x = Strain)) + #Tg
 
 ```{r}
 loop(for (fish in data.generator("./data", 9)) {
-  fish <- fish %>% filter(Strain < 0.2)
-  basis_mat <- ns(fish$Strain, df = 5)
+  #fish <- fish %>% filter(Strain < 0.2)
+  basis_mat <- ns(fish$Strain, df = 15)
   spline_model <- lm(Stress ~ basis_mat, data = fish)
   fish$spline_fit <- predict(spline_model)
   plot <- ggplot(fish, aes(x = Strain)) +
@@ -64,6 +65,7 @@ loop(for (fish in data.generator("./data", 9)) {
   
   print(paste("Fish number: ", fish$Individual, ", Segment: ",  fish$Segment, ", Trial Number: ", fish$Trial, sep = ""))
   print(plot)
+  break
 })
 ```
 
@@ -95,6 +97,32 @@ results <- data.frame(Strain = strain_seq, Fitted = fitted_values,
 
 # View the results
 head(results)
+```
+
+#Splines2
+
+```{r}
+x <- pf09cp01$Strain
+y <- pf09cp01$Stress
+
+b_spline_basis <- bSpline(x, df = 10)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09cp01)
+bsMat <- bSpline(x, df = 10, intercept = TRUE)
+dbsMat <- dbs(x, df = 10, intercept = TRUE)
+
+pf09cp01$spline_fit <- predict(model)
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+pf09cp01$first_deriv <- dbs(x, df = 10, derivs = 1)                    # the 1st derivaitves
+pf09cp01$second_deriv <- dbs(x, df = 10, derivs = 2)                # the 2nd derivaitves
+
+pf09cp01$deriv1 <- deriv(b_spline_basis)
+
+pf09cp01$deriv2<- deriv(b_spline_basis, derivs = 2)
 ```
 
 
@@ -214,7 +242,7 @@ length_initial = 3.00
 load = 0.8
 data_clean(pf09lt01, area, length_initial, load)
 
-deg_of_poly = 6
+deg_of_poly = 7
 
 pf09lt01short <- pf09lt01 %>%
   filter(Strain < 0.2)
@@ -225,7 +253,7 @@ pf09lt01short$spline_fit <- predict(regression_lt01pf09)
 ggplot(pf09lt01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") +
-  geom_vline(xintercept = 0.09833) +
+  geom_vline(xintercept = 0.03166) +
   theme_minimal()
 
 coefficients <- coef(regression_lt01pf09)
@@ -245,11 +273,25 @@ for (i in 1:nrow(pf09lt01short)) {
   pf09lt01short$SecondDerivative[i] <-second_derivative_function(strain_value)}
 
 
-(0.096666667 + 0.100000000)/2
+(0.030000000 + 0.033333333)/2
 
-first_derivative_function(0.09833)
-first_derivative_function(0.03)
+first_derivative_function(0.014)
 ```
+
+
+### splines2
+```{r}
+loop(for (bone in data.generator("./data")) {
+  bsMat <- bSpline(bone$Stress, df = 10, degree = 3, intercept = TRUE)
+  ibsMat <- update(bsMat, integral = TRUE) # the integrals
+  d1Mat <- deriv(bsMat) # the 1st derivaitves
+  d2Mat <- deriv(bsMat, 2) # the 2nd derivaitves
+  
+  view(d2Mat)
+  break
+})
+```
+
 
 
 9833

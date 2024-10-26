@@ -53,13 +53,10 @@ loop(for (fish in data.generator(data_directory)) {
 
 # Images 
 
-Save all images
 
 ```{r}
-data_iterator <- data.generator(data_directory)
-
-loop(for (fish in data_iterator) {
-  image.save(fish, plot(fish)) # in progress
+loop(for (bone in data.generator(data_directory)) {
+  image.save(bone, plot.plot(bone))
 })
 ```
 
