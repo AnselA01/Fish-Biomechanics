@@ -21,6 +21,8 @@ library(scales)
 # source files
 source_files <- list.files("./src/script", full.names = TRUE, pattern = "*.R")
 map(paste0(source_files), source)
+
+area <- read_csv("data/area.csv")
 ```
 
 
@@ -75,14 +77,14 @@ loop(for (fish in data.generator("./data", 9)) {
 cp01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09cp01)
 
 # Create a sequence of values for Strain for prediction
-strain_seq <- seq(min(pf09cp01$Strain), max(pf09cp01$Strain), length.out = 100)
+strain_seq <- seq(min(pf09cp01$Strain), max(pf09cp01$Strain), length.out = 500)
 
 # Predict fitted values
 fitted_values <- predict(cp01spline_model, newdata = data.frame(Strain = strain_seq))
 
 # Calculate numerical derivatives
 # Using finite difference method for derivative
-delta <- 1e-5  # A small number for numerical differentiation
+delta <- 1e-8  # A small number for numerical differentiation
 predicted_derivative <- (predict(cp01spline_model, newdata = data.frame(Strain = strain_seq + delta)) -
                           predict(cp01spline_model, newdata = data.frame(Strain = strain_seq - delta))) / (2 * delta)
 
@@ -102,14 +104,7 @@ head(results)
 #Splines2
 
 ```{r}
-x <- pf09cp01$Strain
-y <- pf09cp01$Stress
-
-b_spline_basis <- bSpline(x, df = 10)
-
-model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09cp01)
-bsMat <- bSpline(x, df = 10, intercept = TRUE)
-dbsMat <- dbs(x, df = 10, intercept = TRUE)
+model <- lm(Stress ~ bSpline(Strain, df = 20), data = pf09cp01)
 
 pf09cp01$spline_fit <- predict(model)
 ggplot(pf09cp01, aes(x = Strain)) +
@@ -117,122 +112,41 @@ ggplot(pf09cp01, aes(x = Strain)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
 
-pf09cp01$first_deriv <- dbs(x, df = 10, derivs = 1)                    # the 1st derivaitves
-pf09cp01$second_deriv <- dbs(x, df = 10, derivs = 2)                # the 2nd derivaitves
+coefs <- coef(model)
+first_deriv_matrix <- dbs(pf09cp01$Strain, df = 20, derivs = 1)
+pf09cp01$first_deriv <- first_deriv_matrix %*% coefs[-1]
 
-pf09cp01$deriv1 <- deriv(b_spline_basis)
-
-pf09cp01$deriv2<- deriv(b_spline_basis, derivs = 2)
+second_deriv_matrix <- dbs(pf09cp01$Strain, df = 20, derivs = 2)
+pf09cp01$second_deriv <- second_deriv_matrix %*% coefs[-1]
 ```
 
-
-#Polynomial Regression Model Testing
+#pf09cp01
 ```{r}
-deg_of_poly = 6
+df=10
 
 pf09cp01short <- pf09cp01 %>%
   filter(Strain < 0.2)
 
-regression_cp01pf09<- lm(Stress ~ poly(Strain, deg_of_poly, raw=TRUE), data = pf09cp01short)
+model <- lm(Stress ~ bSpline(Strain, df = df), data = pf09cp01short)
+coefs_short <- coef(model)
 
-pf09cp01short$spline_fit <- predict(regression_cp01pf09)
+pf09cp01short$spline_fit <- predict(model)
 ggplot(pf09cp01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
-  theme_minimal()
+  theme_minimal() +
+  geom_vline(xintercept = 0.026923077) +                   # deriv = 177
+  geom_vline(xintercept = 0.030769231, color = "red")      # deriv = 169
 
-coefficients <- coef(regression_cp01pf09)
+first_deriv_matrix <- dbs(pf09cp01short$Strain, df = df, derivs = 1)
+pf09cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
 
-first_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * coefficients[i + 1] * strain^(i - 1)))}
-
-second_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * (i - 1) * coefficients[i + 1] * strain^(i - 2)))
-}
-
-
-for (i in 1:nrow(pf09cp01short)) {
-  strain_value <- pf09cp01short$Strain[i]  # Get the Strain value
-  pf09cp01short$Derivative[i] <- first_derivative_function(strain_value)  
-  pf09cp01short$SecondDerivative[i] <-second_derivative_function(strain_value)
-}
-
-first_derivative_function(0.023)
-
-first_derivative_function(0.024)
-
-first_derivative_function(0.025)
-
-first_derivative_function(0.026)
+second_deriv_matrix <- dbs(pf09cp01short$Strain, df = df, derivs = 2)
+pf09cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 ```
 
-```{r eval = FALSE}
-deg_of_poly = 6
 
-pf09mt01short <- pf09mt01 %>%
-  filter(Strain < 0.2)
-
-regression_mt01pf09<- lm(Stress ~ poly(Strain, deg_of_poly, raw=TRUE), data = pf09mt01short)
-
-pf09mt01short$spline_fit <- predict(regression_mt01pf09)
-ggplot(pf09mt01short, aes(x = Strain)) +
-  geom_point(aes(y = Stress)) +
-  geom_line(aes(y = spline_fit), color = "blue") + 
-  theme_minimal()
-
-coefficients <- coef(regression_mt01pf09)
-
-first_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * coefficients[i + 1] * strain^(i - 1)))}
-
-second_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * (i - 1) * coefficients[i + 1] * strain^(i - 2)))
-}
-
-
-for (i in 1:nrow(pf09mt01short)) {
-  strain_value <- pf09mt01short$Strain[i]  # Get the Strain value
-  pf09mt01short$Derivative[i] <- first_derivative_function(strain_value)  
-  pf09mt01short$SecondDerivative[i] <-second_derivative_function(strain_value)
-}
-
-first_derivative_function(0.035)
-
-first_derivative_function(0.036)
-
-first_derivative_function(0.037)
-
-first_derivative_function(0.038)
-```
-
-```{r}
-loop(for (bone in data.generator("./data")) {
-  short <- bone %>%
-    filter(Strain < 0.2)
-  
-  model <- lm(Stress ~ poly(Strain, deg_of_poly, raw = TRUE), data = short)
-  short$spline_fit <- predict(model)
-
-  # calculate derivatives at each point.
-  nrow_short <- nrow(short)
-  short$Derivative <- vector(length = nrow_short)
-  short$SecondDerivative <- vector(length = nrow_short)
-  
-  for (i in 1:nrow_short) {
-    strain_value <- short$Strain[i]
-    short$Derivative[i] <- polyreg.first_derivative(model, strain_value)
-    short$SecondDerivative[i] <- polyreg.second_derivative(model, strain_value)
-  }
-  val <- polyreg.slope_location(short$SecondDerivative, short$Strain)
-
-  print(ggplot(short, aes(x = Strain)) +
-    geom_point(aes(y = Stress)) +
-    geom_line(aes(y = spline_fit), color = "blue") + 
-    geom_vline(xintercept = val) +
-    theme_minimal())
-})
-```
-
+#pf09lt01
 ```{r}
 pf09lt01 <- read_tsv("data/pf09/pf09lt01.csv",
 skip = 15)
@@ -242,56 +156,124 @@ length_initial = 3.00
 load = 0.8
 data_clean(pf09lt01, area, length_initial, load)
 
-deg_of_poly = 7
-
 pf09lt01short <- pf09lt01 %>%
   filter(Strain < 0.2)
 
-regression_lt01pf09<- lm(Stress ~ poly(Strain, deg_of_poly, raw=TRUE), data = pf09lt01short)
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09lt01short)
+coefs_short <- coef(model)
 
-pf09lt01short$spline_fit <- predict(regression_lt01pf09)
+pf09lt01short$spline_fit <- predict(model)
 ggplot(pf09lt01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
-  geom_line(aes(y = spline_fit), color = "blue") +
-  geom_vline(xintercept = 0.03166) +
-  theme_minimal()
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.040000000)            # deriv = 115
 
-coefficients <- coef(regression_lt01pf09)
+first_deriv_matrix <- dbs(pf09lt01short$Strain, df = 10, derivs = 1)
+pf09lt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
 
-first_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * coefficients[i + 1] * strain^(i - 1)))
-  
-}
-
-second_derivative_function <- function(strain) {
-  sum(sapply(1:deg_of_poly, function(i) i * (i - 1) * coefficients[i + 1] * strain^(i - 2)))
-}
-
-for (i in 1:nrow(pf09lt01short)) {
-  strain_value <- pf09lt01short$Strain[i]  # Get the Strain value
-  pf09lt01short$Derivative[i] <- first_derivative_function(strain_value)  
-  pf09lt01short$SecondDerivative[i] <-second_derivative_function(strain_value)}
-
-
-(0.030000000 + 0.033333333)/2
-
-first_derivative_function(0.014)
+second_deriv_matrix <- dbs(pf09lt01short$Strain, df = 10, derivs = 2)
+pf09lt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 ```
 
+#pf09ut01
 
-### splines2
 ```{r}
-loop(for (bone in data.generator("./data")) {
-  bsMat <- bSpline(bone$Stress, df = 10, degree = 3, intercept = TRUE)
-  ibsMat <- update(bsMat, integral = TRUE) # the integrals
-  d1Mat <- deriv(bsMat) # the 1st derivaitves
-  d2Mat <- deriv(bsMat, 2) # the 2nd derivaitves
-  
-  view(d2Mat)
-  break
-})
+pf09ut01 <- read_tsv("data/pf09/pf09ut01.csv",
+skip = 15)
+
+area = 5.064510e-06
+length_initial = 3.05
+load = 0.8
+data_clean(pf09ut01, area, length_initial, load)
+
+pf09ut01short <- pf09ut01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09ut01short)
+coefs_short <- coef(model)
+
+pf09ut01short$spline_fit <- predict(model)
+ggplot(pf09ut01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.059016393) +              # deriv = 157
+  geom_vline(xintercept = 0.078688525, color = "red") # deriv = 80
+
+first_deriv_matrix <- dbs(pf09ut01short$Strain, df = 10, derivs = 1)
+pf09ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf09ut01short$Strain, df = 10, derivs = 2)
+pf09ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 ```
 
 
+```{r}
+#pf0mtt01
+pf09mt01 <- read_tsv("data/pf09/pf09mt01.csv",
+skip = 15)
+
+area = 0.00000793823
+length_initial = 2.82
+load = 0.8
+data_clean(pf09mt01, area, length_initial, load)
+
+pf09mt01short <- pf09mt01 %>%
+  filter(Strain < 0.2)
+
+model_mt <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09mt01short)
+coefs_short <- coef(model_mt)
+
+pf09mt01short$spline_fit <- predict(model_mt)
+ggplot(pf09mt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = (0.042553191 + 0.039007092) / 2) # deriv = 48
+
+first_deriv_matrix <- dbs(pf09mt01short$Strain, df = 10, derivs = 1)
+pf09mt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf09mt01short$Strain, df = 10, derivs = 2)
+pf09mt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+```
+
+
+in progress: solving second derivative 0 instead of taking the values straddling 0.
+```{r}
+second_deriv <- function(x) {
+  second_deriv_matrix <- dbs(x, df = 10, derivs = 2)
+  return(as.numeric(second_deriv_matrix %*% coefs[-1]))
+}
+x_short <- pf09cp01short$Strain
+x_long <- pf09cp01$Strain
+
+roots <- uniroot(second_deriv, interval = range(x_short))$root # does not work
+```
 
 9833
+
+
+
+```{r}
+pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
+
+area = 3.203110e-06
+length_initial = 2.60
+load = 0.8
+data_clean(pf09cp01, area, length_initial, load)
+
+pf09cp01 <- pf09cp01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2)))
+
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  theme_minimal()
+
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = second_deriv)) +
+  theme_minimal()
+```
+
