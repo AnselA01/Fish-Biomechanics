@@ -103,6 +103,9 @@ head(results)
 
 #Splines2
 
+https://stats.stackexchange.com/a/635096 dbs() method explained and used here.
+
+
 ```{r}
 model <- lm(Stress ~ bSpline(Strain, df = 20), data = pf09cp01)
 
@@ -207,6 +210,7 @@ pf09ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
 second_deriv_matrix <- dbs(pf09ut01short$Strain, df = 10, derivs = 2)
 pf09ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 ```
+
 
 
 ```{r}
