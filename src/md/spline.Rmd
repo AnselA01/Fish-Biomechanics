@@ -260,6 +260,9 @@ roots <- uniroot(second_deriv, interval = range(x_short))$root # does not work
 
 
 
+# Derivative of Functions Exploration
+
+
 ```{r}
 pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
 
@@ -273,11 +276,94 @@ pf09cp01 <- pf09cp01 %>%
          second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2)))
 
 ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  theme_minimal()
+
+ggplot(pf09cp01, aes(x = Strain)) +
   geom_point(aes(y = first_deriv)) +
   theme_minimal()
 
 ggplot(pf09cp01, aes(x = Strain)) +
   geom_point(aes(y = second_deriv)) +
   theme_minimal()
+```
+
+```{r}
+pf09lt01 <- read_tsv("data/pf09/pf09lt01.csv",
+skip = 15)
+
+area = 3.203110e-06
+length_initial = 3.00
+load = 0.8
+data_clean(pf09lt01, area, length_initial, load)
+
+pf09lt01 <- pf09lt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2)))
+
+ggplot(pf09lt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  theme_minimal()
+
+ggplot(pf09lt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  theme_minimal()
+
+ggplot(pf09lt01, aes(x = Strain)) +
+  geom_point(aes(y = second_deriv)) +
+  theme_minimal()
+```
+
+```{r}
+pf09mt01 <- read_tsv("data/pf09/pf09mt01.csv",
+skip = 15)
+
+area = 0.00000793823
+length_initial = 2.82
+load = 0.8
+data_clean(pf09mt01, area, length_initial, load)
+
+pf09mt01 <- pf09mt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2)))
+
+ggplot(pf09mt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  theme_minimal()
+
+ggplot(pf09mt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  theme_minimal()
+
+ggplot(pf09mt01, aes(x = Strain)) +
+  geom_point(aes(y = second_deriv)) +
+  theme_minimal()
+```
+
+```{r}
+pf09ut01 <- read_tsv("data/pf09/pf09ut01.csv",
+skip = 15)
+
+area = 5.064510e-06
+length_initial = 3.05
+load = 0.8
+data_clean(pf09ut01, area, length_initial, load)
+
+pf09ut01 <- pf09ut01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2)))
+
+ggplot(pf09ut01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  theme_minimal()
+
+ggplot(pf09ut01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  theme_minimal()
+
+ggplot(pf09ut01, aes(x = Strain)) +
+  geom_point(aes(y = second_deriv)) +
+  theme_minimal()
+
 ```
 
