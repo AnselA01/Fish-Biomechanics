@@ -137,7 +137,7 @@ ggplot(pf09ut01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal() +
-  geom_vline(xintercept = 0.05573770492, color = "red") # deriv = 164.1
+  geom_vline(xintercept = 0.0557377, color = "red") # deriv = 158.4
 
 first_deriv_matrix <- dbs(pf09ut01short$Strain, df = 10, derivs = 1)
 pf09ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]

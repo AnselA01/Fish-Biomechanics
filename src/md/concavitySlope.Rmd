@@ -1,0 +1,52 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(coro)
+library(gridExtra)
+library(ggtext)
+library(segmented)
+library(changepoint)
+library(matrixStats)
+library(scales)
+#library(ggdark) 
+
+setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+data_directory <- "./data"
+script_directory <- "./src/script/"
+```
+
+## Source files. re-run this chunk when you make changes to any .R file
+```{r}
+source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
+map(paste0(source_files), source)
+```
+
+
+```{r}
+                                ## !UPDATED DATA.GENERATE USAGE!
+
+# this gathers ready-to-use bones for any fish and segment
+# the segment parameter is optional. if you want all bones for fish 9, don't include the segment argument. The fish_number argument is not optional if the segment argument is used.
+pf09cp01 <- data.generator(data_directory, fish_number = 9, segment = "cp")() # this "()" calls the generator function returned by data.generator data_directorythe first result (trial 1). pf09cp01 will be a regular bone data frame.
+pf09lt01 <- data.generator(data_directory, fish_number = 9, segment = "lt")() 
+pf09ut01 <- data.generator(data_directory, fish_number = 9, segment = "cp")()
+pf19mt01 <- data.generator(data_directory, fish_number = 19, segment = "mt")()
+pf10cp01 <- data.generator(data_directory, fish_number = 10, segment = "cp")()
+pf19cp01 <- data.generator(data_directory, fish_number = 19, segment = "cp")()
+pf16cp01 <- data.generator(data_directory, fish_number = 16, segment = "cp")()
+pf07mt01 <- data.generator(data_directory, fish_number = 7, segment = "mt")()
+pf16ut01 <- data.generator(data_directory, fish_number = 16, segment = "ut")()
+pf03lt01 <- data.generator(data_directory, fish_number = 3, segment = "lt")()
+pf07ut01 <- data.generator(data_directory, fish_number = 7, segment = "ut")()
+pf15lt01 <- data.generator(data_directory, fish_number = 15, segment = "lt")()
+```
+
+```{r}
+(cp9_slope_i <- concavitySlope(pf09cp01, interpolate = TRUE))
+(cp9_slope <- concavitySlope(pf09cp01, interpolate = FALSE))
+```
