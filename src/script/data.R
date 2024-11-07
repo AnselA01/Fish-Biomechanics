@@ -1,4 +1,4 @@
-data.generator <- generator(function(data_dir, fish_number) {
+data.generator <- generator(function(data_dir, fish_number, segment) {
   filepath_list <- get_fish_data_file_names(data_dir, fish_number)
   if (!length(filepath_list)) {
     stop(paste("No data found for fish", fish_number))
@@ -21,13 +21,18 @@ data.generator <- generator(function(data_dir, fish_number) {
   }
 })
 
-get_fish_data_file_names <- function(data_dir, fish_number) {
+get_fish_data_file_names <- function(data_dir, fish_number, segment) {
   path <- data_dir
+  pattern <- "[^area].csv"
   if (!missing(fish_number)) {
-    folder <- paste0("pf", str_pad(fish_number, 2, side = "left", pad = "0"))
-    path <- paste(data_dir, folder, sep = "/")
+    if (!missing(segment)) {
+      pattern <- paste0("[^area]", segment, "[0-9]{2}")
+          
+    }
+      folder <- paste0("pf", str_pad(fish_number, 2, side = "left", pad = "0"))
+      path <- paste(data_dir, folder, sep = "/")
   }
-  return(list.files(path = path, include.dirs = TRUE, recursive = TRUE, full.names = TRUE, pattern = "[^area].csv"))
+  return(list.files(path = path, include.dirs = TRUE, recursive = TRUE, full.names = TRUE, pattern = pattern))
 }
 
 parse_file_name <- function(full_file_path) {

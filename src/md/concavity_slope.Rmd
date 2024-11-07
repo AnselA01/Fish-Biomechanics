@@ -1,0 +1,33 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+
+source_files <- list.files("./src/script", full.names = TRUE, pattern = "*.R")
+map(paste0(source_files), source)
+```
+
+
+```{r}
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+fish_9_list <- collect(data.generator("./data", fish_number = 9))
+cp01 <- fish_9_list[[1]] %>% filter(Strain < 0.2)
+```
+
+```{r}
+Strain <- cp01$Strain
+spline_fit <- smooth.spline(Strain, cp01$Stress)
+d1_vals <- predict(spline_fit, Strain, deriv = 1)$y  # First derivative
+d2_vals <- predict(spline_fit, Strain, deriv = 2)$y  # Second derivative
+
+slope <- find_slope_at_sign_change(d1_vals, d2_vals)
+```

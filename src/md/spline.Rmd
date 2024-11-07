@@ -106,25 +106,6 @@ head(results)
 https://stats.stackexchange.com/a/635096 dbs() method explained and used here.
 
 
-## Linear interpoolation
-
- - this is a linear equation between two points to find where the arithmetic derivative crosses 0.
-
-$$d2{\text{inflection}}\frac{0 - \text{d2}[i]}{\text{d2}[i+1] - \text{d2}[i]}$$
-
-```{r}
-#' linear interpolation between two points d2_1 (2nd derivative #1 and #2 where #1 is positive and #2 is negative).  (0 - d2i) / (d2i+1 - d2i) is the relative distance (as a proportion) between d2_1 and d2_2 where d2 is 0
-
-#' The alterative where the mean is taken between strain_i and strain_i+1 incorrectly assumes a uniform change from d2_i to d2_i+1.
-
-linear_interpolation <- function(d2_1, d2_2) {
-  return ((0 - d2_1 / 
-             (d2_2 - d2_1)))
-}
-  
-```
-
-
 ```{r}
 modeli <- lm(Stress ~ bSpline(Strain, df = 20), data = pf09cp01)
 
@@ -478,4 +459,39 @@ ggplot(pf06ut01, aes(x = Strain)) +
   theme_minimal()
 
 ```
+
+#Splining Derivatives
+
+```{r}
+pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
+
+area = 3.203110e-06
+length_initial = 2.60
+load = 0.8
+data_clean(pf09cp01, area, length_initial, load)
+
+pf09cp01 <- pf09cp01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09cp01)
+coefs_short1 <- coef(model1)
+
+pf09cp01$spline_fit <- predict(model1)
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+first_deriv_matrix <- dbs(pf09cp01short$Strain, df = df, derivs = 1)
+pf09cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf09cp01short$Strain, df = df, derivs = 2)
+pf09cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+```
+
+
+
 
