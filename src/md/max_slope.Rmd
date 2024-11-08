@@ -19,13 +19,19 @@ library(changepoint)
 library(spatstat.geom) # crossdist function in cpa.find_closest_point
 library(matrixStats)
 library(scales)
+
+setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+data_directory <- "./data"
+script_directory <- "./src/script/"
 ```
 
 ```{r}
 # source files
 source_files <- list.files("./src/script", full.names = TRUE, pattern = "*.R")
 map(paste0(source_files), source)
+```
 
+```{r}
 area <- read_csv("data/area.csv")
 ```
 
@@ -47,7 +53,7 @@ data_clean(pf09cp01, area, length_initial, load)
 pf09cp01short <- pf09cp01 %>%
   filter(Strain < 0.2)
 
-model <- lm(Stress ~ bSpline(Strain, df = 15), data = pf09cp01short)
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09cp01short)
 coefs_short <- coef(model)
 
 pf09cp01short$spline_fit <- predict(model)
@@ -59,10 +65,10 @@ ggplot(pf09cp01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.023076923, color = "purple") # deriv = 180.5
   
 
-first_deriv_matrix <- dbs(pf09cp01short$Strain, df = 15, derivs = 1)
+first_deriv_matrix <- dbs(pf09cp01short$Strain, df = 10, derivs = 1)
 pf09cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
 
-second_deriv_matrix <- dbs(pf09cp01short$Strain, df = 15, derivs = 2)
+second_deriv_matrix <- dbs(pf09cp01short$Strain, df = 10, derivs = 2)
 pf09cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 
 # max deriv
@@ -152,7 +158,7 @@ pf09ut01short |>
   as.data.frame()
 
 # max deriv near 2nd deriv = 0
-# same, 164.1
+# same, 158.4
 ```
 
 >> pf09mt01
@@ -168,7 +174,7 @@ data_clean(pf09mt01, area, length_initial, load)
 pf09mt01short <- pf09mt01 %>%
   filter(Strain < 0.2)
 
-model_mt <- lm(Stress ~ bSpline(Strain, df = 15), data = pf09mt01short)
+model_mt <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09mt01short)
 coefs_short <- coef(model_mt)
 
 pf09mt01short$spline_fit <- predict(model_mt)
@@ -176,12 +182,12 @@ ggplot(pf09mt01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal() +
-  geom_vline(xintercept = 0.0390070922, color = "red") # deriv = 51.4
+  geom_vline(xintercept = 0.04255319, color = "red") # deriv = 48.9
 
-first_deriv_matrix <- dbs(pf09mt01short$Strain, df = 15, derivs = 1)
+first_deriv_matrix <- dbs(pf09mt01short$Strain, df = 10, derivs = 1)
 pf09mt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
 
-second_deriv_matrix <- dbs(pf09mt01short$Strain, df = 15, derivs = 2)
+second_deriv_matrix <- dbs(pf09mt01short$Strain, df = 10, derivs = 2)
 pf09mt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
 
 # max deriv
@@ -191,6 +197,384 @@ pf09mt01short |>
   as.data.frame()
 
 # max deriv near 2nd deriv = 0
-# same, 51.4
+# same, 48.9
+```
+
+>>pf10cp01
+
+```{r}
+pf10cp01 <- read_tsv("data/pf10/pf10cp01.csv", skip = 15)
+
+area = 3.46185e-06
+length_initial = 2.02
+load = 0.8
+data_clean(pf10cp01, area, length_initial, load)
+
+
+pf10cp01short <- pf10cp01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf10cp01short)
+coefs_short <- coef(model)
+
+pf09cp01short$spline_fit <- predict(model)
+ggplot(pf09cp01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.03960396, color = "red")          # deriv = 43.6
+  
+  
+
+first_deriv_matrix <- dbs(pf10cp01short$Strain, df = 10, derivs = 1)
+pf10cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf10cp01short$Strain, df = 10, derivs = 2)
+pf10cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf10cp01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# look at first deriv near when the concavity switches
+# 43.6
+```
+
+>>pf19mt01
+
+```{r}
+pf19mt01 <- read_tsv("data/pf19/pf19mt01.csv", skip = 15)
+
+pf19 <- area |> filter (Individual == "pf19")
+
+area = 5.34750e-06
+length_initial = 2.71
+load = 0.8
+data_clean(pf19mt01, area, length_initial, load)
+
+pf19mt01short <- pf19mt01 %>%
+  filter(Strain < 0.2)
+
+model_mt <- lm(Stress ~ bSpline(Strain, df = 10), data = pf19mt01short)
+coefs_short <- coef(model_mt)
+
+pf19mt01short$spline_fit <- predict(model_mt)
+ggplot(pf19mt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.08487085, color = "red") + # deriv = 118.9
+  geom_vline(xintercept = 0.044280443, color = "purple") # deriv = 71.4
+  
+first_deriv_matrix <- dbs(pf19mt01short$Strain, df = 10, derivs = 1)
+pf19mt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf19mt01short$Strain, df = 10, derivs = 2)
+pf19mt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf19mt01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 71.4
+```
+
+>>pf19cp01
+
+```{r}
+pf19cp01 <- read_tsv("data/pf19/pf19cp01.csv", skip = 15)
+
+area = 3.20311e-06
+length_initial = 2.29
+load = 0.8
+data_clean(pf19cp01, area, length_initial, load)
+
+pf19cp01short <- pf19cp01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf19cp01short)
+coefs_short <- coef(model)
+
+pf19cp01short$spline_fit <- predict(model)
+ggplot(pf19cp01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.1834061 , color = "red") + # deriv = 100.6
+  geom_vline(xintercept = 0.034934498, color = "purple") # deriv = 82.6
+  
+first_deriv_matrix <- dbs(pf19cp01short$Strain, df = 10, derivs = 1)
+pf19cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf19cp01short$Strain, df = 10, derivs = 2)
+pf19cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf19cp01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 82.6
+```
+
+
+>>pf16cp01
+
+```{r}
+pf16cp01 <- read_tsv("data/pf16/pf16cp01.csv", skip = 15)
+
+pf16 <- area |> filter (Individual == "pf16")
+
+area = 6.242630e-06
+length_initial = 2.48
+load = 0.8
+data_clean(pf16cp01, area, length_initial, load)
+
+pf16cp01short <- pf16cp01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf16cp01short)
+coefs_short <- coef(model)
+
+pf16cp01short$spline_fit <- predict(model)
+ggplot(pf16cp01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.0483871  , color = "red")  # deriv = 122.6
+  
+  
+first_deriv_matrix <- dbs(pf16cp01short$Strain, df = 10, derivs = 1)
+pf16cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf16cp01short$Strain, df = 10, derivs = 2)
+pf16cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf16cp01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 122.6
+```
+
+>> pf07mt01
+
+```{r}
+pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
+
+pf07 <- area |> filter (Individual == "pf07")
+
+area = 2.43162e-06
+length_initial = 2.10
+load = 0.8
+data_clean(pf07mt01, area, length_initial, load)
+
+pf07mt01short <- pf07mt01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf07mt01short)
+coefs_short <- coef(model)
+
+pf07mt01short$spline_fit <- predict(model)
+ggplot(pf07mt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.04285714, color = "red")  # deriv = 110.6
+ 
+  
+first_deriv_matrix <- dbs(pf07mt01short$Strain, df = 10, derivs = 1)
+pf07mt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf07mt01short$Strain, df = 10, derivs = 2)
+pf07mt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf07mt01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 110.6
+```
+
+>>pf16ut01
+
+```{r}
+pf16ut01 <- read_tsv("data/pf16/pf16ut01.csv", skip = 15)
+
+
+area = 1.068864e-05
+length_initial = 2.99
+load = 0.8
+data_clean(pf16ut01, area, length_initial, load)
+
+pf16ut01short <- pf16ut01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf16ut01short)
+coefs_short <- coef(model)
+
+pf16ut01short$spline_fit <- predict(model)
+ggplot(pf16ut01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.1036789  , color = "red") +  # deriv = 157.1
+  geom_vline(xintercept = 0.016722408, color = "purple") # 16.3
+  
+first_deriv_matrix <- dbs(pf16ut01short$Strain, df = 10, derivs = 1)
+pf16ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf16ut01short$Strain, df = 10, derivs = 2)
+pf16ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf16ut01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 16.3
+```
+
+
+>> pf03lt01
+
+```{r}
+pf03lt01 <- read_tsv("data/pf03/pf03lt01.csv", skip = 15)
+
+pf03 <- area |> filter (Individual == "pf03")
+
+area = 2.43162e-06
+length_initial = 2.07
+load = 0.8
+data_clean(pf03lt01, area, length_initial, load)
+
+pf03lt01short <- pf03lt01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf03lt01short)
+coefs_short <- coef(model)
+
+pf03lt01short$spline_fit <- predict(model)
+ggplot(pf03lt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.02415459, color = "red")  # deriv = 95.6
+ 
+  
+first_deriv_matrix <- dbs(pf03lt01short$Strain, df = 10, derivs = 1)
+pf03lt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf03lt01short$Strain, df = 10, derivs = 2)
+pf03lt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf03lt01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 95.6
+```
+
+>> pf07ut01
+
+```{r}
+pf07ut01 <- read_tsv("data/pf07/pf07ut01.csv", skip = 15)
+
+pf07 <- area |> filter (Individual == "pf07")
+
+area = 2.60023e-06
+length_initial = 1.96
+load = 0.8
+data_clean(pf07ut01, area, length_initial, load)
+
+pf07ut01short <- pf07ut01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf07ut01short)
+coefs_short <- coef(model)
+
+pf07ut01short$spline_fit <- predict(model)
+ggplot(pf07ut01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.04591837 , color = "red")  # deriv = 154.2
+  
+  
+first_deriv_matrix <- dbs(pf07ut01short$Strain, df = 10, derivs = 1)
+pf07ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf07ut01short$Strain, df = 10, derivs = 2)
+pf07ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf07ut01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 154.2
+```
+
+>> pf16lt01
+
+```{r}
+pf16lt01 <- read_tsv("data/pf16/pf16lt01.csv", skip = 15)
+
+pf16 <- area |> filter (Individual == "pf16")
+
+area = 8.291560e-06
+length_initial = 3.16
+load = 0.8
+data_clean(pf16lt01, area, length_initial, load)
+
+pf16lt01short <- pf16lt01 %>%
+  filter(Strain < 0.2)
+
+model <- lm(Stress ~ bSpline(Strain, df = 10), data = pf16lt01short)
+coefs_short <- coef(model)
+
+pf16lt01short$spline_fit <- predict(model)
+ggplot(pf16lt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal() +
+  geom_vline(xintercept = 0.02848101  , color = "red")  # deriv = 150.7
+  
+  
+first_deriv_matrix <- dbs(pf16lt01short$Strain, df = 10, derivs = 1)
+pf16lt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+
+second_deriv_matrix <- dbs(pf16lt01short$Strain, df = 10, derivs = 2)
+pf16lt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+
+# max deriv
+pf16lt01short |>
+  slice_max(first_deriv, n = 1) |>
+  dplyr::select(Strain, first_deriv, second_deriv) |>
+  as.data.frame()
+
+# max deriv near 2nd deriv = 0
+# 150.7
 ```
 

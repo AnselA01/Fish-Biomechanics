@@ -1,0 +1,352 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(coro)
+library(gridExtra)
+library(ggtext)
+library(segmented)
+library(changepoint)
+library(matrixStats)
+library(scales)
+library(splines)
+library(splines2)
+
+setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+data_directory <- "./data"
+script_directory <- "./src/script/"
+```
+
+## Source files. re-run this chunk when you make changes to any .R file
+```{r}
+source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
+map(paste0(source_files), source)
+```
+
+
+```{r}
+                                ## !UPDATED DATA.GENERATE USAGE!
+
+# this gathers ready-to-use bones for any fish and segment.
+# the segment parameter is optional. if you want all bones for fish 9, don't include the segment argument. The fish_number argument is not optional if the segment argument is used.
+pf09cp01 <- collect(data.generator(data_directory, fish_number = 9, segment = "cp"))[[1]] # collect() collects all matches (fish 9, segment cp) into a list and [[1]] grabs the first item (trial 1).
+pf09lt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "lt"))[[1]]
+pf09ut01 <- collect(data.generator(data_directory, fish_number = 9, segment = "ut"))[[1]]
+pf09mt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "mt"))[[1]]
+pf10cp01 <- collect(data.generator(data_directory, fish_number = 10, segment = "cp"))[[1]]
+pf19mt01 <- collect(data.generator(data_directory, fish_number = 19, segment = "mt"))[[1]]
+pf19cp01 <- collect(data.generator(data_directory, fish_number = 19, segment = "cp"))[[1]]
+pf16cp01 <- collect(data.generator(data_directory, fish_number = 16, segment = "cp"))[[1]]
+pf07mt01 <- collect(data.generator(data_directory, fish_number = 7, segment = "mt"))[[1]]
+pf16ut01 <- collect(data.generator(data_directory, fish_number = 16, segment = "ut"))[[1]]
+pf03lt01 <- collect(data.generator(data_directory, fish_number = 3, segment = "lt"))[[1]]
+pf07ut01 <- collect(data.generator(data_directory, fish_number = 7, segment = "ut"))[[1]]
+pf16lt01 <- collect(data.generator(data_directory, fish_number = 16, segment = "lt"))[[1]] # i don't know why this one doesn't work. The warnings indicate it found and parsed three files.
+
+fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01,pf16cp01,pf07mt01,pf16ut01,pf03lt01, pf07ut01)
+```
+
+#pf09cp01
+```{r}
+pf09cp01 <- pf09cp01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09cp01)
+
+pf09cp01$spline_fit <- predict(model1)
+
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf09cp01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf09lt01
+```{r}
+pf09lt01 <- pf09lt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09lt01)
+
+pf09lt01$spline_fit <- predict(model1)
+
+ggplot(pf09lt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf09lt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf09ut01
+```{r}
+pf09ut01 <- pf09ut01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09ut01)
+
+pf09ut01$spline_fit <- predict(model1)
+
+ggplot(pf09ut01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf09ut01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf09mt01
+```{r}
+pf09mt01 <- pf09mt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09mt01)
+
+pf09mt01$spline_fit <- predict(model1)
+
+ggplot(pf09mt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf09mt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf10cp01
+```{r}
+pf10cp01 <- pf10cp01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf10cp01)
+
+pf10cp01$spline_fit <- predict(model1)
+
+ggplot(pf10cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf10cp01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf19mt01
+```{r}
+pf19mt01 <- pf19mt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf19mt01)
+
+pf19mt01$spline_fit <- predict(model1)
+
+ggplot(pf19mt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf19mt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf19cp01
+```{r}
+pf19cp01 <- pf19cp01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf19cp01)
+
+pf19cp01$spline_fit <- predict(model1)
+
+ggplot(pf19cp01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf19cp01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf16ut01
+```{r}
+pf16ut01 <- pf16ut01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf16ut01)
+
+pf16ut01$spline_fit <- predict(model1)
+
+ggplot(pf16ut01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf16ut01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+
+
+```
+
+#pf07mt01
+```{r}
+pf07mt01 <- pf07mt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf07mt01)
+
+pf07mt01$spline_fit <- predict(model1)
+
+ggplot(pf07mt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf07mt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf16ut01
+```{r}
+pf16ut01 <- pf16ut01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf16ut01)
+
+pf16ut01$spline_fit <- predict(model1)
+
+ggplot(pf16ut01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf16ut01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf03lt01
+```{r}
+pf03lt01 <- pf03lt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf03lt01)
+
+pf03lt01$spline_fit <- predict(model1)
+
+ggplot(pf03lt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf03lt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf07ut01
+```{r}
+pf07ut01 <- pf07ut01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf07ut01)
+
+pf07ut01$spline_fit <- predict(model1)
+
+ggplot(pf07ut01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf07ut01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+#pf16lt01
+```{r}
+pf16lt01 <- pf16lt01 %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf16lt01)
+
+pf16lt01$spline_fit <- predict(model1)
+
+ggplot(pf16lt01, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf16lt01, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+```
+
+```{r}
+# Assuming pf09cp01, pf09lt01, etc., are your data frames (tibbles)
+fish_list <- list(pf09cp01, pf09lt01, pf09ut01, pf09mt01, pf10cp01, pf19mt01, pf19cp01, pf16cp01, pf07mt01, pf16ut01, pf03lt01, pf07ut01)
+
+# Loop over the fish_list
+for (i in 1:length(fish_list)) {
+  fish_list[[i]] <- fish_list[[i]] %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+ggplot(fish_list[[i]], aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = fish_list[[i]])
+
+fish_list[[i]]$spline_fit <- predict(model1)
+}
+
+```
+
+

@@ -13,7 +13,6 @@ library(segmented)
 library(changepoint)
 library(matrixStats)
 library(scales)
-#library(ggdark) 
 
 setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
 data_directory <- "./data"
@@ -30,23 +29,56 @@ map(paste0(source_files), source)
 ```{r}
                                 ## !UPDATED DATA.GENERATE USAGE!
 
-# this gathers ready-to-use bones for any fish and segment
+# this gathers ready-to-use bones for any fish and segment.
 # the segment parameter is optional. if you want all bones for fish 9, don't include the segment argument. The fish_number argument is not optional if the segment argument is used.
-pf09cp01 <- data.generator(data_directory, fish_number = 9, segment = "cp")() # this "()" calls the generator function returned by data.generator data_directorythe first result (trial 1). pf09cp01 will be a regular bone data frame.
-pf09lt01 <- data.generator(data_directory, fish_number = 9, segment = "lt")() 
-pf09ut01 <- data.generator(data_directory, fish_number = 9, segment = "cp")()
-pf19mt01 <- data.generator(data_directory, fish_number = 19, segment = "mt")()
-pf10cp01 <- data.generator(data_directory, fish_number = 10, segment = "cp")()
-pf19cp01 <- data.generator(data_directory, fish_number = 19, segment = "cp")()
-pf16cp01 <- data.generator(data_directory, fish_number = 16, segment = "cp")()
-pf07mt01 <- data.generator(data_directory, fish_number = 7, segment = "mt")()
-pf16ut01 <- data.generator(data_directory, fish_number = 16, segment = "ut")()
-pf03lt01 <- data.generator(data_directory, fish_number = 3, segment = "lt")()
-pf07ut01 <- data.generator(data_directory, fish_number = 7, segment = "ut")()
-pf15lt01 <- data.generator(data_directory, fish_number = 15, segment = "lt")()
+pf09cp01 <- collect(data.generator(data_directory, fish_number = 9, segment = "cp"))[[1]] # collect() collects all matches (fish 9, segment cp) into a list and [[1]] grabs the first item (trial 1).
+pf09lt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "lt"))[[1]]
+pf09ut01 <- collect(data.generator(data_directory, fish_number = 9, segment = "ut"))[[1]]
+pf09mt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "mt"))[[1]]
+pf10cp01 <- collect(data.generator(data_directory, fish_number = 10, segment = "cp"))[[1]]
+pf19mt01 <- collect(data.generator(data_directory, fish_number = 19, segment = "mt"))[[1]]
+pf19cp01 <- collect(data.generator(data_directory, fish_number = 19, segment = "cp"))[[1]]
+pf16cp01 <- collect(data.generator(data_directory, fish_number = 16, segment = "cp"))[[1]]
+pf07mt01 <- collect(data.generator(data_directory, fish_number = 7, segment = "mt"))[[1]]
+pf16ut01 <- collect(data.generator(data_directory, fish_number = 16, segment = "ut"))[[1]]
+pf03lt01 <- collect(data.generator(data_directory, fish_number = 3, segment = "lt"))[[1]]
+pf07ut01 <- collect(data.generator(data_directory, fish_number = 7, segment = "ut"))[[1]]
+#pf15lt01 <- collect(data.generator(data_directory, fish_number = 15, segment = "lt"))[[1]] # i don't know why this one doesn't work. The warnings indicate it found and parsed three files.
+
+fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01,pf16cp01,pf07mt01,pf16ut01,pf03lt01,
+pf07ut01)
 ```
 
 ```{r}
-(cp9_slope_i <- concavitySlope(pf09cp01, interpolate = TRUE))
-(cp9_slope <- concavitySlope(pf09cp01, interpolate = FALSE))
+names <- c(
+"pf09cp01",
+"pf09lt01",
+"pf09ut01",
+"pf09mt01",
+"pf10cp01",
+"pf19mt01",
+"pf19cp01",
+"pf16cp01",
+"pf07mt01",
+"pf16ut01",
+"pf03lt01",
+"pf07ut01")
+
+interpolated_slopes <- unlist(map(fish_list, ~ {
+  slope <- concavitySlope(.x, interpolate = TRUE)
+}))
+
+mean_slopes <- unlist(map(fish_list, ~ {
+  slope <- concavitySlope(.x, interpolate = FALSE)
+}))
+
+results <- data.frame(name = names, slope_i = interpolated_slopes, slope_m = mean_slopes)
 ```
+
+
+
+
+
+
+
+
