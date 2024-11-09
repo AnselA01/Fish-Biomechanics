@@ -43,7 +43,6 @@ pf07mt01 <- collect(data.generator(data_directory, fish_number = 7, segment = "m
 pf16ut01 <- collect(data.generator(data_directory, fish_number = 16, segment = "ut"))[[1]]
 pf03lt01 <- collect(data.generator(data_directory, fish_number = 3, segment = "lt"))[[1]]
 pf07ut01 <- collect(data.generator(data_directory, fish_number = 7, segment = "ut"))[[1]]
-#pf15lt01 <- collect(data.generator(data_directory, fish_number = 15, segment = "lt"))[[1]] # i don't know why this one doesn't work. The warnings indicate it found and parsed three files.
 
 fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01,pf16cp01,pf07mt01,pf16ut01,pf03lt01,
 pf07ut01)
