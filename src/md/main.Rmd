@@ -44,10 +44,11 @@ test_data_iterator <- NULL # throw away the iterator
 ```{r}
 loop(for (fish in data.generator(data_directory)) {
   fit_segmented <- cpa.segment(fish, 10) # n is arbitrary. for our purposes, higher (10) is better because we want more resolution
+  print(summary(fit_segmented))
   nearest_points <- cpa.nearest_points(fish, fit_segmented)
   print(plot.predicted(fish, fit_segmented, nearest_points))
   #slopes <- cpa.slope(nearest_points)
-  break
+  #break
 })
 ```
 
@@ -59,16 +60,8 @@ Save all images
 data_iterator <- data.generator(data_directory)
 
 loop(for (fish in data_iterator) {
-  image.save(fish, plot(fish)) # in progress
+  image.save(fish, plot(fish))
 })
 ```
 
-# Plots
-
-## Breakpoints overlaid, gridded by trial or segment
-```{r}
-fish_plots <- plot.grid(fish_numbers = c(9), segment = TRUE, npointsmax = 10, refit = TRUE, grid_by = "Segment")
-
-grid.arrange(grobs = fish_plots, nrow = 2)
-```
 

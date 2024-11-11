@@ -52,44 +52,73 @@ fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01
 
 #pf09cp01
 ```{r}
-pf09cp01 <- pf09cp01 %>%
+pf09cp01short <- pf09cp01 %>%
+  filter(Strain < 0.2)
+
+pf09cp01short <- pf09cp01short %>%
   mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
          second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
   filter(!is.na(first_deriv), is.finite(first_deriv))
 
-model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09cp01)
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 10), data = pf09cp01short)
+model2 <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09cp01short)
 
-pf09cp01$spline_fit <- predict(model1)
+pf09cp01short$spline_fit_deriv <- predict(model1)
+pf09cp01short$spline_fit <- predict(model2)
+coefs_short <- coef(model2)
 
-ggplot(pf09cp01, aes(x = Strain)) +
+ggplot(pf09cp01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) + 
   theme_minimal()
 
-ggplot(pf09cp01, aes(x = Strain)) +
+ggplot(pf09cp01short, aes(x = Strain)) +
   geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit_deriv), color = "blue") + 
+  theme_minimal()
+
+ggplot(pf09cp01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
+
+first_deriv_matrix <- dbs(pf09cp01short$Strain, df = 10, derivs = 1)
+pf09cp01short$first_deriv_ofspline <- first_deriv_matrix %*% coefs_short[-1]
 ```
 
 #pf09lt01
 ```{r}
-pf09lt01 <- pf09lt01 %>%
+pf09lt01short <- pf09lt01 %>%
+  filter(Strain < 0.2)
+
+pf09lt01short <- pf09lt01short %>%
   mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
          second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
   filter(!is.na(first_deriv), is.finite(first_deriv))
 
-model1 <- lm(first_deriv ~ bSpline(Strain, df = 15), data = pf09lt01)
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 10), data = pf09lt01short)
+model2 <- lm(Stress ~ bSpline(Strain, df = 10), data = pf09lt01short)
 
-pf09lt01$spline_fit <- predict(model1)
+pf09lt01short$spline_fit_deriv <- predict(model1)
+pf09lt01short$spline_fit <- predict(model2)
+coefs_short <- coef(model2)
 
-ggplot(pf09lt01, aes(x = Strain)) +
+ggplot(pf09lt01short, aes(x = Strain)) +
   geom_point(aes(y = Stress)) + 
   theme_minimal()
 
-ggplot(pf09lt01, aes(x = Strain)) +
+ggplot(pf09lt01short, aes(x = Strain)) +
   geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit_deriv), color = "blue") + 
+  theme_minimal()
+
+ggplot(pf09lt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
+
+first_deriv_matrix <- dbs(pf09lt01short$Strain, df = 10, derivs = 1)
+pf09lt01short$first_deriv_ofspline <- first_deriv_matrix %*% coefs_short[-1]
+```
 ```
 
 #pf09ut01
