@@ -332,11 +332,15 @@ ggplot(pf19cp01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.1834061 , color = "red") + # deriv = 100.6
   geom_vline(xintercept = 0.034934498, color = "purple") # deriv = 82.6
   
-first_deriv_matrix <- dbs(pf19cp01short$Strain, df = 10, derivs = 1)
-pf19cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf19cp01short)
 
-second_deriv_matrix <- dbs(pf19cp01short$Strain, df = 10, derivs = 2)
-pf19cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf19cp01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf19cp01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf19cp01short |>
@@ -353,8 +357,6 @@ pf19cp01short |>
 
 ```{r}
 pf16cp01 <- read_tsv("data/pf16/pf16cp01.csv", skip = 15)
-
-pf16 <- area |> filter (Individual == "pf16")
 
 area = 6.242630e-06
 length_initial = 2.48
@@ -375,11 +377,15 @@ ggplot(pf16cp01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.0483871  , color = "red")  # deriv = 122.6
   
   
-first_deriv_matrix <- dbs(pf16cp01short$Strain, df = 10, derivs = 1)
-pf16cp01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf16cp01short)
 
-second_deriv_matrix <- dbs(pf16cp01short$Strain, df = 10, derivs = 2)
-pf16cp01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf16cp01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf16cp01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf16cp01short |>
@@ -395,8 +401,6 @@ pf16cp01short |>
 
 ```{r}
 pf07mt01 <- read_tsv("data/pf07/pf07mt01.csv", skip = 15)
-
-pf07 <- area |> filter (Individual == "pf07")
 
 area = 2.43162e-06
 length_initial = 2.10
@@ -417,11 +421,15 @@ ggplot(pf07mt01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.04285714, color = "red")  # deriv = 110.6
  
   
-first_deriv_matrix <- dbs(pf07mt01short$Strain, df = 10, derivs = 1)
-pf07mt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf07mt01short)
 
-second_deriv_matrix <- dbs(pf07mt01short$Strain, df = 10, derivs = 2)
-pf07mt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf07mt01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf07mt01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf07mt01short |>
@@ -458,11 +466,15 @@ ggplot(pf16ut01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.1036789  , color = "red") +  # deriv = 157.1
   geom_vline(xintercept = 0.016722408, color = "purple") # 16.3
   
-first_deriv_matrix <- dbs(pf16ut01short$Strain, df = 10, derivs = 1)
-pf16ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf16ut01short)
 
-second_deriv_matrix <- dbs(pf16ut01short$Strain, df = 10, derivs = 2)
-pf16ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf16ut01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf16ut01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf16ut01short |>
@@ -479,8 +491,6 @@ pf16ut01short |>
 
 ```{r}
 pf03lt01 <- read_tsv("data/pf03/pf03lt01.csv", skip = 15)
-
-pf03 <- area |> filter (Individual == "pf03")
 
 area = 2.43162e-06
 length_initial = 2.07
@@ -500,12 +510,15 @@ ggplot(pf03lt01short, aes(x = Strain)) +
   theme_minimal() +
   geom_vline(xintercept = 0.02415459, color = "red")  # deriv = 95.6
  
-  
-first_deriv_matrix <- dbs(pf03lt01short$Strain, df = 10, derivs = 1)
-pf03lt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf03lt01short)
 
-second_deriv_matrix <- dbs(pf03lt01short$Strain, df = 10, derivs = 2)
-pf03lt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf03lt01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf03lt01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf03lt01short |>
@@ -521,8 +534,6 @@ pf03lt01short |>
 
 ```{r}
 pf07ut01 <- read_tsv("data/pf07/pf07ut01.csv", skip = 15)
-
-pf07 <- area |> filter (Individual == "pf07")
 
 area = 2.60023e-06
 length_initial = 1.96
@@ -543,11 +554,15 @@ ggplot(pf07ut01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.04591837 , color = "red")  # deriv = 154.2
   
   
-first_deriv_matrix <- dbs(pf07ut01short$Strain, df = 10, derivs = 1)
-pf07ut01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf07ut01short)
 
-second_deriv_matrix <- dbs(pf07ut01short$Strain, df = 10, derivs = 2)
-pf07ut01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf07ut01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf07ut01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf07ut01short |>
@@ -563,8 +578,6 @@ pf07ut01short |>
 
 ```{r}
 pf16lt01 <- read_tsv("data/pf16/pf16lt01.csv", skip = 15)
-
-pf16 <- area |> filter (Individual == "pf16")
 
 area = 8.291560e-06
 length_initial = 3.16
@@ -585,11 +598,15 @@ ggplot(pf16lt01short, aes(x = Strain)) +
   geom_vline(xintercept = 0.02848101  , color = "red")  # deriv = 150.7
   
   
-first_deriv_matrix <- dbs(pf16lt01short$Strain, df = 10, derivs = 1)
-pf16lt01short$first_deriv <- first_deriv_matrix %*% coefs_short[-1]
+n <- nrow(pf16lt01short)
 
-second_deriv_matrix <- dbs(pf16lt01short$Strain, df = 10, derivs = 2)
-pf16lt01short$second_deriv <- second_deriv_matrix %*% coefs_short[-1]
+strain_grid <- seq(0, 0.2, (0.2/(n-1)))
+
+first_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 1)
+second_deriv_matrix_grid <- dbs(strain_grid, df = 10, derivs = 2)
+
+pf16lt01short$first_deriv <- first_deriv_matrix_grid %*% coefs_short[-1]
+pf16lt01short$second_deriv <- second_deriv_matrix_grid %*% coefs_short[-1]
 
 # max deriv
 pf16lt01short |>
