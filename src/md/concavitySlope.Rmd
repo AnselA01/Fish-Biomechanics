@@ -39,39 +39,24 @@ pf10cp01 <- collect(data.generator(data_directory, fish_number = 10, segment = "
 pf19mt01 <- collect(data.generator(data_directory, fish_number = 19, segment = "mt"))[[1]]
 pf19cp01 <- collect(data.generator(data_directory, fish_number = 19, segment = "cp"))[[1]]
 pf16cp01 <- collect(data.generator(data_directory, fish_number = 16, segment = "cp"))[[1]]
-pf07mt01 <- collect(data.generator(data_directory, fish_number = 7, segment = "mt"))[[1]]
+pf17mt01 <- collect(data.generator(data_directory, fish_number = 17, segment = "mt"))[[1]]
 pf16ut01 <- collect(data.generator(data_directory, fish_number = 16, segment = "ut"))[[1]]
 pf03lt01 <- collect(data.generator(data_directory, fish_number = 3, segment = "lt"))[[1]]
 pf07ut01 <- collect(data.generator(data_directory, fish_number = 7, segment = "ut"))[[1]]
+pf16lt01 <- collect(data.generator(data_directory, fish_number = 16, segment = "lt"))[[1]]
 
-fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01,pf16cp01,pf07mt01,pf16ut01,pf03lt01,
-pf07ut01)
+fish_list <- list(pf09cp01, pf09lt01, pf09ut01, pf09mt01, pf10cp01, pf19mt01, pf19cp01, pf16cp01, pf17mt01, pf16ut01, pf03lt01, pf07ut01, pf16lt01)
 ```
 
 ```{r}
 names <- c(
-"pf09cp01",
-"pf09lt01",
-"pf09ut01",
-"pf09mt01",
-"pf10cp01",
-"pf19mt01",
-"pf19cp01",
-"pf16cp01",
-"pf07mt01",
-"pf16ut01",
-"pf03lt01",
-"pf07ut01")
+"pf09cp01", "pf09lt01", "pf09ut01", "pf09mt01", "pf10cp01", "pf19mt01", "pf19cp01", "pf16cp01", "pf17mt01", "pf16ut01", "pf03lt01", "pf07ut01", "pf16lt01")
 
-interpolated_slopes <- unlist(map(fish_list, ~ {
-  slope <- concavitySlope(.x, interpolate = TRUE)
-}))
 
-mean_slopes <- unlist(map(fish_list, ~ {
+slopes <- map(fish_list, ~ {
   slope <- concavitySlope(.x, interpolate = FALSE)
-}))
+})
 
-results <- data.frame(name = names, slope_i = interpolated_slopes, slope_m = mean_slopes)
 ```
 
 

@@ -1,4 +1,25 @@
-data.generator <- generator(function(data_dir, fish_number, segment) {
+# Get your bones here! data.fetch fetches any number of fish, segments, and trials
+# arg fish_numbers: a list of fish numbers
+# arg segments: as list of segments
+# arg trials: a list of trials. default is 1
+
+data.fetch <- function(fish_numbers, segments, trials = c(1)) {
+  results <- list()
+  names <- list()
+  for (fish_number in fish_numbers) {
+    for (segment in segments) {
+      for (trial in trials) {
+        bone <- collect(data.generator(fish_number = fish_number, segment = segment))[[trial]]
+        results <- append(results, list(bone))
+        names <- append(names, paste0(sprintf("%02d", fish_number), segment, trial))
+      }
+    }
+  }
+  names(results) <- names
+  return (results)
+}
+
+data.generator <- generator(function(data_dir = "./data", fish_number, segment) {
   filepath_list <- get_fish_data_file_names(data_dir, fish_number, segment)
   if (!length(filepath_list)) {
     stop(paste("No data found for fish", fish_number))
@@ -73,6 +94,7 @@ recalculate_stress_strain <- function(df, metadata, area_data) {
            mutate(
              Stress = (Load / area)/10^6,
              Strain = abs(length_initial - (length_initial - Distance)) / length_initial))
+
 }
 
 find_area_initial_length <- function(metadata, area_data) {
@@ -129,7 +151,7 @@ data_clean <- function(data_name, area, length_initial, load) {
     mutate(Area = area,
            Distance = Distance - first(Distance),
            LengthInitial = length_initial,
-           Stress = 10^-6 * Load / Area,
+           Stress = 10^-6 * (Load / Area),
            Strain = abs((length_initial - (length_initial - Distance)) / length_initial),
            Fish_Type = substr(data_string, 0, 2),
            Fish_Num = substr(data_string, 3, 4),

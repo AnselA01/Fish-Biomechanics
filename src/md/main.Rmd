@@ -31,11 +31,11 @@ source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
 map(paste0(source_files), source)
 ```
 
-## Test fish
+# data.fetch usage
+
 ```{r}
-test_data_iterator <- data.generator(data_directory)
-test_fish <- test_data_iterator()
-test_data_iterator <- NULL # throw away the iterator
+bones <- data.fetch(fish_numbers = c(1,2), segments = c("cp", "lt"))
+print(names(bones))
 ```
 
 # Change point analysis
@@ -43,25 +43,20 @@ test_data_iterator <- NULL # throw away the iterator
 ## Segmentation and finding the slope between predicted break points
 ```{r}
 loop(for (fish in data.generator(data_directory)) {
-  fit_segmented <- cpa.segment(fish, 10) # n is arbitrary. for our purposes, higher (10) is better because we want more resolution
+  fish <- fish %>% filter(Strain < 0.2)
+  fit_segmented <- cpa.segment(fish, 20, refit = TRUE) # n is arbitrary. for our purposes, higher (10) is better because we want more resolution
   print(summary(fit_segmented))
   nearest_points <- cpa.nearest_points(fish, fit_segmented)
   print(plot.predicted(fish, fit_segmented, nearest_points))
   #slopes <- cpa.slope(nearest_points)
-  #break
+  break
 })
 ```
 
 # Images 
 
-Save all images
 
-```{r}
-data_iterator <- data.generator(data_directory)
 
-loop(for (fish in data_iterator) {
-  image.save(fish, plot(fish))
-})
-```
+
 
 

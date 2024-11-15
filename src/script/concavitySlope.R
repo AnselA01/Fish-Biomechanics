@@ -3,7 +3,10 @@ concavitySlope <- function(bone, interpolate) {
   d1_vals <- predict(spline_fit, bone$Strain, deriv = 1)$y
   d2_vals <- predict(spline_fit, bone$Strain, deriv = 2)$y
 
-  return(find_slope_at_sign_change(d1_vals, d2_vals, interpolate))
+  ret <- find_slope_at_sign_change(d1_vals[-(1:5)], d2_vals[-(1:5)], interpolate = FALSE) 
+  slope <- ret$slope
+  sign_change_index <- ret$sign_change_index
+  return(data.frame(slope = slope, strain = bone$Strain[sign_change_index]))
   
 }
 
@@ -15,9 +18,11 @@ find_slope_at_sign_change <- function(d1_vals, d2_vals, interpolate) {
   d1_sign_change_vals <- c(d1_vals[d2_sign_change_indices[[1]]],
                            d1_vals[d2_sign_change_indices[[2]]])
   
-  return(ifelse(interpolate, 
-                interpolate(d1_sign_change_vals, d2_sign_change_vals),
-                mean(d1_sign_change_vals)))
+  slope <- ifelse(interpolate, 
+                  interpolate(d1_sign_change_vals, d2_sign_change_vals),
+                  mean(d1_sign_change_vals))
+  
+  return(list(slope = slope, sign_change_index = d2_sign_change_indices[[1]]))
 }
 
 find_sign_change_indices <- function(d2_vals) {

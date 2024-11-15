@@ -12,7 +12,7 @@
 
 -   `log`
 
-    currently only the autogit log file.
+    the autogit script log file.
 
 -   `src`
 
@@ -20,7 +20,7 @@
 
         R markdown files.
 
-        -   `main` - Your entry point for testing and using any .R scripts.
+        -   `main` - General testing and function usage examples.
 
         -   `pf09segmenting` - Exploration of segmenting method with pf09 bones.
 
@@ -38,19 +38,21 @@
 
         -   `data` - wrangling data from raw bone to useful stress/strain data.
 
-            -   `data.generator function` tips:
-            
-                - This is a helpful function for requesting bone data for specific fish and segments
+            -   `data.fetch function` usage:
 
-                -   Syntax: `data.generator(data_directory, fish_number, segment)` where data_directory is a string path to your data directory (ours is "./data"), fish_number is a number 1-21, and segment is one of ("CP", "LT", "MT", "UT") and is not case-sensitive. `fish_number` and `segment` are optional but `segment` is usable only with `fish_number`. The return type is a coro iterator. <https://coro.r-lib.org/articles/generator.html>
+                -   This is a helpful function for fetching bone data for specific fish and segments
 
-                -   Collecting : `coro::collect(data.generator("./data", fish_number, segment))` to get all bones for a `fish_number` and a `segmebonesnt` in a list. If you just want to do something to a bunch of bones without saving the result, this is not for you. Use the iteration method below. The trial number can be indexed with `[[trial_number]] of the collect() call.`
+                -   Syntax: `bones_list <- data.fetch(fish_numbers, segments, trials)`
 
-                -   Iterating over bones: `coro::loop(for (bone in data.generator("./data", fish_number, segment)) { <do something with bone> })` to iterate over the `segment` bones of `fish_number`.
+                    -   args:
 
-                -   Example: I want to collect the "LT" bones of fish 10 into a list called `pf10lt_list`
+                        -   `fish_numbers`: a list of fish numbers like `c(1, 2, 3)`
 
-                       `pf10lt_list <- coro::collect(data.generator("./data", 10, "lt"))`
+                        -   `segments`: a list of segments like `c("lt", "cp")`
+
+                        -   (optional, default is 1)`trials`: a list of trials like `c(1, 2)`
+
+                    -   returns a list of bones indexed by a fish number, segment, and trial number as `bones_list[["01lt1"]]`
 
         -   `image` - function to save ggplots to images
 
