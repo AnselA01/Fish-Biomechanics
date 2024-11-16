@@ -38,9 +38,9 @@
 
         -   `data` - wrangling data from raw bone to useful stress/strain data.
 
-            -   `data.fetch function` usage:
+            -   `data.fetch` function usage:
 
-                -   This is a helpful function for fetching bone data for specific fish and segments
+                -   This is a helpful and user-friendly function for fetching bone data for any number of fish, segments, and trials.
 
                 -   Syntax: `bones_list <- data.fetch(fish_numbers, segments, trials)`
 
@@ -50,7 +50,9 @@
 
                         -   `segments`: a list of segments like `c("lt", "cp")`
 
-                        -   (optional, default is 1)`trials`: a list of trials like `c(1, 2)`
+                        -   `trials`: a list of trials like `c(1, 2)`
+                        
+                        - The `fish_numbers` and `segments` arguments default to everything, so, if you want all segments for fish pf01, you would use `var <- data.fetch(fish_numbers = c(1))`. If you want all fish for segment "lt", you would use `var <- data.fetch(segments = c("lt"))`. `trials` defaults to 1.
 
                     -   returns a list of bones indexed by a fish number, segment, and trial number as `bones_list[["01lt1"]]`
 
@@ -59,3 +61,7 @@
         -   `plot` - Functions used for plotting data
 
         -   `polynomialRegression` - functions for polynomial regression of data
+        
+        -   `YoungsModulus` - functions for calculating Young's Modulus of Stress/Strain data with two methods: Max Slope (`ym.MaxSlope`) and spline of first derivative (ym.FDS)
+        
+## References

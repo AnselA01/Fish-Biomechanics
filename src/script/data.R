@@ -1,16 +1,17 @@
-# Get your bones here! data.fetch fetches any number of fish, segments, and trials
-# arg fish_numbers: a list of fish numbers
-# arg segments: as list of segments
+# Get your bones here! data.fetch fetches any number of fish, segments, and trials.
+# arg fish_numbers: a list of fish numbers 1-21. default is all (1-21)
+# arg segments: a list of segments "cp", "lt", "mt", or "ut". default is all
 # arg trials: a list of trials. default is 1
-
-data.fetch <- function(fish_numbers, segments, trials = c(1)) {
+data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1)) {
   results <- list()
   names <- list()
   for (fish_number in fish_numbers) {
     for (segment in segments) {
-      for (trial in trials) {
-        bone <- collect(data.generator(fish_number = fish_number, segment = segment))[[trial]]
-        results <- append(results, list(bone))
+        bones <- collect(data.generator(fish_number = fish_number, segment = segment))
+        # they can't have more trials than there are available.
+        segment_trials <- if (length(trials) > length(bones)) 1:length(bones) else trials
+      for (trial in segment_trials) {
+        results <- append(results, list(bones[[trial]]))
         names <- append(names, paste0(sprintf("%02d", fish_number), segment, trial))
       }
     }

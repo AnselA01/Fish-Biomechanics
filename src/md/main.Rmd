@@ -34,8 +34,10 @@ map(paste0(source_files), source)
 # data.fetch usage
 
 ```{r}
-bones <- data.fetch(fish_numbers = c(1,2), segments = c("cp", "lt"))
+# we are fetching all segments for pf01 trial 1
+bones <- data.fetch(fish_numbers = c(1), segments = c("lt"))
 print(names(bones))
+bones[["01cp1"]]
 ```
 
 # Change point analysis
@@ -52,11 +54,4 @@ loop(for (fish in data.generator(data_directory)) {
   break
 })
 ```
-
-# Images 
-
-
-
-
-
 

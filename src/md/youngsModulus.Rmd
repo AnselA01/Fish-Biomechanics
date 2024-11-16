@@ -1,0 +1,25 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+
+source("./src/script/youngsModulus.R")
+source("./src/script/data.R")
+```
+
+```{r}
+bones <- data.fetch(fish_numbers = c(9), segments = c("cp"), trials = c(1,2,3,4))
+pf09lt <- bones[["09cp1"]]
+```
+
+```{r}
+maxSlope <- ym.FDS(pf09lt)
+print(maxSlope)
+```
+
+
+
