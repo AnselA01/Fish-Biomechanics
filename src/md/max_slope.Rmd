@@ -548,3 +548,19 @@ pf16lt01short |>
 # 150.7
 ```
 
+## Trying MARS package
+
+```{r}
+library(earth)
+library(tidymodels)
+library(gridExtra)
+```
+
+```{r}
+pf09cp01short <- pf09cp01|>
+  filter(Strain < 0.2)
+
+folds <- vfold_cv(pf09cp01short, v = 10)
+grid <- grid_regular(terms)
+```
+

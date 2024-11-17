@@ -1,12 +1,22 @@
 #plots strain vs. stress
-plot.plot <- function(data) {
-  return(ggplot(data, aes(x = Strain, y = Stress)) +
-           geom_line(size = 1) +
-           labs(caption = paste(data$Individual, data$Segment, data$Trial, sep = " "),
-                x = "Strain",
-                y = "Stress") +
-           theme_bw()) +
-    plot.caption = element_text(hjust = 0, size = 10)
+plot.plot <- function(data, layers) {
+  base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
+    geom_line(size = 1) +
+    labs(
+      caption = paste(data$Individual, data$Segment, data$Trial, sep = " "),
+      x = "Strain",
+      y = "Stress"
+    ) +
+    theme_bw() +
+    theme(plot.caption = element_text(hjust = 0, size = 10), 
+          plot.subtitle = element_markdown(hjust = 0, size = 12)) 
+  
+  # add custom layers
+  for (layer in layers) {
+    base.plot <- base.plot + layer
+  }
+  
+  return(base.plot)
 }
 
 # Plot Strain and Stress with predicted break points overlaid

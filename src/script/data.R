@@ -8,6 +8,7 @@ data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "u
   for (fish_number in fish_numbers) {
     for (segment in segments) {
         bones <- collect(data.generator(fish_number = fish_number, segment = segment))
+        if (!length(bones)) next
         # they can't have more trials than there are available.
         segment_trials <- if (length(trials) > length(bones)) 1:length(bones) else trials
       for (trial in segment_trials) {

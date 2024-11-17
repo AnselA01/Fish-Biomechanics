@@ -1,81 +1,135 @@
-# Finds Young's Modulus and corresponding strain value for Stress/Strain data using the max slope of Stress spline fit method.
-ym.maxSlope <- function(bone) {
-  # steps:
-  # fit spline to stress/strain
-  # make grid
-  # calculate first and second derivatives of spline fit
-  # look up first.deriv with index of second deriv where it crosses 0?
-}
-
-# Finds Young's Modulus and corresponding strain value for Stress/Strain data using the local maximum of Stress/Strain 1st derivatives spline fit.
-ym.FDS <- function(bone) {
+# Calculates Young's Modulus for a bone with one of three methods:
+# 1. Global max slope ("max")
+# 2. Slope at the inflection point ("inflection")
+# 3. First local max of the first derivative spline fit ("fds")
+ym.calculate <- function(bone, method = c("max", "inflection", "fds")) {
+  method <- match.arg(method) # match.arg makes sure method is one of the three values in the default argument list.
   bone <- filter(bone, Strain < 0.2)
-  bone <- numericDifferentiation(bone)
   
-  splineFitResult <- fitStressSpline(bone)
-  boneGrid <- calculateSplineFirstDerivative(splineFitResult$boneGrid, splineFitResult$coefs)
-  return(
-    localMax(
-      boneGrid$first.deriv.spline.fit,
-      boneGrid$first.deriv,
-      boneGrid$Strain
-    )
-  )
+  splineFitResult <- fitStressSpline(bone, fitFirstDeriv = FALSE)
+  firstSecondDerivResult <- calculateFirstSecondDerivatives(splineFitResult$strainGrid$Strain, splineFitResult$coefs)
+  
+  result <- switch(method,
+                   "max" = {
+                     globalMax(
+                       firstSecondDerivResult$first.deriv,
+                       firstSecondDerivResult$second.deriv,
+                       splineFitResult$strainGrid$Strain
+                     )
+                   },
+                   "inflection" = {
+                     inflectionPoint(
+                       firstSecondDerivResult$first.deriv,
+                       firstSecondDerivResult$second.deriv,
+                       splineFitResult$strainGrid$Strain
+                     )
+                   },
+                   "fds" = {
+                     bone <- numericDifferentiation(bone)
+                     splineFitResult <- fitStressSpline(bone, fitFirstDeriv = TRUE)
+                     firstSecondDerivResult <- calculateFirstSecondDerivatives(splineFitResult$strainGrid$Strain, splineFitResult$coefs)
+                     
+                     localMax(
+                       splineFitResult$first.deriv.spline.fit,
+                       firstSecondDerivResult$first.deriv,
+                       splineFitResult$strainGrid$Strain
+                     )
+                   })
+  
+  return(result)
 }
-
 
 # creates a grid with Strain points spaced `increment` apart.
 # arg increment: grid spacing
 # returns tibble with gridded Strain column.
-createGrid <- function(bone, increment = 0.004) {
-  start <- min(bone$Strain)
+createGrid <- function(bone, increment = 0.0001) {
+  start <- 0
   end <- max(bone$Strain)
   return(data.frame(Strain = seq(start, end, by = increment)))
 }
 
-# performs numeric differentiation on a bone's Stress and Strain values
+# performs numeric differentiation on Stress and Strain values
 # returns: original bone with two new columns: first.deriv and second.deriv
 numericDifferentiation <- function(bone) {
-  lag2Strain <- lag(bone$Strain, 2) # is used multiple times
   return(bone |>
-           mutate(
-             first.deriv = (Stress - lag(Stress, 2)) / (Strain - lag2Strain),
-             second.deriv = (first.deriv - lag(first.deriv, 2)) / (Strain - lag2Strain)
-           ) |>
-           filter(!is.na(first.deriv), is.finite(first.deriv)))
+    mutate(
+      lag2Strain = lag(Strain, 2),
+      first.deriv = (Stress - lag(Stress, 2)) / (Strain - lag2Strain),
+      second.deriv = (first.deriv - lag(first.deriv, 2)) / (Strain - lag2Strain)
+    ) |>
+    filter(!is.na(first.deriv), is.finite(first.deriv)) |>
+    dplyr::select(-lag2Strain))
 }
 
-# fits splines for Stress/Strain and Stress/Strain first derivatives
-# returns: list 1. coefficients of Stress spline fit. 2. bone data appended with 1st derivative spline fit and Stress spline fit.
-fitStressSpline <- function(bone) {
-  ## TODO replace spline fit with method from MARS package
-  first.deriv.spline.fit <- lm(first.deriv ~ bSpline(Strain, df = 10), data = bone)
-  stress.spline.fit <- lm(Stress ~ bSpline(Strain, df = 10), data = bone)
+
+# fit a spline with an abstract formula
+# TODO CHANGE THIS TO MARS PACKAGE METHOD
+fitSpline <- function(formula, bone, strain) {
+  model <- lm(formula, data = bone)
+  predictions <- predict(model, newdata = strain)
+  return(list(model = model, predictions = predictions))
+}
+
+# fits stress and/or stress first deriv splines
+fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
+  strainGrid <- createGrid(bone)
   
-  boneGrid <- createGrid(bone)
-  boneGrid$first.deriv.spline.fit <- predict(first.deriv.spline.fit, newdata = boneGrid)
-  boneGrid$stress.spline.fit <- predict(stress.spline.fit, newdata = boneGrid)
+  # fit and predict stress spline
+  stressResult <- fitSpline(Stress ~ bSpline(Strain, df = 10), bone, strainGrid)
+  strainGrid$stress.spline.fit <- stressResult$predictions
   
-  return(list(
-    coefs = coef(stress.spline.fit),
-    bone = bone,
-    boneGrid = boneGrid
-  ))
+  result <- list(coefs = coef(stressResult$model), strainGrid = strainGrid)
+  
+  # optionally fit and predict first derivative spline. this is used by the FDS method.
+  if (fitFirstDeriv) {
+    derivResult <- fitSpline(first.deriv ~ bSpline(Strain, df = 10), bone, strainGrid)
+    result$first.deriv.spline.fit <- derivResult$predictions
+    result$first.deriv.coefs <- coef(derivResult$model)
+  }
+  
+  return(result)
 }
 
-# finds first derivatives of a spline fit
-calculateSplineFirstDerivative <- function(bone, stress.spline.fit.coefficients) {
-  first.deriv.mat <- dbs(bone$Strain, df = 10, derivs = 1) # dbs is the derivative of a spline fit
-  bone$first.deriv.spline.fit <- first.deriv.mat %*% stress.spline.fit.coefficients[-1] # [1] is the intercept.
-  return(bone)
+# calculates the first and second derivatives of `strain` values using the coefficients from a spline fit.
+# arg strain: strain values to calculate derivatives for
+# arg coefficients: the coefficients of a spline fit to original Stress/Strain data
+calculateFirstSecondDerivatives <- function(strain, coefficients) {
+  first.deriv.basis.mat <- dbs(strain, df = 10, derivs = 1)
+  second.deriv.basis.mat <- dbs(strain, df = 10, derivs = 2)
+
+  return(list(first.deriv = first.deriv.basis.mat %*% coefficients[-1], # coefficients[1] is the intercept
+         second.deriv = second.deriv.basis.mat %*% coefficients[-1]))
 }
 
-# finds first maximum in v1; returns list of corresponding values in v2 and v3
-# arg v1: FDS passes a first derivative spline fit, maxSlope passes a
-# arg v2: FDS passes a first derivative, maxSlope passes a
-# arg v3: both methods pass Strain
-# returns: first.deriv value at index of spline.fit first local max
-localMax <- function(v1, v2, v3) {
-  v1MaxIndex <- min(which.min(diff(v1) > 0))
-  return(list(slope = v2[v1MaxIndex], strain = v3[v1MaxIndex]))
+inflectionIndex <- function(second.deriv) {
+  for (i in 2:(length(second.deriv) - 1)) {
+    if (sign(second.deriv[i]) != sign(second.deriv[i + 1])) {
+      return(i)
+    }
+  }
+  return (NULL)
 }
+
+# finds global max of arg 1 (first deriv)
+# returns: first.deriv global max and corresponding second deriv and strain values.
+globalMax <- function(first.deriv, second.deriv, strain) {
+  d1MaxIndex <- which.max(first.deriv)
+  return(list(slope = first.deriv[d1MaxIndex], second.deriv = second.deriv[d1MaxIndex], strain = strain[d1MaxIndex]))
+}
+
+# finds the inflection point of arg 2 (second deriv)
+# returns: first derivative and strain values at the inflection point
+inflectionPoint <- function(first.deriv, second.deriv, strain) {
+  d2InflectionIndex <- inflectionIndex(second.deriv)
+  if (is.null(d2InflectionIndex)) return(list(slope = -1, strain = -1))
+  return(list(slope = first.deriv[[d2InflectionIndex]], strain = strain[[d2InflectionIndex]]))
+}
+
+
+# finds first maximum of arg 1 (first deriv spline fit)
+# returns: first.deriv value at index of spline.fit first local max and corresponding strain value
+localMax <- function(first.deriv.spline.fit, first.deriv, strain) {
+  d1LocalMaxIdx <- min(which.min(diff(first.deriv.spline.fit) > 0))
+  return(list(slope = first.deriv[d1LocalMaxIdx], strain = strain[d1LocalMaxIdx]))
+}
+
