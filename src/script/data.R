@@ -1,3 +1,5 @@
+library(coro)
+
 # Get your bones here! data.fetch fetches any number of fish, segments, and trials.
 # arg fish_numbers: a list of fish numbers 1-21. default is all (1-21)
 # arg segments: a list of segments "cp", "lt", "mt", or "ut". default is all
@@ -17,8 +19,10 @@ data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "u
       }
     }
   }
+  
+  if (length(results) == 1) return(results[[1]]) # if there is only one result, unlist it
   names(results) <- names
-  return (results)
+  return(results)
 }
 
 data.generator <- generator(function(data_dir = "./data", fish_number, segment) {
@@ -34,11 +38,11 @@ data.generator <- generator(function(data_dir = "./data", fish_number, segment) 
       next
     }
     
-    area_data <- clean_area_data(suppressMessages(read_csv("data/area.csv")))
+    area <- area.clean(suppressMessages(read_csv("data/area.csv")))
     load_filter <- 0.8
     
     yield(
-      recalculate(data, load_filter, metadata, area_data) %>% 
+      recalculate(data, load_filter, metadata, area) |> 
         attach_metadata(metadata)
     )
   }
@@ -66,24 +70,41 @@ parse_file_name <- function(full_file_path) {
   return(c(individual, segment, trial))
 }
 
-read_file <- function(file_path) {
-  rows_skip <- 15
-  df <- suppressMessages(read_tsv(file_path, skip = rows_skip))
-  if (ncol(df) == 7) {
-    return(clean_fish_data(df))
-  }
+# files are either comma or tab separated. This is indicated by the presence of "sep=\t" on the first line of the file. 
+# If this line is there, the file is tab separated. If it is not, the file is comma separated.
+# Returns correct file delimiter character
+getDelim <- function(file_path) {
+  first.line <- readLines(file_path, n = 1)
+  return(ifelse(grepl("sep=", first.line), "\t", ","))
 }
 
+# Returns correct number of lines to skip. Logic to find this is to skip up to where the line starts with "Reading".
+getRowSkip <- function(file_path) {
+  return(grep(paste0("^", "Reading"),  readLines(file_path)) - 1)
+}
+
+read_file <- function(file_path) {
+  row.skip <- getRowSkip(file_path)
+  delim <- getDelim(file_path)
+  df <- suppressMessages(read_delim(file_path, skip = row.skip, delim = delim))
+  
+  if (!is.null(df)) {
+    return(clean_fish_data(df))
+  }
+  return (NULL)
+}
+
+# wrapper around recalculate distance and recalculate stress strain
 recalculate <- function(df, load_filter, metadata, area_data) {
   return(
-    recalculate_distance(df, load_filter) %>% 
+    recalculate_distance(df, load_filter) |> 
            recalculate_stress_strain(metadata, area_data))
 }
 
 recalculate_distance <- function(df, loadFilter) {
   return(
-    df %>% 
-      filter(Load > loadFilter) %>% 
+    df |> 
+      filter(Load > loadFilter) |> 
       mutate(Distance = Distance - first(Distance)) # should new distance be negative?
   )
 }
@@ -92,7 +113,7 @@ recalculate_stress_strain <- function(df, metadata, area_data) {
   new_values <- find_area_initial_length(metadata, area_data)
   area <- new_values[1]$Area
   length_initial <- new_values[2]$Length
-  return(df %>% 
+  return(df |> 
            mutate(
              Stress = (Load / area)/10^6,
              Strain = abs(length_initial - (length_initial - Distance)) / length_initial))
@@ -101,8 +122,8 @@ recalculate_stress_strain <- function(df, metadata, area_data) {
 
 find_area_initial_length <- function(metadata, area_data) {
   return (
-    area_data %>% 
-      filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) %>% 
+    area_data |> 
+      filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 
       summarise(
         Area = first(Area),
         Length = first(Length)
@@ -111,12 +132,12 @@ find_area_initial_length <- function(metadata, area_data) {
 }
 
 attach_metadata <- function(df, metadata) {
-  return(df %>% mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
+  return(df |> mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
 }
 
-clean_area_data <- function(df) {
+area.clean <- function(df) {
   return (
-    df %>% 
+    df |> 
       dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
              Trial = "Trial # (at least 01-03)",
              Area = "Area (m^2)",
@@ -126,13 +147,11 @@ clean_area_data <- function(df) {
 }
 
 clean_fish_data <- function(df) {
-  return(df %>%
+  return(df |> 
            dplyr::rename(Load = "Load [N]",
                   Time = "Time [s]",
-                  Stress = "Stress [MPa]",
-                  Strain = "Strain [%]",
-                  Distance = "Distance [mm]") %>% 
-           dplyr::select(-7))
+                  Distance = "Distance [mm]") |> 
+           dplyr::select(-where(is.logical))) # if the last column is blank (it sometimes or always is), remove it
 }
 
 
@@ -142,14 +161,14 @@ data_clean <- function(data_name, area, length_initial, load) {
   
   data <- get(data_string)
   
-  processed_data <- data %>%
-    dplyr::select(-7) %>%
+  processed_data <- data |>
+    dplyr::select(-7) |>
     rename(Load = "Load [N]",
            Time = "Time [s]",
            Stress = "Stress [MPa]",
            Strain = "Strain [%]",
-           Distance = "Distance [mm]") %>%
-    filter(Load > load) %>%
+           Distance = "Distance [mm]") |>
+    filter(Load > load) |>
     mutate(Area = area,
            Distance = Distance - first(Distance),
            LengthInitial = length_initial,

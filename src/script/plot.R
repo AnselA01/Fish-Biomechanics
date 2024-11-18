@@ -1,3 +1,5 @@
+library(ggtext)
+
 #plots strain vs. stress
 plot.plot <- function(data, layers) {
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +

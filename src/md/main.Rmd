@@ -32,13 +32,17 @@ map(paste0(source_files), source)
 ```
 
 # data.fetch usage
-
 ```{r}
 # we are fetching all segments for pf01 trial 1
 bones <- data.fetch(fish_numbers = c(1), segments = c("lt"))
 print(names(bones))
 bones[["01cp1"]]
 ```
+
+## gen testing
+```{r}
+```
+
 
 # Change point analysis
 

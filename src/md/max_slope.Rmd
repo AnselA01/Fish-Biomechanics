@@ -561,6 +561,36 @@ pf09cp01short <- pf09cp01|>
   filter(Strain < 0.2)
 
 folds <- vfold_cv(pf09cp01short, v = 10)
-grid <- grid_regular(terms)
+grid <- grid_regular(num_terms(c(2,15)), levels = 10)
+
+mars_model <- mars(num_terms = tune()) |>
+  set_engine("earth") |>
+  set_mode("regression")
+
+mars_recipe <- recipe(Stress ~ Strain, data = pf09cp01short)
+
+mars_wf <- workflow() |>
+  add_model(mars_model) |>
+  add_recipe(mars_recipe)
+
+tune_results <- tune_grid(object = mars_wf,
+                          resamples = folds,
+                          grid = grid)
+
+autoplot(tune_results)
+
+show_best(tune_results, metric = "rmse")
+
+best_neighbor <- select_by_one_std_err(tune_results, metric = "rmse", num_terms)
+
+mars_final_wf <- finalize_workflow(mars_wf, best_neighbor)
+mars_final_fit <- fit(mars_final_wf, pf09cp01short)
+
+augment(mars_final_fit, pf09cp01short) |>
+  ggplot() +
+  geom_point(aes(x = Strain, y = Stress)) + 
+  geom_line(aes(x = Strain, y = .pred, color = "red"))
+
+
 ```
 
