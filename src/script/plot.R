@@ -1,7 +1,7 @@
 library(ggtext)
 
 #plots strain vs. stress
-plot.plot <- function(data, layers) {
+plot.plot <- function(data, layers = c()) {
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
     geom_line(size = 1) +
     labs(
@@ -10,15 +10,39 @@ plot.plot <- function(data, layers) {
       y = "Stress"
     ) +
     theme_bw() +
-    theme(plot.caption = element_text(hjust = 0, size = 10), 
-          plot.subtitle = element_markdown(hjust = 0, size = 12)) 
+    theme(plot.caption = element_text(hjust = 0, size = 7), 
+          plot.subtitle = element_markdown(hjust = 0, size = 7),
+          axis.title.x = element_text(size = 7),
+          axis.title.y = element_text(size = 7),
+          axis.text.x = element_text(size = 7),
+          axis.text.y = element_text(size = 7) 
+          ) 
   
-  # add custom layers
+  # add custom layers 
   for (layer in layers) {
     base.plot <- base.plot + layer
   }
   
   return(base.plot)
+}
+
+# fetches and plots subject.name. also returns the subject
+# arg subject.name: a fish id in the form "<fish number><segment><trial>"
+# returns subject
+plot.subject <- function(subject.name) {
+  library(stringi)
+  source("./src/script/data.R")
+  fish_number <- parse_number(subject.name) # extract first number
+  segment <- gsub("[^a-zA-Z]", "", x = subject.name)
+  trial <- parse_number(stri_reverse(subject.name)) # extract first number after reversal
+  subject <- data.fetch(fish_numbers = c(fish_number), segments = c(segment), trials = c(trial))
+  if (!length(subject)) {
+    message("Could not find subject", subject.name)
+    return(NULL)
+  }
+  
+  print(plot.plot(subject))
+  return(subject)
 }
 
 # Plot Strain and Stress with predicted break points overlaid

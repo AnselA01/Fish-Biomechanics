@@ -18,6 +18,6 @@ Save all images
 
 ```{r}
 loop(for (fish in data.generator()) {
-  image.save(fish, plot(fish))
+  image.save(fish, plot.plot(fish), "plain")
 })
 ```

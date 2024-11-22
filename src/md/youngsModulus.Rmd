@@ -10,77 +10,134 @@ library(tidyverse)
 source("./src/script/youngsModulus.R")
 source("./src/script/data.R")
 source("./src/script/plot.R")
+source("./src/script/image.R")
 ```
+
+## slope variability index
+
+The Slope Variability Index measures the coefficient of variation for a window of 201 first derivative values centered on a determined strain value.
+
+SVI indicators:
+  1. Two methods have the same, lowest score
+  2. One method has a significantly lower score.
+```{r}
+#pf06cp3 two are similar and lower
+pf06cp3 <- data.fetch(fish_numbers = c(6), segments = c("cp"), trials = c(3))
+pf06cp3.max <- ym.calculate(pf06cp3, method = "max")
+pf06cp3.inflection <- ym.calculate(pf06cp3, method = "inflection")
+pf06cp3.fds <- ym.calculate(pf06cp3, method = "fds")
+
+pf06cp3.max$score # same
+pf06cp3.inflection$score # same
+pf06cp3.fds$score
+
+# pf01cp1 two are similar and lower
+pf01cp1 <- data.fetch(fish_numbers = c(1), segments = c("cp"), trials = c(1))
+pf01cp1.max <- ym.calculate(pf01cp1, method = "max")
+pf01cp1.inflection <- ym.calculate(pf01cp1, method = "inflection")
+pf01cp1.fds <- ym.calculate(pf01cp1, method = "fds")
+
+pf01cp1.max$score # same
+pf01cp1.inflection$score # same
+pf01cp1.fds$score
+
+# pf02cp2 one is significantly lower
+pf01cp2 <- data.fetch(fish_numbers = c(1), segments = c("cp"), trials = c(2))
+pf01cp2.max <- ym.calculate(pf01cp2, method = "max")
+pf01cp2.inflection <- ym.calculate(pf01cp2, method = "inflection")
+pf01cp2.fds <- ym.calculate(pf01cp2, method = "fds")
+
+pf01cp2.max$score 
+pf01cp2.inflection$score # lower
+pf01cp2.fds$score
+```
+
 
 ## troublemakers
 ```{r}
+# can't fit spline
 pf09ut4 <- data.fetch(fish_numbers = c(9), segments = c("ut"), trials = c(4))
 pf09ut4.max <- ym.calculate(pf09ut4, method = "max")
+plot.subject("9ut4") # initial noise
 
+# can't fit all 10 knots (fit 8).
+pf15cp2 <- data.fetch(fish_numbers = c(15), segments = c("cp"), trials = c(2))
+pf15cp2.inflection <- ym.calculate(pf15cp2, method = "inflection")
+plot.subject("15cp2") # like 10 observations
+
+# can't fit spline
 pf20lt3 <- data.fetch(fish_numbers = c(20), segments = c("lt"), trials = c(3))
 pf20lt3.max <- ym.calculate(pf20lt3, method = "max")
-```
-
-```{r}
-pf15cp2 <- data.fetch(fish_numbers = c(15), segments = c("cp"), trials = c(2))
-pf15cp2.max <- ym.calculate(pf15cp2, method = "inflection")
+plot.subject("20lt3") # initial noise
 
 ```
 
 
-## gather results
+## saving results
 ```{r}
+names <- vector()
+r.squared <- vector()
 max.slope <- vector()
 max.strain <- vector()
+max.score <- vector()
 inflection.slope <- vector()
 inflection.strain <- vector()
+inflection.score <- vector()
 fds.slope <- vector()
 fds.strain <- vector()
-names <- vector()
-```
+fds.score <- vector()
 
-```{r}
 loop(for (bone in data.generator()) {
-  max <- ym.calculate(bone, method = "max")
-  if (is.null(max)) next
-  inflection <- ym.calculate(bone, method = "inflection")
-  if (is.null(inflection)) next
-  fds <- ym.calculate(bone, method = "fds")
-  if (is.null(fds)) next
+  result <- ym.calculate(bone)
+  if (any(c(result$max, result$inflection, result$fds) %in% NULL)) next
   
-  max.slope <- append(max.slope, max$slope)
-  max.strain <- append(max.strain, max$strain)
-  inflection.slope <- append(inflection.slope, inflection$slope)
-  inflection.strain <- append(inflection.strain, inflection$strain)
-  fds.slope <- append(fds.slope, fds$slope)
-  fds.strain <- append(fds.strain, fds$strain)
-  names <- append(names, max$name)
+  names <- append(names, result$max$name)
+  r.squared <- append(r.squared, result$r.squared)
+  max.slope <- append(max.slope, result$max$slope)
+  max.strain <- append(max.strain, result$max$strain)
+  max.score <- append(max.score, result$max$score)
+  inflection.slope <- append(inflection.slope, result$inflection$slope)
+  inflection.strain <- append(inflection.strain, result$inflection$strain)
+  inflection.score <- append(inflection.score, result$inflection$score)
+  fds.slope <- append(fds.slope, result$fds$slope)
+  fds.strain <- append(fds.strain, result$fds$strain)
+  fds.score <- append(fds.score, result$fds$score)
   
-  slopes.label <- paste(
+  plot.subtitle <- paste(
     "<b style=color:red;>Max:</b> ",
     round(max$slope, 1),
     "<br>",
-    "<b style=color:green;>Inflection:</b>",
+    "<b style=color:DarkGreen;>Inflection:</b>",
     round(inflection$slope, 1),
     "<br>",
     "<b style='color:blue;'>FDS:</b>",
-    round(fds$slope, 1)
+    round(fds$slope, 1),
+    "<br>",
+    "<b style='color:black;'>R-squared:</b>",
+    round(result$r.squared, 2)
   )
   
-  print(plot.plot(bone, layers = list(
-    geom_vline(xintercept = max$strain, color = "red"),
-    geom_vline(xintercept = inflection$strain, color = "green"),
-    geom_vline(xintercept = fds$strain, color = "blue"),
-    labs(subtitle = slopes.label)
-  )))
-  #Sys.sleep(some number of seconds) # adjust for your viewing pleasure
+  plot <- plot.plot(bone, layers = list(
+    geom_segment(x = max$strain, xend = max$strain, y = 0, yend = max(bone$Stress * 0.85), color = "red"),
+    geom_segment(x = inflection$strain, xend = inflection$strain, y = 0, yend = max(bone$Stress * 0.85), color = "DarkGreen"),
+    geom_segment(x = fds$strain, xend = fds$strain, y = 0, yend = max(bone$Stress * 0.85), color = "blue"),
+    annotate("text", x = max$strain, y = max(bone$Stress), label = round(max$score, 3), angle = 0, color = "red", size = 2, fontface = "bold"),
+    annotate("text", x = inflection$strain, y = max(bone$Stress * 0.95), label = round(inflection$score, 3), angle = 0, color = "DarkGreen", size = 2, fontface = "bold"),
+    annotate("text", x = fds$strain, y = max(bone$Stress * 0.90), label = round(fds$score, 3), angle = 0, color = "blue", size = 2, fontface = "bold"),
+    labs(subtitle = plot.subtitle)
+  ))
+  
+  print(plot)
+  image.save(bone, plot, directory = "ymResults")
 })
 ```
 
 ```{r}
-results <- tibble(names, max.slope, max.strain, inflection.slope, inflection.strain, fds.slope, fds.strain)
+results <- tibble(names, max.slope, max.strain, max.score, inflection.slope, inflection.strain, inflection.score, fds.slope, fds.strain, fds.score, r.squared)
 write_csv(results, "./data/youngs-modulus-results/results.csv")
 ```
+
+
 
 
 

@@ -41,6 +41,8 @@ bones[["01cp1"]]
 
 ## gen testing
 ```{r}
+# plot a subject from an id string
+plot.subject("9lt2")
 ```
 
 
