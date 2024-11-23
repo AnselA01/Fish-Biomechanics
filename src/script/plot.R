@@ -1,7 +1,9 @@
-library(ggtext)
 
 #plots strain vs. stress
+# layers argument is a list of ggplot layers like geom_vline(), annotate()... Add anything!
 plot.plot <- function(data, layers = c()) {
+  library(ggtext)
+  
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
     geom_line(size = 1) +
     labs(
@@ -16,7 +18,7 @@ plot.plot <- function(data, layers = c()) {
           axis.title.y = element_text(size = 7),
           axis.text.x = element_text(size = 7),
           axis.text.y = element_text(size = 7) 
-          ) 
+          )
   
   # add custom layers 
   for (layer in layers) {
@@ -32,9 +34,13 @@ plot.plot <- function(data, layers = c()) {
 plot.subject <- function(subject.name) {
   library(stringi)
   source("./src/script/data.R")
-  fish_number <- parse_number(subject.name) # extract first number
+  source("./src/script/helpers/general.R")
+  
+  # parsing identification data
+  fish_number <- parse_number(str_remove(subject.name, "^0")) # extract first number and remove leading 0 if present
   segment <- gsub("[^a-zA-Z]", "", x = subject.name)
-  trial <- parse_number(stri_reverse(subject.name)) # extract first number after reversal
+  trial <- parse_number(str_remove(stri_reverse(subject.name), "^0")) # extract first number after reversal. leading 0 again
+  # fetching and plotting
   subject <- data.fetch(fish_numbers = c(fish_number), segments = c(segment), trials = c(trial))
   if (!length(subject)) {
     message("Could not find subject", subject.name)
@@ -65,34 +71,4 @@ plot.histogram <- function(df, bins) {
     ggplot(aes(x = Stress)) + 
     geom_histogram(bins = bins) + 
     theme_minimal()
-}
-
-# * arg fish_numbers: list of numbers  fish number 0-21 to plot bones for.
-# * arg segment:      boolean,         show breakpoints for each bone.
-# * arg npointsmax:   number           max breakpoint count. 
-# * arg refit:        boolean          Recommended. Will try to refit n-1 break points if fitting n break points fails. This may increase runtime.
-# * arg grid.by:      string           Variable to grid by. Accepts "Trial" or "Segment".
-# * arg show.only:    string           List of bones to show. Default is all 
-plot.grid <- function(fish_numbers, segment, npointsmax, refit, grid_by = c("Trial", "Segment"), show.only = c("")) {
-  grid_by <- match.arg(grid_by)
-
-  return(lapply(fish_numbers, function(fish_number) {
-    combined_data <- collect(data.generator(data_directory, fish_number)) %>% # collect all values from the data generator into a list
-      map_dfr(function(bone) { # enumerates bone list and rbinds the result to combined_data
-        bone$nearest <- if (segment) bone$Reading %in% cpa.nearest_points(bone, cpa.segment(bone, npointsmax, refit))$Reading else FALSE
-        return(bone)
-      })
-    
-    color_var <- c(Trial = "Segment", Segment = "Trial")[[grid_by]] # map color_var to the opposite of grid_by
-    return(ggplot(data = combined_data, aes_string(x = "Strain", y = "Stress", color = color_var)) + 
-           geom_line(size = 1) + 
-           geom_point(aes_string(size = "ifelse(nearest, 1.5, NA)", fill = color_var), color = "white", shape = 21, show.legend = FALSE) +
-           facet_wrap(as.formula(paste("~", grid_by))) + 
-           labs(title = paste("Fish", fish_number)) +
-           scale_size_identity() +
-           #dark_theme_bw() +
-           theme_minimal() +
-           theme(strip.background = element_blank()))
-    })
-  )
 }

@@ -1,0 +1,25 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+source("./src/script/youngsModulusDecisionMaking.R")
+source("./src/script/youngsModulus.R")
+source("./src/script/data.R")
+```
+
+```{r}
+pf01cp1 <- data.fetch(fish_number = c(1), segments = c("cp"), trials = c(1))
+pf01cp1.ym <- ym.calculate(pf01cp1)
+pf01cp1.determine <- determine(pf01cp1.ym)
+
+pf01cp3 <- data.fetch(fish_number = c(1), segments = c("cp"), trials = c(3))
+pf01cp3.ym <- ym.calculate(pf01cp3)
+pf01cp3.determine <- determine(pf01cp3.ym)
+```
+
+

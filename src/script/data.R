@@ -6,7 +6,15 @@ library(coro)
 # arg fish_numbers: a list of fish numbers 1-21. default is all (1-21)
 # arg segments: a list of segments "cp", "lt", "mt", or "ut". default is all
 # arg trials: a list of trials. default is 1
-data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1)) {
+# OR arg subject.name: your subject like "<number (one digit><segment><trial (one digit)>"
+data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1), subject.name = "") {
+  source("./src/script/helpers/general.R") # gen.parseSubjectName()
+  
+  # they just want one IN PROGRESS
+  # if (length(subject.name)) {
+  #   subject.data <- gen.parseSubjectName(subject.name)
+  #   return(data.findOne(subject.data$fish.number, subject.data$segment, subject.data$trial))
+  # }
   results <- list()
   names <- list()
   for (fish_number in fish_numbers) {
@@ -26,6 +34,12 @@ data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "u
   names(results) <- names
   return(results)
 }
+
+# in progress
+# finds one bone given the arguments. Not to be used by 
+# data.findOne(fish.number, segment, trial) {
+#   
+# }
 
 data.generator <- generator(function(data_dir = "./data", fish_number, segment) {
   filepath_list <- get_fish_data_file_names(data_dir, fish_number, segment)
@@ -88,7 +102,7 @@ getRowSkip <- function(file_path) {
 read_file <- function(file_path) {
   row.skip <- getRowSkip(file_path)
   delim <- getDelim(file_path)
-  df <- suppressMessages(read_delim(file_path, skip = row.skip, delim = delim))
+  df <- suppressWarnings(suppressMessages(read_delim(file_path, skip = row.skip, delim = delim)))
   
   if (!is.null(df)) {
     return(clean_fish_data(df))
