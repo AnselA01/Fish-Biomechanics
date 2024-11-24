@@ -1,25 +1,57 @@
-# determines correct value of young's modulus
+# determines correct value of young's modulus from a ym.result
 # arg ym.result: the return value from ym.calculate
-determine <- function(ym.result) {
-  similar <- similarity(slopes = getSlopes(ym.result), scores = getScores(ym.result))
-  return(similar)
+ym.determine <- function(ym.result) {
+  slopes <- getSlopes(ym.result)
+  strains <- getStrains(ym.result)
+  scores <- getScores(ym.result)
+  
+  matching.pairs <- similarity(slopes = slopes, scores = scores)
+  
+  # 0 match
+  if (is.null(matching.pairs[[1]])) {
+    return(medianStrainSlope(slopes, strains, scores))
+  }
+  # 1 or all match
+  else {
+    return (minScoreSlope(slopes, strains, scores, unique(unlist(matching.pairs))))
+  }
+}
 
-  # here is the decision logic
-  # we start with the number of methods that have similar scores AND respectively similar slopes.
-  switch(similarity$number,
-    "0" = {
-      
-    },
-    
-    # 1 is similar 
-    "1" = {
-      
-    },
-    
-    # all are similar
-    "3" = {
-      
-    }
+# finds the min slope of the method with the min score
+# arg slopes: all slopes
+# arg scores: all scores
+# arg methods: valid methods to check
+# returns slope of method with lowest score
+
+# Using this means no pairs are matching.
+medianStrainSlope <- function(slopes, strains, scores) {
+  methods = c("max", "inflection", "fds")
+  strains.unlist <- unlist(strains)
+  strain.median <- median(strains.unlist)
+  strain.median.index <- which(strains.unlist == strain.median)
+  method.median <- methods[strain.median.index]
+  
+  return(
+    list(
+      method = methods[strain.median.index],
+      slope = slopes[strain.median.index][[1]],
+      strain = strain.median,
+      score = scores[strain.median.index][[1]]
+    )
+  )
+}
+
+# Using this means there is 1 matching pair or 3 matching pairs 
+minScoreSlope <- function(slopes, strains, scores, methods) {
+  min.score.index <- which.min(unlist(scores[methods]))
+  methods.slopes <- unlist(slopes[methods])
+  return(
+    list(
+      method = methods[min.score.index],
+      slope = methods.slopes[min.score.index][[1]],
+      strain = strains[min.score.index][[1]],
+      score = scores[min.score.index][[1]]
+    )
   )
 }
 
@@ -30,6 +62,17 @@ getSlopes <- function(ym.result) {
       max = ym.result$max.slope,
       inflection = ym.result$inflection.slope,
       fds = ym.result$fds.slope
+    )
+  )
+}
+
+# extract strains from ym.result
+getStrains <- function(ym.result) {
+  return(
+    list(
+      max = ym.result$max.strain,
+      inflection = ym.result$inflection.strain,
+      fds = ym.result$fds.strain
     )
   )
 }
@@ -56,10 +99,8 @@ getStrains <- function(ym.result) {
   )
 }
 
-
-
 # determines which methods have respectively similar slopes and scores.
-# returns a boolean list of who is similar in both slope and score
+# returns a list of lists of matching pairs
 similarity <- function(slopes, scores) {
   percentDifference <- function(x, y) {
     return(abs(x - y) / pmax(x, y) * 100)
@@ -72,25 +113,23 @@ similarity <- function(slopes, scores) {
   colnames(slopes) <- method.names
   scores <- matrix(c(scores$max, scores$inflection, scores$fds), ncol = 3, byrow = TRUE)
   colnames(scores) <- method.names
-  
-  # differences between all columns
+
+  # differences between all column pairs
   score.diffs <- outer(scores[1,], scores[1,], FUN = Vectorize(percentDifference))
   slope.diffs <- outer(slopes[1,], slopes[1,], FUN = Vectorize(percentDifference))
   # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar slopes and scores.
   similar.mat <- score.diffs <= threshold.percent & slope.diffs <= threshold.percent
-  
-  # there are three possible values of number: 0, 1, and 3. 0 means none, 1 means one pair, 3 means all
-  # 2 is impossible because if two unique pairs are similar then their intersection must also be similar.
   diag(similar.mat) <- FALSE # no self comparisons
-  number <- sum(similar.mat) / 2 # / 2 because each is in the matrix twice
-  
 
-  return(list(
-    max_inflection = similar.mat[1, 2], 
-    max_fds = similar.mat[1, 3], 
-    inflection_fds = similar.mat[2, 3],
-    number = number
-  ))
+  # return a list of lists where each inner list is the names of the matching pair
+  upper.triangle <- which(similar.mat, arr.ind = TRUE)
+  matching.indices <- upper.triangle[upper.triangle[, "row"] < upper.triangle[, "col"], ]
+  pairs <- lapply(seq_len(nrow(upper.triangle)), function(row) {
+    index <- upper.triangle[row, ]
+    return(list(rownames(similar.mat)[index["row"]], colnames(similar.mat)[index["col"]]))
+  })
+  
+  return(pairs[1:(sum(similar.mat) / 2)]) # divide by 2 because matches are x,y and y,x and we want only one of them
 }
 
 # determines if you are "too close" to 0 strain. Too close is within ____? the distance should be numeric because the strain scales are the same

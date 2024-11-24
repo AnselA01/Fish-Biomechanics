@@ -2,12 +2,14 @@
 #plots strain vs. stress
 # layers argument is a list of ggplot layers like geom_vline(), annotate()... Add anything!
 plot.plot <- function(data, layers = c()) {
+  source("./src/script/helpers/general.R")
   library(ggtext)
+  
   
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
     geom_line(size = 1) +
     labs(
-      caption = paste(data$Individual, data$Segment, data$Trial, sep = " "),
+      caption = getName(data, sep = " "),
       x = "Strain",
       y = "Stress"
     ) +

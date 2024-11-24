@@ -10,16 +10,39 @@ library(tidyverse)
 source("./src/script/youngsModulusDecisionMaking.R")
 source("./src/script/youngsModulus.R")
 source("./src/script/data.R")
+source("./src/script/helpers/general.R")
 ```
 
 ```{r}
-pf01cp1 <- data.fetch(fish_number = c(1), segments = c("cp"), trials = c(1))
-pf01cp1.ym <- ym.calculate(pf01cp1)
-pf01cp1.determine <- determine(pf01cp1.ym)
+bones <- data.generator()
 
-pf01cp3 <- data.fetch(fish_number = c(1), segments = c("cp"), trials = c(3))
-pf01cp3.ym <- ym.calculate(pf01cp3)
-pf01cp3.determine <- determine(pf01cp3.ym)
+names <- vector(length = 273)
+method <- vector(length = 273)
+slope <- vector(length = 273)
+score <- vector(length = 273)
+
+i <- 1
+
+for (bone in bones) {
+  ym.result <- ym.calculate(bone)
+  
+  if (is.null(ym.result)) next
+  
+  choose <- ym.determine(ym.result)
+  name <- getName(bone)
+  names[i] <- name
+  method[i] <- choose$method
+  slope[i] <- choose$slope
+  score[i] <- choose$score
+  
+  i <- i + 1
+}
 ```
+
+```{r}
+results <- data.frame(names, method, slope, score)
+write_csv(results, "./results/youngsModulus/decisions.csv")
+```
+
 
 

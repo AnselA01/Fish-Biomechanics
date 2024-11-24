@@ -36,23 +36,19 @@ area <- read_csv("data/area.csv")
 ```
 
 ```{r}
-                                ## !UPDATED DATA.GENERATE USAGE!
-
-# this gathers ready-to-use bones for any fish and segment.
-# the segment parameter is optional. if you want all bones for fish 9, don't include the segment argument. The fish_number argument is not optional if the segment argument is used.
-pf09cp01 <- collect(data.generator(data_directory, fish_number = 9, segment = "cp"))[[1]] # collect() collects all matches (fish 9, segment cp) into a list and [[1]] grabs the first item (trial 1).
-pf09lt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "lt"))[[1]]
-pf09ut01 <- collect(data.generator(data_directory, fish_number = 9, segment = "ut"))[[1]]
-pf09mt01 <- collect(data.generator(data_directory, fish_number = 9, segment = "mt"))[[1]]
-pf10cp01 <- collect(data.generator(data_directory, fish_number = 10, segment = "cp"))[[1]]
-pf19mt01 <- collect(data.generator(data_directory, fish_number = 19, segment = "mt"))[[1]]
-pf19cp01 <- collect(data.generator(data_directory, fish_number = 19, segment = "cp"))[[1]]
-pf16cp01 <- collect(data.generator(data_directory, fish_number = 16, segment = "cp"))[[1]]
-pf07mt01 <- collect(data.generator(data_directory, fish_number = 7, segment = "mt"))[[1]]
-pf16ut01 <- collect(data.generator(data_directory, fish_number = 16, segment = "ut"))[[1]]
-pf03lt01 <- collect(data.generator(data_directory, fish_number = 3, segment = "lt"))[[1]]
-pf07ut01 <- collect(data.generator(data_directory, fish_number = 7, segment = "ut"))[[1]]
-pf16lt01 <- collect(data.generator(data_directory, fish_number = 16, segment = "lt"))[[1]] # i don't know why this one doesn't work. The warnings indicate it found and parsed three files.
+pf09cp01 <- data.fetch(subject = "pf09cp1")
+pf09lt01 <- data.fetch(subject = "pf09lt1")
+pf09ut01 <- data.fetch(subject = "pf09ut1")
+pf09mt01 <- data.fetch(subject = "pf09mt1")
+pf10cp01 <- data.fetch(subject = "pf10cp1")
+pf19mt01 <- data.fetch(subject = "pf19mt1")
+pf19cp01 <- data.fetch(subject = "pf19cp1")
+pf16cp01 <- data.fetch(subject = "pf16cp1")
+pf17mt01 <- data.fetch(subject = "pf17mt1")
+pf16ut01 <- data.fetch(subject = "pf16ut1")
+pf03lt01 <- data.fetch(subject = "pf03lt1")
+pf07ut01 <- data.fetch(subject = "pf07ut1")
+pf16lt01 <- data.fetch(subject = "pf16lt1")
 
 fish_list <- list(pf09cp01,pf09lt01,pf09ut01,pf09mt01,pf10cp01,pf19mt01,pf19cp01,pf16cp01,pf07mt01,pf16ut01,pf03lt01, pf07ut01)
 ```

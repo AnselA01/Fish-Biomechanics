@@ -24,40 +24,18 @@ data_directory <- "./data"
 script_directory <- "./src/script/"
 ```
 
-## Source files. re-run this chunk when you make changes to any .R file
 ```{r}
-# this will pick up any .R files added to the src/script directory. remember to re-run
+# this will pick up any .R files added to the src/script directory.
 source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
 map(paste0(source_files), source)
 ```
 
-# data.fetch usage
-```{r}
-# we are fetching all segments for pf01 trial 1
-bones <- data.fetch(fish_numbers = c(1), segments = c("lt"))
-print(names(bones))
-bones[["01cp1"]]
-```
-
 ## gen testing
 ```{r}
-# plot a subject from an id string
-plot.subject("9lt2")
+bone <- data.fetch(subject.name = "pf01cp1")
 ```
 
-
-# Change point analysis
-
-## Segmentation and finding the slope between predicted break points
 ```{r}
-loop(for (fish in data.generator(data_directory)) {
-  fish <- fish %>% filter(Strain < 0.2)
-  fit_segmented <- cpa.segment(fish, 20, refit = TRUE) # n is arbitrary. for our purposes, higher (10) is better because we want more resolution
-  print(summary(fit_segmented))
-  nearest_points <- cpa.nearest_points(fish, fit_segmented)
-  print(plot.predicted(fish, fit_segmented, nearest_points))
-  #slopes <- cpa.slope(nearest_points)
-  break
-})
+bones <- data.generator()
 ```
 

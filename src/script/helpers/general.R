@@ -1,10 +1,18 @@
 library(stringi)
  
 # arg name: expects subject name as a string in the form "<number><segment><trial>" (no < or >)
-gen.parseSubjectName <- function(subject.name) {
-  # remove pf or whatever from the front. you can pass it if it makes you happy
-  fish_number <- parse_number(str_remove(subject.name, "^0")) # extract first number and remove leading 0 if present
-  segment <- gsub("[^a-zA-Z]", "", x = subject.name)
-  trial <- parse_number(str_remove(stri_reverse(subject.name), "^0")) # extract first number after reversal. leading 0 again
-  return(c(fish.number = fish_number, segment = segment, trial = trial))
+# returns list of fish type, number, segment, and trial
+parseSubjectName <- function(subject.name) {
+  fish.type <- str_sub(subject.name, end = 2)
+  subject.name <- substring(subject.name, 3)
+  fish.number <- parse_number(subject.name)
+  segment <- str_extract(subject.name, "[a-zA-Z]+")
+  trial <- parse_number(str_remove(stri_reverse(subject.name), "^0"))
+  return(list(fish.type = fish.type, fish.number = fish.number, segment = segment, trial = trial))
+}
+
+# something is up with this
+# gets name of subject from bone df
+getName <- function(bone, sep = "") {
+  return(paste(bone$Individual[[1]], bone$Segment[[1]], bone$Trial[[1]], sep = sep))
 }

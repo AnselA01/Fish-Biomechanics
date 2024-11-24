@@ -1,123 +1,154 @@
 library(coro)
+library(furrr)
+library(progressr)
 
+global.area <- cleanArea(suppressMessages(read_csv("data/area.csv")))
+global.load_filter <- 0.8
 
 
 # Get your bones here! data.fetch fetches any number of fish, segments, and trials.
 # arg fish_numbers: a list of fish numbers 1-21. default is all (1-21)
 # arg segments: a list of segments "cp", "lt", "mt", or "ut". default is all
 # arg trials: a list of trials. default is 1
-# OR arg subject.name: your subject like "<number (one digit><segment><trial (one digit)>"
-data.fetch <- function(fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1), subject.name = "") {
+# OR arg subject.name: your subject like "<fish type><fish number><segment><trial>" (without the < >)
+data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1), subject.name) {
   source("./src/script/helpers/general.R") # gen.parseSubjectName()
   
-  # they just want one IN PROGRESS
-  # if (length(subject.name)) {
-  #   subject.data <- gen.parseSubjectName(subject.name)
-  #   return(data.findOne(subject.data$fish.number, subject.data$segment, subject.data$trial))
-  # }
-  results <- list()
-  names <- list()
+  # they just want one
+  if (!missing(subject.name)) {
+    return(findOne(parseSubjectName(subject.name)))
+  }
+
+  max_results <- length(fish_numbers) * length(segments) * length(trials)
+  results <- vector("list", max_results)
+  names <- vector("character", max_results)
+  i <- 1
+  
   for (fish_number in fish_numbers) {
     for (segment in segments) {
-        bones <- collect(data.generator(fish_number = fish_number, segment = segment))
+        bones <- data.generator(fish.type, fish_number = fish_number, segment = segment)
         if (!length(bones)) next
         # they can't have more trials than there are available.
         segment_trials <- if (length(trials) > length(bones)) 1:length(bones) else trials
       for (trial in segment_trials) {
         results <- append(results, list(bones[[trial]]))
-        names <- append(names, paste0(sprintf("%02d", fish_number), segment, trial))
-      }
+        results[[i]] <- bones[[trial]]
+        names[[i]] <- paste0(sprintf("%02d", fish_number), segment, trial)      }
     }
   }
   
+  results <- results[seq_len(i - 1)]
+  names(results) <- names[seq_len(i - 1)]
   if (length(results) == 1) return(results[[1]]) # if there is only one result, unlist it
-  names(results) <- names
   return(results)
 }
 
-# in progress
-# finds one bone given the arguments. Not to be used by 
-# data.findOne(fish.number, segment, trial) {
-#   
-# }
+# finds one bone given the arguments. Can be used on its own but is more easily interfaced with data.fetch
+findOne <- function(attributes) {
+  filepath <- getBoneFilepaths("./data", attributes$fish.type, attributes$fish.number, attributes$segment, attributes$trial)
+  if (!length(filepath)) {
+    stop(paste("No data found for fish", attributes$fish.number))
+  }
+  return(readAndProcessFile(filepath))
+}
 
-data.generator <- generator(function(data_dir = "./data", fish_number, segment) {
-  filepath_list <- get_fish_data_file_names(data_dir, fish_number, segment)
-  if (!length(filepath_list)) {
-    stop(paste("No data found for fish", fish_number))
+
+batchProcessFiles <- function(filepaths) {
+  message("Fetching data...")
+  with_progress({ # a progress bar!
+    progress.bar <- progressor(steps = length(filepaths))
+    lapply(filepaths, function(filepath) {
+      data <- readAndProcessFile(filepath)
+      progress.bar()
+      return(data)
+    })
+  })
+}
+
+data.generator <- function(data.dir = "./data", fish.type, fish.number, segment) {
+  filepaths <- getBoneFilepaths(data.dir, fish.type, fish.number, segment)
+  #data <- batchProcessFilesPar(filepaths)
+  data <- batchProcessFiles(filepaths)
+  if (length(data) == 0) stop(paste("No data found for fish", fish.number))
+  return(data)
+}
+
+
+readAndProcessFile <- function(filepath) {
+  metadata <- parseFileName(filepath)
+  data <- file.read(filepath)
+  
+  if (is.null(data)) {
+    return(NULL)
   }
   
-  for (file_path in filepath_list) {
-    metadata <- parse_file_name(file_path)
-    data <- read_file(file_path)
-    if (is.null(data)) {
-      next
-    }
-    
-    area <- area.clean(suppressMessages(read_csv("data/area.csv")))
-    load_filter <- 0.8
-    
-    yield(
-      recalculate(data, load_filter, metadata, area) |> 
-        attach_metadata(metadata)
-    )
-  }
-})
+  processed_data <- recalculate(data, global.load_filter, metadata, global.area)
+  attachMetadata(processed_data, metadata)
+}
 
-get_fish_data_file_names <- function(data_dir, fish_number, segment) {
-  path <- data_dir
+getBoneFilepaths <- function(data.dir = "./data", fish.type, fish.number, segment, trial) {
+  path <- data.dir
   pattern <- "[^area].csv"
-  if (!missing(fish_number)) {
+  if (!missing(fish.number)) {
     if (!missing(segment)) {
       pattern <- paste0(tolower(segment), "[0-9]{2}")
           
     }
-      folder <- paste0("pf", str_pad(fish_number, 2, side = "left", pad = "0"))
-      path <- paste(data_dir, folder, sep = "/")
+      folder <- paste0(fish.type, str_pad(fish.number, 2, side = "left", pad = "0"))
+      # get only one bone
+      if (!missing(trial)) {
+        path <- paste0(data.dir, "/", folder, "/")
+        pattern <- paste0(folder, segment, str_pad(trial, 2, side = "left", pad = "0"), ".csv")
+        return(unlist(list.files(path = path, pattern = pattern, recursive = FALSE, full.names = TRUE)))
+      }
   }
-  return(list.files(path = path, include.dirs = TRUE, recursive = TRUE, full.names = TRUE, pattern = pattern))
+  
+  # gets all in data folder
+  return(list.files(path = path, pattern = pattern, recursive = TRUE, full.names = TRUE))
 }
 
-parse_file_name <- function(full_file_path) {
-  file_name <- sub(".*/", "", full_file_path)
-  individual <- str_sub(file_name, 1, 4)
-  segment <- toupper(str_sub(file_name, 5, 6))
-  trial <- parse_number(str_sub(file_name, 7, 8))
+parseFileName <- function(filepath) {
+  file.name <- sub(".*/", "", filepath)
+  individual <- str_sub(file.name, 1, 4)
+  segment <- toupper(str_sub(file.name, 5, 6))
+  trial <- parse_number(str_sub(file.name, 7, 8))
   return(c(individual, segment, trial))
 }
 
 # files are either comma or tab separated. This is indicated by the presence of "sep=\t" on the first line of the file. 
 # If this line is there, the file is tab separated. If it is not, the file is comma separated.
 # Returns correct file delimiter character
-getDelim <- function(file_path) {
-  first.line <- readLines(file_path, n = 1)
-  return(ifelse(grepl("sep=", first.line), "\t", ","))
+getDelim <- function(lines) {
+  return(ifelse(grepl("sep=", lines[[1]]), "\t", ","))
 }
 
 # Returns correct number of lines to skip. Logic to find this is to skip up to where the line starts with "Reading".
-getRowSkip <- function(file_path) {
-  return(grep(paste0("^", "Reading"),  readLines(file_path)) - 1)
+getNumRowSkip <- function(lines) {
+  return(grep("^Reading", lines)[1] - 1)
 }
 
-read_file <- function(file_path) {
-  row.skip <- getRowSkip(file_path)
-  delim <- getDelim(file_path)
-  df <- suppressWarnings(suppressMessages(read_delim(file_path, skip = row.skip, delim = delim)))
+file.read <- function(filepath) {
+  lines <- readLines(filepath, n = 20)
+  delim <- getDelim(lines)
+  num.skip <- getNumRowSkip(lines)
+  
+  df <- suppressWarnings(suppressMessages(read_delim(filepath, skip = num.skip, delim = delim)))
   
   if (!is.null(df)) {
     return(clean_fish_data(df))
   }
-  return (NULL)
+  return(NULL)
 }
 
 # wrapper around recalculate distance and recalculate stress strain
 recalculate <- function(df, load_filter, metadata, area_data) {
   return(
-    recalculate_distance(df, load_filter) |> 
-           recalculate_stress_strain(metadata, area_data))
+    recalculateDistance(df, load_filter) |>
+      recalculateStressStrain(metadata, area_data)
+  )
 }
 
-recalculate_distance <- function(df, loadFilter) {
+recalculateDistance <- function(df, loadFilter) {
   return(
     df |> 
       filter(Load > loadFilter) |> 
@@ -125,8 +156,8 @@ recalculate_distance <- function(df, loadFilter) {
   )
 }
 
-recalculate_stress_strain <- function(df, metadata, area_data) {
-  new_values <- find_area_initial_length(metadata, area_data)
+recalculateStressStrain <- function(df, metadata, area_data) {
+  new_values <- getAreaAndInitialLength(metadata, area_data)
   area <- new_values[1]$Area
   length_initial <- new_values[2]$Length
   return(df |> 
@@ -136,7 +167,7 @@ recalculate_stress_strain <- function(df, metadata, area_data) {
 
 }
 
-find_area_initial_length <- function(metadata, area_data) {
+getAreaAndInitialLength <- function(metadata, area_data) {
   return (
     area_data |> 
       filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 
@@ -147,11 +178,11 @@ find_area_initial_length <- function(metadata, area_data) {
   )
 }
 
-attach_metadata <- function(df, metadata) {
+attachMetadata <- function(df, metadata) {
   return(df |> mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
 }
 
-area.clean <- function(df) {
+cleanArea <- function(df) {
   return (
     df |> 
       dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
