@@ -2,23 +2,15 @@
 
 ## Directory Contents
 
--   `data`
+-   `data` - bone .csv files here (they are tab, not comma separated)
 
-    bone .csv files here (they are tab, not comma separated)
+-   `img` - all generated images of stress/strain curves for all fish and bones
 
--   `img`
+-   `log` - the autogit script log file.
 
-    all generated images of stress/strain curves for all fish and bones
+-   `src` - all Rmd and R source files
 
--   `log`
-
-    the autogit script log file.
-
--   `src`
-
-    -   `md`
-
-        R markdown files.
+    -   `md` - R markdown files.
 
         -   `main` - General testing and function usage examples.
 
@@ -30,38 +22,42 @@
 
         -   `thresholdjustification` -Justiifcaiton for chosen thresholdhold to filter noise data
 
-    -   `script`
-
-        R source files.
+    -   `script` - R source files.
 
         -   `changePointAnalysis` - Functions for use with segmenting method
 
         -   `data` - wrangling data from raw bone to useful stress/strain data.
 
-            -   `data.fetch` function usage:
+            -   `data.fetch`: a helpful and user-friendly function for fetching bone data for any number of fish, segments, and trials.
 
-                -   This is a helpful and user-friendly function for fetching bone data for any number of fish, segments, and trials.
+                -   Syntax: `list <- data.fetch(fish_numbers, segments, trials)` or `data.fetch(subject)`
 
-                -   Syntax: `bones_list <- data.fetch(fish_numbers, segments, trials)`
+                    -   arguments:
 
-                    -   args:
+                        -   `subject`: if you just want one fish. Argument is a string `<fish type xx><fish number yy><segment zz><trial a>`
 
                         -   `fish_numbers`: a list of fish numbers like `c(1, 2, 3)`
 
                         -   `segments`: a list of segments like `c("lt", "cp")`
 
                         -   `trials`: a list of trials like `c(1, 2)`
-                        
-                        - The `fish_numbers` and `segments` arguments default to everything, so, if you want all segments for fish pf01, you would use `var <- data.fetch(fish_numbers = c(1))`. If you want all fish for segment "lt", you would use `var <- data.fetch(segments = c("lt"))`. `trials` defaults to 1.
 
-                    -   returns a list of bones indexed by a fish number, segment, and trial number as `bones_list[["01lt1"]]`
+                        -   The `fish_numbers` and `segments` arguments default to everything, so, if you want all segments for fish pf01, you would use `var <- data.fetch(fish_numbers = c(1))`. If you want all fish for segment "lt", you would use `var <- data.fetch(segments = c("lt"))`. `trials` defaults to 1.
 
+                    -   returns: a list of bones indexed by a fish number, segment, and trial number as `list[["xxyyz"]]`
+            
         -   `image` - function to save ggplots to images
 
         -   `plot` - Functions used for plotting data
 
         -   `polynomialRegression` - functions for polynomial regression of data
+
+        -   `youngsModulus` - Calculation of Young's Modulus for Stress/Strain data with three methods: global maximum slope, first inflection point, first slope local maximum. Function for calculation using all three methods is `ym.calculate(bone)`. 
+
+        -   `youngsModulusDetermine` - Determination of the correct young's modulus calculation method. Function for detetmination is `ym.Determine`. User passes the return value from `ym.calculate`.
         
-        -   `YoungsModulus` - functions for calculating Young's Modulus of Stress/Strain data with two methods: Max Slope (`ym.MaxSlope`) and spline of first derivative (ym.FDS)
-        
+            - Calculation and determination can be performed in one step with function `ym.calculateAndDetermine(bone)`
+
+## Methodology
+
 ## References

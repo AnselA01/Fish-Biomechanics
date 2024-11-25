@@ -50,7 +50,7 @@ pf01cp2.result$fds.score
 
 ## troublemakers
 
-### can't fit
+### can't fit splines
 ```{r}
 # can't fit spline
 pf09ut4 <- data.fetch(fish_numbers = c(9), segments = c("ut"), trials = c(4))
@@ -71,42 +71,52 @@ plot.subject("20lt3") # initial noise
 
 ## saving results
 ```{r}
-names <- vector()
-rsquared <- vector()
-max.slope <- vector()
-max.strain <- vector()
-max.score <- vector()
-inflection.slope <- vector()
-inflection.strain <- vector()
-inflection.score <- vector()
-fds.slope <- vector()
-fds.strain <- vector()
-fds.score <- vector()
+bones <- data.generator()
 
-loop(for (bone in data.generator()) {
+# names <- vector()
+# rsquared <- vector()
+# max.slope <- vector()
+# max.strain <- vector()
+# max.score <- vector()
+# inflection.slope <- vector()
+# inflection.strain <- vector()
+# inflection.score <- vector()
+# fds.slope <- vector()
+# fds.strain <- vector()
+# fds.score <- vector()
+```
+
+```{r}
+for (bone in bones) {
   result <- ym.calculate(bone)
   if (is.null(result)) next
   
-  names <- append(names, result$name)
-  rsquared <- append(rsquared, result$r.squared)
-  max.slope <- append(max.slope, result$max.slope)
-  max.strain <- append(max.strain, result$max.strain)
-  max.score <- append(max.score, result$max.score)
-  inflection.slope <- append(inflection.slope, result$inflection.slope)
-  inflection.strain <- append(inflection.strain, result$inflection.strain)
-  inflection.score <- append(inflection.score, result$inflection.score)
-  fds.slope <- append(fds.slope, result$fds.slope)
-  fds.strain <- append(fds.strain, result$fds.strain)
-  fds.score <- append(fds.score, result$fds.score)
+  choice <- ym.determine(result)
+  
+  maxColor <- ifelse(choice$method == "max", "darkGreen", "red")
+  inflectionColor <- ifelse(choice$method == "inflection", "darkGreen", "red")
+  fdsColor <- ifelse(choice$method == "fds", "darkGreen", "red")
+  
+  # names <- append(names, result$name)
+  # rsquared <- append(rsquared, result$r.squared)
+  # max.slope <- append(max.slope, result$max.slope)
+  # max.strain <- append(max.strain, result$max.strain)
+  # max.score <- append(max.score, result$max.score)
+  # inflection.slope <- append(inflection.slope, result$inflection.slope)
+  # inflection.strain <- append(inflection.strain, result$inflection.strain)
+  # inflection.score <- append(inflection.score, result$inflection.score)
+  # fds.slope <- append(fds.slope, result$fds.slope)
+  # fds.strain <- append(fds.strain, result$fds.strain)
+  # fds.score <- append(fds.score, result$fds.score)
   
   plot.subtitle <- paste(
-    "<b style=color:red;>Max:</b> ",
+    "<b style='color:", maxColor, ";'>Max:</b>",
     round(result$max.slope, 1),
     "<br>",
-    "<b style=color:DarkGreen;>Inflection:</b>",
+    "<b style='color:", inflectionColor, ";'>Inflection:</b>",
     round(result$inflection.slope, 1),
     "<br>",
-    "<b style='color:blue;'>FDS:</b>",
+    "<b style='color:", fdsColor, ";'>FDS:</b>",
     round(result$fds.slope, 1),
     "<br>",
     "<b style='color:black;'>R-squared:</b>",
@@ -121,21 +131,21 @@ loop(for (bone in data.generator()) {
         xend = result$max.strain,
         y = 0,
         yend = max(bone$Stress * 0.80),
-        color = "red"
+        color = maxColor
       ),
       geom_segment(
         x = result$inflection.strain,
         xend = result$inflection.strain,
         y = 0,
         yend = max(bone$Stress * 0.80),
-        color = "DarkGreen"
+        color = inflectionColor
       ),
       geom_segment(
         x = result$fds.strain,
         xend = result$fds.strain,
         y = 0,
         yend = max(bone$Stress * 0.80),
-        color = "blue"
+        color = fdsColor
       ),
       annotate(
         "text",
@@ -143,7 +153,7 @@ loop(for (bone in data.generator()) {
         y = max(bone$Stress),
         label = round(result$max.score, 3),
         angle = 0,
-        color = "red",
+        color = maxColor,
         size = 2,
         fontface = "bold"
       ),
@@ -153,7 +163,7 @@ loop(for (bone in data.generator()) {
         y = max(bone$Stress * 0.925),
         label = round(result$inflection.score, 3),
         angle = 0,
-        color = "DarkGreen",
+        color = inflectionColor,
         size = 2,
         fontface = "bold"
       ),
@@ -163,7 +173,7 @@ loop(for (bone in data.generator()) {
         y = max(bone$Stress * 0.85),
         label = round(result$fds.score, 3),
         angle = 0,
-        color = "blue",
+        color = fdsColor,
         size = 2,
         fontface = "bold"
       ),
@@ -172,8 +182,8 @@ loop(for (bone in data.generator()) {
   )
   
   #print(plot)
-  image.save(bone, plot, directory = "ymResults")
-})
+  image.save(bone, plot, directory = "ymResults/decisions")
+}
 ```
 
 ```{r}

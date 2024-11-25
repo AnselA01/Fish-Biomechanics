@@ -1,0 +1,86 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+source("./src/script/youngsModulusDetermination.R")
+source("./src/script/youngsModulus.R")
+source("./src/script/data.R")
+source("./src/script/helpers/general.R")
+```
+
+```{r}
+pf09lt1 <- data.fetch(subject = "pf09lt1")
+result <- ym.calculateAndDetermine(pf09lt1)
+```
+
+
+```{r}
+bones <- data.generator()
+# names <- vector(length = 273)
+# method <- vector(length = 273)
+# slope <- vector(length = 273)
+# score <- vector(length = 273)
+# 
+# i <- 1
+```
+
+```{r}
+for (bone in bones) {
+  ym.result <- ym.calculate(bone)
+  if (is.null(ym.result)) next
+  choose <- ym.determine(ym.result)
+  
+  # name <- getName(bone)
+  # names[i] <- name
+  # method[i] <- choose$method
+  # slope[i] <- choose$slope
+  # score[i] <- choose$score
+  # i <- i + 1
+  
+  
+    plot.subtitle <- paste(
+    "<b>Method:</b> ",
+    choose$method,
+    "<br>",
+    "<b>Slope:</b>",
+    round(choose$slope, 1),
+    "<br>",
+    "<b>Score</b>",
+    round(choose$score, 3),
+    "<br>",
+    "<b>R-squared:</b>",
+    round(ym.result$r.squared, 1),
+    "<br>"
+  )
+  
+  plot <- plot.plot(
+    bone,
+    layers = list(
+      geom_segment(
+        x = choose$strain,
+        xend = choose$strain,
+        y = 0,
+        yend = max(bone$Stress),
+        color = "red"
+      ),
+      labs(subtitle = plot.subtitle)
+    )
+  )
+  
+  #image.save(bone, plot, directory = "ymResults/decisions")
+  #print(plot)
+}
+```
+
+```{r}
+results <- data.frame(names, method, slope, score)
+write_csv(results, "./results/youngsModulus/decisions.csv")
+```
+
+
+

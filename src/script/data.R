@@ -2,6 +2,17 @@ library(coro)
 library(furrr)
 library(progressr)
 
+cleanArea <- function(df) {
+  return (
+    df |> 
+      dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
+                    Trial = "Trial # (at least 01-03)",
+                    Area = "Area (m^2)",
+                    Length = "Length (mm)",
+                    Width = "Width or Diameter (mm)")
+  )
+}
+
 global.area <- cleanArea(suppressMessages(read_csv("data/area.csv")))
 global.load_filter <- 0.8
 
@@ -19,9 +30,9 @@ data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("c
     return(findOne(parseSubjectName(subject.name)))
   }
 
-  max_results <- length(fish_numbers) * length(segments) * length(trials)
-  results <- vector("list", max_results)
-  names <- vector("character", max_results)
+  results.max <- length(fish_numbers) * length(segments) * length(trials)
+  results <- vector("list", results.max)
+  names <- vector("character", results.max)
   i <- 1
   
   for (fish_number in fish_numbers) {
@@ -31,15 +42,15 @@ data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("c
         # they can't have more trials than there are available.
         segment_trials <- if (length(trials) > length(bones)) 1:length(bones) else trials
       for (trial in segment_trials) {
-        results <- append(results, list(bones[[trial]]))
         results[[i]] <- bones[[trial]]
-        names[[i]] <- paste0(sprintf("%02d", fish_number), segment, trial)      }
+        names[[i]] <- paste0(sprintf("%02d", fish_number), segment, trial)      
+      }
     }
   }
   
   results <- results[seq_len(i - 1)]
   names(results) <- names[seq_len(i - 1)]
-  if (length(results) == 1) return(results[[1]]) # if there is only one result, unlist it
+  if (length(results) == 1) return(results[[1]]) # return just the one 
   return(results)
 }
 
@@ -182,16 +193,6 @@ attachMetadata <- function(df, metadata) {
   return(df |> mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
 }
 
-cleanArea <- function(df) {
-  return (
-    df |> 
-      dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
-             Trial = "Trial # (at least 01-03)",
-             Area = "Area (m^2)",
-             Length = "Length (mm)",
-             Width = "Width or Diameter (mm)")
-  )
-}
 
 clean_fish_data <- function(df) {
   return(df |> 
