@@ -29,7 +29,7 @@ ym.determine <- function(ym.result) {
   result.strains <- ym.result.values$strains
   result.scores <- ym.result.values$scores
   
-  scores.under.one <- underOne(scores = result.scores)
+
   
   matching.pairs <- similarity(slopes = result.slopes, scores = result.scores)
 
@@ -41,6 +41,14 @@ ym.determine <- function(ym.result) {
   else {
     return (minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs))
   }
+}
+
+# check for "one score under one and two not"
+# using this means we shouldn't use either matching pairs method because the agreeing pair(s) are wrong.
+# returns list of who is under one only if only one is.
+numUnderOneScore <- function(scores) {
+  
+  return()
 }
 
 # method with the median strain
@@ -76,6 +84,12 @@ medianStrainSlope <- function(slopes, strains, scores) {
 # arg chosenMethods: chosen methods
 # returns slope of method with lowest score
 minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
+  # check for one under 1 and two over.
+  scores.under.one <- underOne(scores = result.scores)
+  if (length(scores.under.one) == 1) {
+    return(minScore(result.slopes, result.strain, result.scores))
+  }
+  
   min.score.index <- which.min(unlist(scores[chosenMethods]))
   methods.slopes <- unlist(slopes[chosenMethods])
   return(

@@ -128,8 +128,6 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
   first.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 1)
   second.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 2)
   
-  # TODO pf15cp2 has two NA coefficients probably due to overfitting. Parse the warning message and refit with n-1 df?
-
   return(list(first.deriv = first.deriv.basis.mat %*% coefficients[-1], # coefficients[1] is the intercept
          second.deriv = second.deriv.basis.mat %*% coefficients[-1]))
 }
@@ -209,7 +207,6 @@ localMax <- function(first.deriv.spline.fit, first.deriv, strain) {
     return(local.max.index[1] + start.index)
   }
   
-  start.index <- 300 # try to avoid the first small peak
   d1.localMax.index <- localMaxIndex(first.deriv.spline.fit)
   return(
     list(
