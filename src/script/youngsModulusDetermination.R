@@ -29,6 +29,8 @@ ym.determine <- function(ym.result) {
   result.strains <- ym.result.values$strains
   result.scores <- ym.result.values$scores
   
+  scores.under.one <- underOne(scores = result.scores)
+  
   matching.pairs <- similarity(slopes = result.slopes, scores = result.scores)
 
   # 0 pairs match
