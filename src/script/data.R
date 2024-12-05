@@ -232,7 +232,7 @@ data_clean <- function(data_name, area, length_initial, load) {
 
 plot <- function(data) {
   return(ggplot(data, aes(x = Strain, y = Stress)) +
-           geom_point() +        # Points for the data
+           geom_point() +
            labs(caption = paste("Fish number: ", data$Individual, ", Segment: ",  data$Segment, ", Trial Number: ", data$Trial_Number, sep = ""),
                 x = "Strain",
                 y = "Stress") +

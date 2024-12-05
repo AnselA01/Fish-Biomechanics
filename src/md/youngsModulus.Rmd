@@ -73,17 +73,17 @@ plot.subject("20lt3") # initial noise
 ```{r}
 bones <- data.generator()
 
-# names <- vector()
-# rsquared <- vector()
-# max.slope <- vector()
-# max.strain <- vector()
-# max.score <- vector()
-# inflection.slope <- vector()
-# inflection.strain <- vector()
-# inflection.score <- vector()
-# fds.slope <- vector()
-# fds.strain <- vector()
-# fds.score <- vector()
+names <- vector()
+rsquared <- vector()
+max.slope <- vector()
+max.strain <- vector()
+max.score <- vector()
+inflection.slope <- vector()
+inflection.strain <- vector()
+inflection.score <- vector()
+fds.slope <- vector()
+fds.strain <- vector()
+fds.score <- vector()
 ```
 
 ```{r}
@@ -97,17 +97,17 @@ for (bone in bones) {
   inflectionColor <- ifelse(choice$method == "inflection", "darkGreen", "red")
   fdsColor <- ifelse(choice$method == "fds", "darkGreen", "red")
   
-  # names <- append(names, result$name)
-  # rsquared <- append(rsquared, result$r.squared)
-  # max.slope <- append(max.slope, result$max.slope)
-  # max.strain <- append(max.strain, result$max.strain)
-  # max.score <- append(max.score, result$max.score)
-  # inflection.slope <- append(inflection.slope, result$inflection.slope)
-  # inflection.strain <- append(inflection.strain, result$inflection.strain)
-  # inflection.score <- append(inflection.score, result$inflection.score)
-  # fds.slope <- append(fds.slope, result$fds.slope)
-  # fds.strain <- append(fds.strain, result$fds.strain)
-  # fds.score <- append(fds.score, result$fds.score)
+  names <- append(names, result$name)
+  rsquared <- append(rsquared, result$r.squared)
+  max.slope <- append(max.slope, result$max.slope)
+  max.strain <- append(max.strain, result$max.strain)
+  max.score <- append(max.score, result$max.score)
+  inflection.slope <- append(inflection.slope, result$inflection.slope)
+  inflection.strain <- append(inflection.strain, result$inflection.strain)
+  inflection.score <- append(inflection.score, result$inflection.score)
+  fds.slope <- append(fds.slope, result$fds.slope)
+  fds.strain <- append(fds.strain, result$fds.strain)
+  fds.score <- append(fds.score, result$fds.score)
   
   plot.subtitle <- paste(
     "<b style='color:", maxColor, ";'>Max:</b>",
@@ -188,7 +188,7 @@ for (bone in bones) {
 
 ```{r}
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
-write_csv(results, "./data/youngs-modulus-results/results.csv")
+write_csv(results, "./results/results.csv")
 ```
 
 

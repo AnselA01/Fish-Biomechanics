@@ -5,7 +5,6 @@ plot.plot <- function(data, layers = c()) {
   source("./src/script/helpers/general.R")
   library(ggtext)
   
-  
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
     geom_line(size = 1) +
     labs(

@@ -2,7 +2,8 @@ source("./src/script/youngsModulus.R")
 source("./src/script/helpers/general.R")
 
 global.methods.all <- c("max", "inflection", "fds")
-global.similar.threshold.percent <- 5
+global.similar.threshold.percent <- 30
+global.similar.strain.threshold <- 0.015
 
 global.name <- ""
 
@@ -29,9 +30,7 @@ ym.determine <- function(ym.result) {
   result.strains <- ym.result.values$strains
   result.scores <- ym.result.values$scores
   
-
-  
-  matching.pairs <- similarity(slopes = result.slopes, scores = result.scores)
+  matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
 
   # 0 pairs match
   if (is.null(matching.pairs)) {
@@ -39,16 +38,8 @@ ym.determine <- function(ym.result) {
   }
   # 1 or 3 pairs match
   else {
-    return (minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs))
+    return(maxSlope(result.slopes, result.strains, result.scores, matching.pairs))
   }
-}
-
-# check for "one score under one and two not"
-# using this means we shouldn't use either matching pairs method because the agreeing pair(s) are wrong.
-# returns list of who is under one only if only one is.
-numUnderOneScore <- function(scores) {
-  
-  return()
 }
 
 # method with the median strain
@@ -83,14 +74,30 @@ medianStrainSlope <- function(slopes, strains, scores) {
 # arg scores: all scores
 # arg chosenMethods: chosen methods
 # returns slope of method with lowest score
+maxSlope <- function(slopes, strains, scores, chosenMethods) {
+  max.slope.index <- which.max(unlist(slopes[chosenMethods]))
+  methods.slopes <- unlist(slopes[chosenMethods])
+  return(
+    list(
+      name = global.name,
+      methods = chosenMethods,
+      calculation = "maximum slope",
+      method = chosenMethods[max.slope.index][[1]],
+      slope = methods.slopes[max.slope.index][[1]],
+      strain = strains[max.slope.index][[1]],
+      score = scores[max.slope.index][[1]]
+    )
+  )
+}
+
+# method with the max slopes
+# Using this means there is 1 matching pair or 3 matching pairs 
+# arg slopes: all slopes
+# arg scores: all scores
+# arg chosenMethods: chosen methods
+# returns slope of method with lowest score
 minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
-  # check for one under 1 and two over.
-  scores.under.one <- underOne(scores = result.scores)
-  if (length(scores.under.one) == 1) {
-    return(minScore(result.slopes, result.strain, result.scores))
-  }
-  
-  min.score.index <- which.min(unlist(scores[chosenMethods]))
+  min.score.index <- which.min(scores[chosenMethods])
   methods.slopes <- unlist(slopes[chosenMethods])
   return(
     list(
@@ -105,24 +112,55 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   )
 }
 
-# determines which methods have similar slopes and scores. 
+# floor to an integer. helpful for turning negligible differences to 0.
+percentDifference <- function(x, y) {
+  return(floor(abs(x - y) / pmax(x, y) * 100))
+}
+
+# returns matrix of pairwise differences using fun 
+pairwiseDifferences <- function(values, fun, absolute = FALSE) {
+  if (absolute) {
+    return(outer(values[1,], values[1,], FUN = function(a, b) abs(a - b)))
+  }
+  return(outer(values[1,], values[1,], FUN = fun))
+}
+
+findEqualStrain <- function(strain.diffs) {
+  equal.mat <- !strain.diffs
+  diag(equal.mat) <- FALSE
+  # there is at least one equal pair. it doesn't matter which one we return.
+  if (sum(equal.mat) > 0) {
+    index <- which(equal.mat == 1 & upper.tri(equal.mat), arr.ind = TRUE) # upper.tri for unique matches (not x,y and y,x)
+    return(unlist(list(rownames(equal.mat)[index[, 1]], colnames(equal.mat)[index[, 2]])))
+  }
+  return(NULL)
+}
+
+# determines which methods have similar slopes and scores. Prioritizes exact matches even if all pairs match.
 # Similarity is defined by a <= 10% percent difference between two values from the larger value.
 # returns a list of lists of matching pairs
-similarity <- function(slopes, scores) {
-  percentDifference <- function(x, y) {
-    return(abs(x - y) / pmax(x, y) * 100)
-  }
-
+similarity <- function(slopes, strains, scores) {
+  strains <- matrix(c(strains$max, strains$inflection, strains$fds), ncol = 3, byrow = TRUE)
+  colnames(strains) <- global.methods.all
   slopes <- matrix(c(slopes$max, slopes$inflection, slopes$fds), ncol = 3, byrow = TRUE)
   colnames(slopes) <- global.methods.all
   scores <- matrix(c(scores$max, scores$inflection, scores$fds), ncol = 3, byrow = TRUE)
   colnames(scores) <- global.methods.all
 
-  # differences between all column pairs
-  score.diffs <- outer(scores[1,], scores[1,], FUN = Vectorize(percentDifference))
-  slope.diffs <- outer(slopes[1,], slopes[1,], FUN = Vectorize(percentDifference))
-  # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar slopes and scores.
-  similar.mat <- (score.diffs <= global.similar.threshold.percent) & (slope.diffs <= global.similar.threshold.percent)
+  strain.diffs <- pairwiseDifferences(strains, fun = "-", absolute = TRUE)
+  
+  # first check for exact strain matches
+  equalStrain <- findEqualStrain(strain.diffs)
+  if (!is.null(equalStrain)) {
+    return(equalStrain)
+  }
+  
+  score.diffs <- pairwiseDifferences(scores, fun = percentDifference)
+  slope.diffs <- pairwiseDifferences(slopes, fun = percentDifference)
+  
+  # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar (within 0.015) strains
+  similar.mat <- (strain.diffs <= global.similar.strain.threshold)
+  
   diag(similar.mat) <- FALSE # no self comparisons
 
   # return a list of lists where each inner list is the names of the matching pair
@@ -158,24 +196,3 @@ extractYmResultValues <- function(ym.result) {
     )
   )
 }
-
-
-# determines if you are "too close" to 0 strain. Too close is within ____? the distance should be numeric because the strain scales are the same
-# returns a boolean list of who is close to 0 strain and the number of close methods
-strainDistance <- function(strains) {
-  threshold <- 0
-  
-  
-  
-  close.max <- distamce.max <= threshold
-  close.inflection <- distamce.inflection <= threshold
-  close.fds <- distamce.fds <= threshold
-  number <- sum(close.max, close.inflection, close.fds)
-  
-  return (max = close.max, 
-          inflection = close.inflection, 
-          fds = close.fds,
-          number = number
-  )
-}
-
