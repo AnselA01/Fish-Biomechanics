@@ -14,6 +14,8 @@
 
         -   `main` - General testing and function usage examples.
 
+        -   `max_slope` - Exploratory calculations for finding Young's Modulus using inflection point.
+        
         -   `pf09segmenting` - Exploration of segmenting method with pf09 bones.
 
         -   `polynomial_regression` - Exploration of polynomial regression modeling with pf09 bones.
@@ -21,6 +23,8 @@
         -   `spline` - Exploration of spline method with pf09 bones
 
         -   `thresholdjustification` -Justiifcaiton for chosen thresholdhold to filter noise data
+        
+         - `old` - old files we are no longer directly using for the project
 
     -   `script` - R source files.
 
