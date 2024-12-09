@@ -36,6 +36,9 @@ i <- 1
 ```
 
 ```{r}
+plot <- FALSE
+save <- FALSE
+
 for (bone in bones) {
   ym.result <- ym.calculate(bone)
   if (is.null(ym.result)) next
@@ -50,37 +53,43 @@ for (bone in bones) {
   rsquared[i] <- ym.result$r.squared
   i <- i + 1
   
-  # plot.subtitle <- paste(
-  #   "<b>Method:</b> ",
-  #   choose$method,
-  #   "<br>",
-  #   "<b>Slope:</b>",
-  #   round(choose$slope, 1),
-  #   "<br>",
-  #   "<b>Score</b>",
-  #   round(choose$score, 3),
-  #   "<br>",
-  #   "<b>R-squared:</b>",
-  #   round(ym.result$r.squared, 1),
-  #   "<br>"
-  # )
+  if (plot) {
+    plot.subtitle <- paste(
+      "<b>Method:</b> ",
+      choose$method,
+      "<br>",
+      "<b>Slope:</b>",
+      round(choose$slope, 1),
+      "<br>",
+      "<b>Score</b>",
+      round(choose$score, 3),
+      "<br>",
+      "<b>R-squared:</b>",
+      round(ym.result$r.squared, 1),
+      "<br>"
+    )
+    
+    plot <- plot.plot(
+      bone,
+      layers = list(
+        geom_segment(
+          x = choose$strain,
+          xend = choose$strain,
+          y = 0,
+          yend = max(bone$Stress),
+          color = "red"
+        ),
+        labs(subtitle = plot.subtitle)
+      )
+    )
+    
+    print(plot)
+  }
   
-  # plot <- plot.plot(
-  #   bone,
-  #   layers = list(
-  #     geom_segment(
-  #       x = choose$strain,
-  #       xend = choose$strain,
-  #       y = 0,
-  #       yend = max(bone$Stress),
-  #       color = "red"
-  #     ),
-  #     labs(subtitle = plot.subtitle)
-  #   )
-  # )
+  if (save) {
+    image.save(bone, plot, directory = "ymResults/decisions")
+  }
   
-  #image.save(bone, plot, directory = "ymResults/decisions")
-  #print(plot)
 }
 ```
 
@@ -88,6 +97,5 @@ for (bone in bones) {
 results <- data.frame(names, method, slope, score, strain, rsquared)
 write_csv(results, "./results/youngsModulus/decisions.csv")
 ```
-
 
 

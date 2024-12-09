@@ -64,4 +64,25 @@
 
 ## Methodology
 
+### Young's Modulus
+
+#### Calculation
+
+Calculation of Young's modulus performed using three methods:
+
+1. 
+
+2. 
+
+3. 
+
+
+
+
+#### Selection
+
+To select the correct Young's modulus value from our pool of three values, we considered __score and 
+
+
+
 ## References
