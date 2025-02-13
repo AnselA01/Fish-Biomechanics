@@ -2,8 +2,11 @@ source("./src/script/youngsModulus.R")
 source("./src/script/helpers/general.R")
 
 global.methods.all <- c("max", "inflection", "fds")
-global.similar.threshold.percent <- 30
-global.similar.strain.threshold <- 0.015
+global.similar.threshold.percent <- 5
+
+# inconclusive thresholds
+global.inconclusive.slope.threshold <- 20
+global.inconclusive.score.threshold <- 2
 
 global.name <- ""
 
@@ -32,15 +35,13 @@ ym.determine <- function(ym.result) {
   
   matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
 
-  # 0 pairs match
-  if (is.null(matching.pairs)) {
-    return(medianStrainSlope(result.slopes, result.strains, result.scores))
-  }
-  # 1 or 3 pairs match
-  else {
-    return(maxSlope(result.slopes, result.strains, result.scores, matching.pairs))
-  }
+  # if there are no matching pairs take the method with the median strain. If there is a matching pair(s) take the method with the minimum score.
+  decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores, inconclusive = inconclusive(ym.result.values))
+            else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs, inconclusive = inconclusive(ym.result.values))
+  decision$inconclusive <- inconclusive(decision)
+  return(decision)
 }
+
 
 # method with the median strain
 # Using this means there are no matching pairs
@@ -49,7 +50,7 @@ ym.determine <- function(ym.result) {
 # arg methods: valid methods to check
 
 # Using this means no pairs are matching.
-medianStrainSlope <- function(slopes, strains, scores) {
+medianStrainSlope <- function(slopes, strains, scores, inconclusive) {
   strains.unlist <- unlist(strains)
   strain.median <- median(strains.unlist)
   strain.median.index <- which(strains.unlist == strain.median)
@@ -74,30 +75,14 @@ medianStrainSlope <- function(slopes, strains, scores) {
 # arg scores: all scores
 # arg chosenMethods: chosen methods
 # returns slope of method with lowest score
-maxSlope <- function(slopes, strains, scores, chosenMethods) {
-  max.slope.index <- which.max(unlist(slopes[chosenMethods]))
-  methods.slopes <- unlist(slopes[chosenMethods])
-  return(
-    list(
-      name = global.name,
-      methods = chosenMethods,
-      calculation = "maximum slope",
-      method = chosenMethods[max.slope.index][[1]],
-      slope = methods.slopes[max.slope.index][[1]],
-      strain = strains[max.slope.index][[1]],
-      score = scores[max.slope.index][[1]]
-    )
-  )
-}
-
-# method with the max slopes
-# Using this means there is 1 matching pair or 3 matching pairs 
-# arg slopes: all slopes
-# arg scores: all scores
-# arg chosenMethods: chosen methods
-# returns slope of method with lowest score
-minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
-  min.score.index <- which.min(scores[chosenMethods])
+minScoreSlope <- function(slopes, strains, scores, chosenMethods, inconclusive) {
+  # check for one under 1 and two over.
+  scores.under.one <- numUnderOneScore(scores = result.scores)
+  if (length(scores.under.one) == 1) {
+    return(minScore(result.slopes, result.strain, result.scores))
+  }
+  
+  min.score.index <- which.min(unlist(scores[chosenMethods]))
   methods.slopes <- unlist(slopes[chosenMethods])
   return(
     list(
@@ -112,34 +97,14 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   )
 }
 
-# floor to an integer. helpful for turning negligible differences to 0.
-percentDifference <- function(x, y) {
-  return(floor(abs(x - y) / pmax(x, y) * 100))
-}
-
-# returns matrix of pairwise differences using fun 
-pairwiseDifferences <- function(values, fun, absolute = FALSE) {
-  if (absolute) {
-    return(outer(values[1,], values[1,], FUN = function(a, b) abs(a - b)))
-  }
-  return(outer(values[1,], values[1,], FUN = fun))
-}
-
-findEqualStrain <- function(strain.diffs) {
-  equal.mat <- !strain.diffs
-  diag(equal.mat) <- FALSE
-  # there is at least one equal pair. it doesn't matter which one we return.
-  if (sum(equal.mat) > 0) {
-    index <- which(equal.mat == 1 & upper.tri(equal.mat), arr.ind = TRUE) # upper.tri for unique matches (not x,y and y,x)
-    return(unlist(list(rownames(equal.mat)[index[, 1]], colnames(equal.mat)[index[, 2]])))
-  }
-  return(NULL)
-}
-
 # determines which methods have similar slopes and scores. Prioritizes exact matches even if all pairs match.
 # Similarity is defined by a <= 10% percent difference between two values from the larger value.
 # returns a list of lists of matching pairs
 similarity <- function(slopes, strains, scores) {
+  percentDifference <- function(x, y) {
+    return(round(abs(x - y) / pmax(x, y) * 100, 1))
+  }
+
   strains <- matrix(c(strains$max, strains$inflection, strains$fds), ncol = 3, byrow = TRUE)
   colnames(strains) <- global.methods.all
   slopes <- matrix(c(slopes$max, slopes$inflection, slopes$fds), ncol = 3, byrow = TRUE)
@@ -147,20 +112,13 @@ similarity <- function(slopes, strains, scores) {
   scores <- matrix(c(scores$max, scores$inflection, scores$fds), ncol = 3, byrow = TRUE)
   colnames(scores) <- global.methods.all
 
-  strain.diffs <- pairwiseDifferences(strains, fun = "-", absolute = TRUE)
+  # differences between all column pairs
+  strain.diffs <- outer(strains[1,], strains[1,], FUN = Vectorize(percentDifference))
+  score.diffs <- outer(scores[1,], scores[1,], FUN = Vectorize(percentDifference))
+  slope.diffs <- outer(slopes[1,], slopes[1,], FUN = Vectorize(percentDifference))
   
-  # first check for exact strain matches
-  equalStrain <- findEqualStrain(strain.diffs)
-  if (!is.null(equalStrain)) {
-    return(equalStrain)
-  }
-  
-  score.diffs <- pairwiseDifferences(scores, fun = percentDifference)
-  slope.diffs <- pairwiseDifferences(slopes, fun = percentDifference)
-  
-  # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar (within 0.015) strains
-  similar.mat <- (strain.diffs <= global.similar.strain.threshold)
-  
+  # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar slopes and scores.
+  similar.mat <- (score.diffs <= global.similar.threshold.percent) & (slope.diffs <= global.similar.threshold.percent)
   diag(similar.mat) <- FALSE # no self comparisons
 
   # return a list of lists where each inner list is the names of the matching pair
@@ -196,3 +154,35 @@ extractYmResultValues <- function(ym.result) {
     )
   )
 }
+
+
+# determines if you are "too close" to 0 strain. Too close is within ____? the distance should be numeric because the strain scales are the same
+# returns a boolean list of who is close to 0 strain and the number of close methods
+strainDistance <- function(strains) {
+  threshold <- 0
+  
+  close.max <- distamce.max <= threshold
+  close.inflection <- distamce.inflection <= threshold
+  close.fds <- distamce.fds <= threshold
+  number <- sum(close.max, close.inflection, close.fds)
+  
+  return (max = close.max, 
+          inflection = close.inflection, 
+          fds = close.fds,
+          number = number
+  )
+}
+
+# determines whether the results from three methods indicates a need for user intervention in the decision making process
+# conditions for inconclusiveness are:
+# 1. The slope for the chosen method is less than 20.
+# 2. Or the score for the chosen method is > 2. This cutoff is generous. Consider 1 or 1.5. Also consider a better score using the residuals of a linear model
+# since we will be using a line to find yield strength anyway.
+# * arg result: a ym calculation results
+# * returns boolean indicating if our method decision is inconclusive. 
+inconclusive <- function(results) {
+  return(results$slope < global.inconclusive.slope.threshold || results$score > global.inconclusive.score.threshold)
+}
+
+
+

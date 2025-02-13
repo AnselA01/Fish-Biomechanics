@@ -16,10 +16,11 @@ source("./src/script/image.R")
 ```
 
 ```{r}
-pf09mt3 <- data.fetch(subject = "pf09mt3")
-pf09lt1 <- data.fetch(subject = "pf09lt1")
-result1 <- ym.calculateAndDetermine(pf09mt3)
-result2 <- ym.calculateAndDetermine(pf09lt1)
+pf02ut3 <- data.fetch(subject = "pf02ut3")
+pf16ut1 <- data.fetch(subject = "pf16ut1")
+result1 <- ym.calculateAndDetermine(pf02ut3)
+result2 <- ym.calculateAndDetermine(pf16ut1)
+
 ```
 
 
@@ -32,13 +33,13 @@ score <- vector(length = 273)
 strain <- vector(length = 273)
 rsquared <- vector(length = 273)
 
-i <- 1
 ```
 
 ```{r}
-plot <- FALSE
-save <- FALSE
+doPlot <- FALSE
+doSave <- FALSE
 
+i <- 1
 for (bone in bones) {
   ym.result <- ym.calculate(bone)
   if (is.null(ym.result)) next
@@ -53,7 +54,7 @@ for (bone in bones) {
   rsquared[i] <- ym.result$r.squared
   i <- i + 1
   
-  if (plot) {
+  if (doPlot) {
     plot.subtitle <- paste(
       "<b>Method:</b> ",
       choose$method,
@@ -86,7 +87,7 @@ for (bone in bones) {
     print(plot)
   }
   
-  if (save) {
+  if (doSave) {
     image.save(bone, plot, directory = "ymResults/decisions")
   }
   
@@ -95,7 +96,6 @@ for (bone in bones) {
 
 ```{r}
 results <- data.frame(names, method, slope, score, strain, rsquared)
-write_csv(results, "./results/youngsModulus/decisions.csv")
 ```
 
 

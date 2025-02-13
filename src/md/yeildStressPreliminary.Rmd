@@ -1,0 +1,180 @@
+---
+title: "yieldStressPreliminary"
+author: "Abby Hahs, Ansel Alldredge, Otto Schmidt"
+date: "2025-02-11"
+output: pdf
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(coro)
+library(gridExtra)
+library(ggtext)
+library(segmented)
+library(changepoint)
+library(spatstat.geom) # crossdist function in cpa.find_closest_point
+library(matrixStats)
+library(scales)
+library(stats)
+library(readr)
+#library(ggdark) 
+
+setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+data_directory <- "./data"
+script_directory <- "./src/script/"
+```
+
+```{r}
+# this will pick up any .R files added to the src/script directory.
+source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
+map(paste0(source_files), source)
+```
+
+```{r}
+pf16lt01short <- pf16lt01 %>%
+  filter(Strain < 0.2)
+
+pf16lt01short <- pf16lt01short %>%
+  mutate(first_deriv = (Stress - lag(Stress, 2)) / (Strain - lag(Strain, 2)),
+         second_deriv = (first_deriv - lag(first_deriv, 2)) / (Strain - lag(Strain, 2))) %>%
+  filter(!is.na(first_deriv), is.finite(first_deriv))
+
+model1 <- lm(first_deriv ~ bSpline(Strain, df = 10), data = pf16lt01short)
+model2 <- lm(Stress ~ bSpline(Strain, df = 10), data = pf16lt01short)
+
+pf16lt01short$spline_fit_deriv <- predict(model1)
+pf16lt01short$spline_fit <- predict(model2)
+coefs_short <- coef(model2)
+
+ggplot(pf16lt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) + 
+  theme_minimal()
+
+ggplot(pf16lt01short, aes(x = Strain)) +
+  geom_point(aes(y = first_deriv)) +
+  geom_line(aes(y = spline_fit_deriv), color = "blue") + 
+  theme_minimal()
+
+ggplot(pf16lt01short, aes(x = Strain)) +
+  geom_point(aes(y = Stress)) +
+  geom_line(aes(y = spline_fit), color = "blue") + 
+  theme_minimal()
+
+first_deriv_matrix <- dbs(pf16lt01short$Strain, df = 10, derivs = 1)
+pf16lt01short$first_deriv_ofspline <- first_deriv_matrix %*% coefs_short[-1]
+
+m = 134.089018
+x1 = 0.0316 + (0.002 * 0.4272152) #strain + (0.002 * total strain)
+y1 = 3.3312823 #y(x) = y
+
+ggplot(data=data.frame(x=c(x1,y1), y = c(x1 +1, y1 + m)), aes(x=x, y = y)) + 
+  geom_abline(intercept = (m*-x1) + y1, slope = m, col = "red") +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_line(data = pf16lt01short, aes(x = Strain, y = spline_fit), color = "blue") +
+  xlim(c(0, max(pf16lt01short$Strain))) +  
+  ylim(c(0, max(pf16lt01short$Stress))) 
+
+# find where line = spline and return Stress (y) value
+
+pf16lt01short <- pf16lt01short %>%
+  mutate(yieldline = m*(Strain - x1) + y1)
+
+intersections <- which(abs(pf16lt01short$spline_fit - pf16lt01short$yieldline) < 0.1)
+
+pf16lt01short$Stress[max(intersections)]
+
+```
+
+
+```{r}
+decisions <- read_csv("results/youngsModulus/decisions.csv")
+
+createGrid(pf16lt01, 0.0001)
+
+gridspline <- fitStressSpline(pf16lt01)[[2]]
+x <- decisions$strain[which(decisions$names == "pf16LT1")]
+
+m <- decisions$slope[which(decisions$names == "pf16LT1")]
+x1 <- x + 0.002*max(pf16lt01$Strain)
+y1 <- gridspline$stress.spline.fit[which(gridspline$Strain == x)]
+
+gridspline <- gridspline %>%
+  mutate(yieldline = m*(Strain - x1) + y1)
+
+ggplot(gridspline) + 
+  geom_line(aes(x = Strain, y = stress.spline.fit), color = "blue") + 
+  geom_line(aes(x = Strain, y = yieldline), color = "red") +
+  xlim(c(0, max(pf16lt01$Strain))) 
+
+highest_row <- max(as.numeric(row.names(gridspline[abs(gridspline$stress.spline.fit - gridspline$yieldline) < 0.01, ])))
+
+yield_stress <- gridspline$stress.spline.fit[highest_row]
+yield_stress
+```
+
+```{r}
+decisions <- read_csv("results/youngsModulus/decisions.csv")
+pf04ut01<- data.fetch(subject = "pf04ut1")
+
+createGrid(pf04ut01, 0.0001)
+
+gridspline <- fitStressSpline(pf04ut01)[[2]]
+x <- decisions$strain[which(decisions$names == "pf04UT1")]
+
+m <- decisions$slope[which(decisions$names == "pf04UT1")]
+x1 <- x + 0.002*max(pf04ut01$Strain)
+y1 <- gridspline$stress.spline.fit[which(gridspline$Strain == x)] #which(gridspline$Strain == x)
+
+gridspline <- gridspline %>%
+  mutate(yieldline = m*(Strain - x1) + y1)
+
+ggplot(gridspline) + 
+  geom_line(aes(x = Strain, y = stress.spline.fit), color = "blue") + 
+  geom_line(aes(x = Strain, y = yieldline), color = "red") +
+  xlim(c(0, max(pf04ut01$Strain))) 
+
+
+highest_row <- max(as.numeric(row.names(gridspline[abs(gridspline$stress.spline.fit - gridspline$yieldline) < 0.01, ])))
+
+yield_stress <- gridspline$stress.spline.fit[highest_row]
+yield_stress
+```
+
+```{r}
+decisions <- read_csv("results/youngsModulus/decisions.csv")
+pf13cp01 <- data.fetch(subject = "pf13cp1")
+
+createGrid(pf13cp01, 0.0001)
+
+gridspline <- fitStressSpline(pf13cp01)[[2]]
+x <- decisions$strain[which(decisions$names == "pf13CP1")]
+
+m <- decisions$slope[which(decisions$names == "pf13CP1")]
+x1 <- x + 0.002*max(pf13cp01$Strain)
+y1 <- gridspline$stress.spline.fit[which(gridspline$Strain == x)] #which(gridspline$Strain == x)
+
+gridspline <- gridspline %>%
+  mutate(yieldline = m*(Strain - x1) + y1)
+
+ggplot(gridspline) + 
+  geom_line(aes(x = Strain, y = stress.spline.fit), color = "blue") + 
+  geom_line(aes(x = Strain, y = yieldline), color = "red") +
+  xlim(c(0, max(pf13cp01$Strain))) 
+
+
+highest_row <- max(as.numeric(row.names(gridspline[abs(gridspline$stress.spline.fit - gridspline$yieldline) < 0.01, ])))
+
+yield_stress <- gridspline$stress.spline.fit[highest_row]
+yield_stress
+```
+
+
+```{r}
+#yield.stress <- gridspline$stress.spline.fit[which.min(abs(gridspline$stress.spline.fit - gridspline$yieldline))]
+
+#yield.stress
+```
+

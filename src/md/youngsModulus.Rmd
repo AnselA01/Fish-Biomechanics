@@ -8,6 +8,7 @@ editor_options:
 library(tidyverse)
 
 source("./src/script/youngsModulus.R")
+source("./src/script/youngsModulusDetermination.R")
 source("./src/script/data.R")
 source("./src/script/plot.R")
 source("./src/script/image.R")
@@ -23,7 +24,7 @@ SVI indicators:
   2. One method has a score near 0
 ```{r}
 #pf06cp3: two are similar and near 0
-pf06cp3 <- data.fetch(fish_numbers = c(6), segments = c("cp"), trials = c(3))
+pf09mt3 <- data.fetch(subject = "pf09mt3")
 pf06cp3.result1 <- ym.calculate(pf06cp3)
 
 pf06cp3.result1$max.score # same, 0
@@ -67,6 +68,13 @@ pf20lt3 <- data.fetch(fish_numbers = c(20), segments = c("lt"), trials = c(3))
 pf20lt3.max <- ym.calculate(pf20lt3, method = "max")
 plot.subject("20lt3") # initial noise
 ```
+
+## Intervention
+```{r}
+pf02ut3 <- data.fetch(subject = "pf09ut3")
+ym.calculate(pf02ut3)
+```
+
 
 
 ## saving results
@@ -181,8 +189,8 @@ for (bone in bones) {
     )
   )
   
-  #print(plot)
-  image.save(bone, plot, directory = "ymResults/decisions")
+  print(plot)
+  #image.save(bone, plot, directory = "ymResults/decisions")
 }
 ```
 
