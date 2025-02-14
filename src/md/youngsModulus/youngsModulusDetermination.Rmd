@@ -32,7 +32,7 @@ slope <- vector(length = 273)
 score <- vector(length = 273)
 strain <- vector(length = 273)
 rsquared <- vector(length = 273)
-
+inconclusive <- vector(length = 273)
 ```
 
 ```{r}
@@ -52,6 +52,7 @@ for (bone in bones) {
   score[i] <- choose$score
   strain[i] <- choose$strain
   rsquared[i] <- ym.result$r.squared
+  inconclusive[i] <- choose$inconclusive
   i <- i + 1
   
   if (doPlot) {
@@ -95,7 +96,7 @@ for (bone in bones) {
 ```
 
 ```{r}
-results <- data.frame(names, method, slope, score, strain, rsquared)
+results <- data.frame(names, method, slope, score, strain, rsquared, inconclusive)
 ```
 
 

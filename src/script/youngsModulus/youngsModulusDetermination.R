@@ -36,9 +36,9 @@ ym.determine <- function(ym.result) {
   matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
 
   # if there are no matching pairs take the method with the median strain. If there is a matching pair(s) take the method with the minimum score.
-  decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores, inconclusive = inconclusive(ym.result.values))
-            else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs, inconclusive = inconclusive(ym.result.values))
-  decision$inconclusive <- inconclusive(decision)
+  decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores)
+            else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs)
+  decision$inconclusive <- inconclusiveDecision(decision)
   return(decision)
 }
 
@@ -50,7 +50,7 @@ ym.determine <- function(ym.result) {
 # arg methods: valid methods to check
 
 # Using this means no pairs are matching.
-medianStrainSlope <- function(slopes, strains, scores, inconclusive) {
+medianStrainSlope <- function(slopes, strains, scores) {
   strains.unlist <- unlist(strains)
   strain.median <- median(strains.unlist)
   strain.median.index <- which(strains.unlist == strain.median)
@@ -75,7 +75,7 @@ medianStrainSlope <- function(slopes, strains, scores, inconclusive) {
 # arg scores: all scores
 # arg chosenMethods: chosen methods
 # returns slope of method with lowest score
-minScoreSlope <- function(slopes, strains, scores, chosenMethods, inconclusive) {
+minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   # check for one under 1 and two over.
   scores.under.one <- numUnderOneScore(scores = result.scores)
   if (length(scores.under.one) == 1) {
@@ -180,8 +180,8 @@ strainDistance <- function(strains) {
 # since we will be using a line to find yield strength anyway.
 # * arg result: a ym calculation results
 # * returns boolean indicating if our method decision is inconclusive. 
-inconclusive <- function(results) {
-  return(results$slope < global.inconclusive.slope.threshold || results$score > global.inconclusive.score.threshold)
+inconclusiveDecision <- function(decision) {
+  return(decision$slope < global.inconclusive.slope.threshold || decision$score > global.inconclusive.score.threshold)
 }
 
 
