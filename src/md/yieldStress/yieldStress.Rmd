@@ -1,0 +1,115 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+
+source("./src/script/yieldStress/yieldStress.R")
+source("./src/script/helpers/data.R")
+source("./src/script/helpers/plot.R")
+source("./src/script/helpers/image.R")
+```
+
+
+## slope variability index
+
+The Slope Variability Index measures the variation of slopes with reference to the selected slope for a window of 201 first derivative values.
+
+SVI indicators:
+  1. Two methods have the same, near 0
+  2. One method has a score near 0
+```{r}
+#pf06cp3: two are similar and near 0
+pf09mt3 <- data.fetch(subject = "pf09mt3")
+pf06cp3.result1 <- ym.calculate(pf06cp3)
+
+pf06cp3.result1$max.score # same, 0
+pf06cp3.result1$inflection.score # same, 0
+pf06cp3.result1$fds.score
+
+# pf01cp1: all are similar
+pf01cp1 <- data.fetch(fish_numbers = c(1), segments = c("cp"), trials = c(1))
+pf01cp1.result <- ym.calculate(pf01cp1)
+
+pf01cp1.result$max.score
+pf01cp1.result$inflection.score
+pf01cp1.result$fds.score
+
+# pf02cp2: one is near 0 and in the right place according to the decision tree
+pf01cp2 <- data.fetch(fish_numbers = c(1), segments = c("cp"), trials = c(2))
+pf01cp2.result <- ym.calculate(pf01cp2)
+
+pf01cp2.result$max.score 
+pf01cp2.result$inflection.score # 0
+pf01cp2.result$fds.score
+```
+
+
+## troublemakers
+
+### can't fit splines
+```{r}
+# can't fit spline
+pf09ut4 <- data.fetch(fish_numbers = c(9), segments = c("ut"), trials = c(4))
+pf09ut4.max <- ym.calculate(pf09ut4)
+plot.subject("9ut4") # initial noise
+
+# can't fit all 10 knots (fit 8).
+pf15cp2 <- data.fetch(fish_numbers = c(15), segments = c("cp"), trials = c(2))
+pf15cp2.inflection <- ym.calculate(pf15cp2, method = "inflection")
+plot.subject("15cp2") # like 10 observations
+
+# can't fit spline
+pf20lt3 <- data.fetch(fish_numbers = c(20), segments = c("lt"), trials = c(3))
+pf20lt3.max <- ym.calculate(pf20lt3, method = "max")
+plot.subject("20lt3") # initial noise
+```
+
+## Intervention
+```{r}
+pf02ut3 <- data.fetch(subject = "pf09ut3")
+ym.calculate(pf02ut3)
+```
+
+
+## saving results
+```{r}
+bones <- data.generator()
+
+names <- vector()
+yield.stress <- vector()
+yield.strain <- vector()
+yield.results <- vector()
+yield.tib <- tibble()
+
+#need this tibble
+decisions <- read_csv("results/youngsModulus/decisions.csv")
+```
+
+```{r}
+for (bone in bones) {
+  yield.result <- ys.calculate(bone)
+  name <- getName(bone)
+  if (is.null(result)) next
+  
+  #yield.stress <- append(yield.stress, yield.result$yield.stress)
+  #yield.strain <- append(yield.strain, yield.result$yield.strain)
+
+  yield.results <- append(yield.results, list(yield.result))
+  
+  
+  names <- append(names, list(name))
+  
+}
+yield.results = unlist(yield.results)
+names <- unlist(names)
+```
+
+```{r}
+yield.tib <- tibble(names, yield.results)
+write_csv(yield.tib, "./results/yieldStress.csv")
+```
+

@@ -1,4 +1,4 @@
-source("./src/script/youngsModulus.R")
+source("./src/script/youngsModulus/youngsModulus.R")
 source("./src/script/helpers/general.R")
 
 global.methods.all <- c("max", "inflection", "fds")

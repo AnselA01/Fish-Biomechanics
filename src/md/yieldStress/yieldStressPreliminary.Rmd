@@ -37,14 +37,16 @@ map(paste0(source_files), source)
 pf16lt01 <- data.fetch(subject = "pf16lt1")
 decisions <- read_csv("results/youngsModulus/decisions.csv")
 
-createGrid(pf16lt01, 0.0001)
+#createGrid(pf16lt01, 0.0001)
 
 gridspline <- fitStressSpline(pf16lt01)[[2]]
 x <- decisions$strain[which(decisions$names == "pf16LT1")]
 
 m <- decisions$slope[which(decisions$names == "pf16LT1")]
 x1 <- x + 0.002*max(pf16lt01$Strain)
-y1 <- gridspline$stress.spline.fit[which(gridspline$Strain == as.numeric(x))]
+stress.spline.index <- as.integer(str_replace_all(as.character(x), "0|\\.", "")) + 1
+y1 <- gridspline$stress.spline.fit[[stress.spline.index]]
+#y1 <- gridspline$stress.spline.fit[which(gridspline$Strain == as.numeric(x))]
 
 gridspline <- gridspline %>%
   mutate(yieldline = m*(Strain - x1) + y1)
@@ -76,7 +78,7 @@ y1 <- gridspline$stress.spline.fit[[stress.spline.index]]
 gridspline <- gridspline %>%
   mutate(yieldline = m*(Strain - x1) + y1)
 
-plotggplot(gridspline) + 
+ggplot(gridspline) + 
   geom_line(aes(x = Strain, y = stress.spline.fit), color = "blue") + 
   geom_line(aes(x = Strain, y = yieldline), color = "red") +
   xlim(c(0, max(pf04ut01$Strain))) 

@@ -7,11 +7,11 @@ editor_options:
 ```{r}
 library(tidyverse)
 
-source("./src/script/youngsModulus.R")
-source("./src/script/youngsModulusDetermination.R")
-source("./src/script/data.R")
-source("./src/script/plot.R")
-source("./src/script/image.R")
+source("./src/script/youngsModulus/youngsModulus.R")
+source("./src/script/youngsModulus/youngsModulusDetermination.R")
+source("./src/script/helpers/data.R")
+source("./src/script/helpers/plot.R")
+source("./src/script/helpers/image.R")
 ```
 
 
