@@ -24,7 +24,7 @@ global.load_filter <- 0.8
 # OR arg subject.name: your subject like "<fish type><fish number><segment><trial>" (without the < >)
 data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("cp", "lt", "mt", "ut"), trials = c(1), subject.name) {
   source("./src/script/helpers/general.R") # gen.parseSubjectName()
-  
+
   # they just want one
   if (!missing(subject.name)) {
     return(findOne(parseSubjectName(subject.name)))
@@ -42,7 +42,8 @@ data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("c
         # they can't have more trials than there are available.
         segment_trials <- if (length(trials) > length(bones)) 1:length(bones) else trials
       for (trial in segment_trials) {
-        results[[i]] <- bones[[trial]]
+        bone <- bones[[trial]]
+        results[[i]] <- bone
         names[[i]] <- paste0(sprintf("%02d", fish_number), segment, trial)      
       }
     }
@@ -78,9 +79,9 @@ batchProcessFiles <- function(filepaths) {
 
 data.generator <- function(data.dir = "./data", fish.type, fish.number, segment) {
   filepaths <- getBoneFilepaths(data.dir, fish.type, fish.number, segment)
-  #data <- batchProcessFilesPar(filepaths)
   data <- batchProcessFiles(filepaths)
   if (length(data) == 0) stop(paste("No data found for fish", fish.number))
+  
   return(data)
 }
 
@@ -94,7 +95,7 @@ readAndProcessFile <- function(filepath) {
   }
   
   processed_data <- recalculate(data, global.load_filter, metadata, global.area)
-  attachMetadata(processed_data, metadata)
+  return(attachMetadata(processed_data, metadata))
 }
 
 getBoneFilepaths <- function(data.dir = "./data", fish.type, fish.number, segment, trial) {
@@ -162,7 +163,7 @@ recalculate <- function(df, load_filter, metadata, area_data) {
 recalculateDistance <- function(df, loadFilter) {
   return(
     df |> 
-      filter(Load > loadFilter) |> 
+      dplyr::filter(Load > loadFilter) |> 
       mutate(Distance = Distance - first(Distance)) # should new distance be negative?
   )
 }
@@ -181,7 +182,7 @@ recalculateStressStrain <- function(df, metadata, area_data) {
 getAreaAndInitialLength <- function(metadata, area_data) {
   return (
     area_data |> 
-      filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 
+      dplyr::filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 
       summarise(
         Area = first(Area),
         Length = first(Length)

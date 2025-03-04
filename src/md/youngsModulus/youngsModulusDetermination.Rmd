@@ -7,20 +7,17 @@ editor_options:
 
 ```{r}
 library(tidyverse)
-source("./src/script/youngsModulusDetermination.R")
-source("./src/script/youngsModulus.R")
-source("./src/script/data.R")
+source("./src/script/youngsModulus/youngsModulusDetermination.R")
+source("./src/script/youngsModulus/youngsModulus.R")
+source("./src/script/helpers/data.R")
 source("./src/script/helpers/general.R")
 source("./src/script/plot.R")
 source("./src/script/image.R")
 ```
 
 ```{r}
-pf02ut3 <- data.fetch(subject = "pf02ut3")
-pf16ut1 <- data.fetch(subject = "pf16ut1")
-result1 <- ym.calculateAndDetermine(pf02ut3)
-result2 <- ym.calculateAndDetermine(pf16ut1)
-
+bone <- data.fetch(subject.name = "pf01ut1")
+ym.calculateAndDetermine(bone)
 ```
 
 
@@ -28,6 +25,7 @@ result2 <- ym.calculateAndDetermine(pf16ut1)
 bones <- data.generator()
 names <- vector(length = 273)
 method <- vector(length = 273)
+calculation <- vector(length = 273)
 slope <- vector(length = 273)
 score <- vector(length = 273)
 strain <- vector(length = 273)
@@ -37,7 +35,7 @@ inconclusive <- vector(length = 273)
 
 ```{r}
 doPlot <- FALSE
-doSave <- FALSE
+doSave <- TRUE
 
 i <- 1
 for (bone in bones) {
@@ -48,6 +46,7 @@ for (bone in bones) {
   name <- getName(bone)
   names[i] <- name
   method[i] <- choose$method
+  calculation[i] <- choose$calculation
   slope[i] <- choose$slope
   score[i] <- choose$score
   strain[i] <- choose$strain
@@ -55,7 +54,7 @@ for (bone in bones) {
   inconclusive[i] <- choose$inconclusive
   i <- i + 1
   
-  if (doPlot) {
+  if (doPlot || doSave) {
     plot.subtitle <- paste(
       "<b>Method:</b> ",
       choose$method,
@@ -85,7 +84,9 @@ for (bone in bones) {
       )
     )
     
-    print(plot)
+    if(doPlot) {
+      print(plot)
+    }
   }
   
   if (doSave) {
@@ -96,7 +97,8 @@ for (bone in bones) {
 ```
 
 ```{r}
-results <- data.frame(names, method, slope, score, strain, rsquared, inconclusive)
+results <- data.frame(names, method, calculation, slope, score, strain, rsquared, inconclusive)
+write_csv(results, "results/youngsModulus/decisions_2.csv")
 ```
 
 

@@ -26,13 +26,12 @@ script_directory <- "./src/script/"
 
 ```{r}
 # this will pick up any .R files added to the src/script directory.
-source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R")
+source_files <- list.files(script_directory, full.names = TRUE, pattern = "*.R", recursive = TRUE)
 map(paste0(source_files), source)
 ```
 
-## gen testing
 ```{r}
-bone <- data.fetch(subject.name = "pf01cp1")
+bone <- data.fetch(subject = "pf01cp1")
 ```
 
 ```{r}

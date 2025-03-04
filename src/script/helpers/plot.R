@@ -34,15 +34,10 @@ plot.plot <- function(data, layers = c()) {
 # returns subject
 plot.subject <- function(subject.name) {
   library(stringi)
-  source("./src/script/data.R")
+  source("./src/script/helpers/data.R")
   source("./src/script/helpers/general.R")
   
-  # parsing identification data
-  fish_number <- parse_number(str_remove(subject.name, "^0")) # extract first number and remove leading 0 if present
-  segment <- gsub("[^a-zA-Z]", "", x = subject.name)
-  trial <- parse_number(str_remove(stri_reverse(subject.name), "^0")) # extract first number after reversal. leading 0 again
-  # fetching and plotting
-  subject <- data.fetch(fish_numbers = c(fish_number), segments = c(segment), trials = c(trial))
+  subject <- data.fetch(subject.name = subject.name)
   if (!length(subject)) {
     message("Could not find subject", subject.name)
     return(NULL)

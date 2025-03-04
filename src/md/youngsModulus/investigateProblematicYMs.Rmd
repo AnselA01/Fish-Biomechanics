@@ -1,0 +1,146 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(splines)
+
+source("./src/script/youngsModulus/youngsModulus.R")
+source("./src/script/youngsModulus/youngsModulusDetermination.R")
+source("./src/script/helpers/data.R")
+source("./src/script/helpers/plot.R")
+source("./src/script/helpers/image.R")
+
+
+```
+
+```{r}
+pf11lt2 <- data.fetch(subject = "pf11lt2")
+
+model2 <- lm(Stress ~ bSpline(Strain, df = 10), data = pf11lt02)
+spline_fit <- predict(model2)
+
+ggplot(pf11lt02, aes(x = Strain, y = Stress)) +
+  geom_line(spline_fit)
+
+
+```
+
+```{r}
+
+pf11lt2 <- data.fetch(subject = "pf11lt2")
+
+pf11lt2short <- pf11lt2 %>%
+  filter(Strain < 0.2)
+
+
+model2 <- lm(Stress ~ bSpline(Strain, df = 10), data = pf11lt2short)
+
+pf11lt2short$spline_fit <- predict(model2)
+
+ggplot(pf11lt2short, aes(x = Strain, y = Stress)) +
+  geom_point() +  # Add actual data points
+  geom_line(aes(y = spline_fit), color = "blue")
+
+```
+
+
+```{r}
+plot_spline_model <- function(data, df) {
+
+  data <- data %>%
+    mutate(
+      Strain = as.numeric(Strain),
+      Stress = as.numeric(Stress)
+    ) %>%
+    filter(!is.na(Strain), !is.na(Stress), Strain < 0.2)
+  
+
+  model <- lm(Stress ~ bSpline(Strain, df = df), data = data)
+  
+  data$spline_fit <- predict(model)
+  
+  ggplot(data, aes(x = Strain, y = Stress)) +
+    geom_point() +  
+    geom_line(aes(y = spline_fit), color = "blue")  
+}
+```
+
+
+```{r}
+bone <- data.fetch(subject = "pf01cp3")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf11ut4")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf12cp1")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf16lt2")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf16ut2")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf21lt1")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf12cp1")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf02ut3")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf04ut3")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf05ut3")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf08lt2")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf10lt1")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf10mt1")
+plot_spline_model(bone, 10)
+```
+
+```{r}
+bone <- data.fetch(subject = "pf03lt2")
+plot_spline_model(bone, 10)
+```
+
+
+

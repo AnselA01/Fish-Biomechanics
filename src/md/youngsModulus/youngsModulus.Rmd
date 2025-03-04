@@ -9,6 +9,7 @@ library(tidyverse)
 
 source("./src/script/youngsModulus/youngsModulus.R")
 source("./src/script/youngsModulus/youngsModulusDetermination.R")
+source("./src/script/youngsModulus/dbScan.R")
 source("./src/script/helpers/data.R")
 source("./src/script/helpers/plot.R")
 source("./src/script/helpers/image.R")
@@ -24,8 +25,8 @@ SVI indicators:
   2. One method has a score near 0
 ```{r}
 #pf06cp3: two are similar and near 0
-pf09mt3 <- data.fetch(subject = "pf09mt3")
-pf06cp3.result1 <- ym.calculate(pf06cp3)
+pf09mt3 <- data.fetch(subject.name = "pf09mt3")
+ym.calculate(pf09mt3)
 
 pf06cp3.result1$max.score # same, 0
 pf06cp3.result1$inflection.score # same, 0
@@ -80,7 +81,9 @@ ym.calculate(pf02ut3)
 ## saving results
 ```{r}
 bones <- data.generator()
+```
 
+```{r}
 names <- vector()
 rsquared <- vector()
 max.slope <- vector()
@@ -95,6 +98,8 @@ fds.score <- vector()
 ```
 
 ```{r}
+do.plot <- FALSE
+do.save <- TRUE
 for (bone in bones) {
   result <- ym.calculate(bone)
   if (is.null(result)) next
@@ -131,66 +136,72 @@ for (bone in bones) {
     round(result$r.squared, 2)
   )
   
-  plot <- plot.plot(
-    bone,
-    layers = list(
-      geom_segment(
-        x = result$max.strain,
-        xend = result$max.strain,
-        y = 0,
-        yend = max(bone$Stress * 0.80),
-        color = maxColor
-      ),
-      geom_segment(
-        x = result$inflection.strain,
-        xend = result$inflection.strain,
-        y = 0,
-        yend = max(bone$Stress * 0.80),
-        color = inflectionColor
-      ),
-      geom_segment(
-        x = result$fds.strain,
-        xend = result$fds.strain,
-        y = 0,
-        yend = max(bone$Stress * 0.80),
-        color = fdsColor
-      ),
-      annotate(
-        "text",
-        x = result$max.strain,
-        y = max(bone$Stress),
-        label = round(result$max.score, 3),
-        angle = 0,
-        color = maxColor,
-        size = 2,
-        fontface = "bold"
-      ),
-      annotate(
-        "text",
-        x = result$inflection.strain,
-        y = max(bone$Stress * 0.925),
-        label = round(result$inflection.score, 3),
-        angle = 0,
-        color = inflectionColor,
-        size = 2,
-        fontface = "bold"
-      ),
-      annotate(
-        "text",
-        x = result$fds.strain,
-        y = max(bone$Stress * 0.85),
-        label = round(result$fds.score, 3),
-        angle = 0,
-        color = fdsColor,
-        size = 2,
-        fontface = "bold"
-      ),
-      labs(subtitle = plot.subtitle)
+  if (do.plot || do.save) {
+    plot <- plot.plot(
+      bone,
+      layers = list(
+        geom_segment(
+          x = result$max.strain,
+          xend = result$max.strain,
+          y = 0,
+          yend = max(bone$Stress * 0.80),
+          color = maxColor
+        ),
+        geom_segment(
+          x = result$inflection.strain,
+          xend = result$inflection.strain,
+          y = 0,
+          yend = max(bone$Stress * 0.80),
+          color = inflectionColor
+        ),
+        geom_segment(
+          x = result$fds.strain,
+          xend = result$fds.strain,
+          y = 0,
+          yend = max(bone$Stress * 0.80),
+          color = fdsColor
+        ),
+        annotate(
+          "text",
+          x = result$max.strain,
+          y = max(bone$Stress),
+          label = round(result$max.score, 3),
+          angle = 0,
+          color = maxColor,
+          size = 2,
+          fontface = "bold"
+        ),
+        annotate(
+          "text",
+          x = result$inflection.strain,
+          y = max(bone$Stress * 0.925),
+          label = round(result$inflection.score, 3),
+          angle = 0,
+          color = inflectionColor,
+          size = 2,
+          fontface = "bold"
+        ),
+        annotate(
+          "text",
+          x = result$fds.strain,
+          y = max(bone$Stress * 0.85),
+          label = round(result$fds.score, 3),
+          angle = 0,
+          color = fdsColor,
+          size = 2,
+          fontface = "bold"
+        ),
+        labs(subtitle = plot.subtitle)
+      )
     )
-  )
   
-  print(plot)
-  #image.save(bone, plot, directory = "ymResults/decisions")
+    if (do.plot) {
+      print(plot)
+    }
+  }
+  if (do.save) {
+    image.save(bone, plot, directory = "ymResults/decisions")
+  }
 }
 ```
 
@@ -198,6 +209,13 @@ for (bone in bones) {
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
 write_csv(results, "./results/results.csv")
 ```
+
+# db scanning
+```{r}
+dbBone <- data.fetch(subject.name = "pf09lt1")
+ym.identifyElasticRegion(dbBone)
+```
+
 
 
 

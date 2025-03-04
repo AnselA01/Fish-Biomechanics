@@ -7,7 +7,7 @@ name <- ""
 r.squared <- NA
 
 # constants
-global.degrees.freedom <- 10
+global.max.df <- 10 # the starting number of degrees of freedom when fitting splines
 global.strain.filter <- 0.2
 global.grid.interval <- 0.0001
 
@@ -20,13 +20,22 @@ ym.calculate <- function(bone) {
   bone <- filter(bone, Strain < global.strain.filter)
   
   spline.fit.result <- fitStressSpline(bone, fitFirstDeriv = FALSE)
-  if (is.null(spline.fit.result)) return(NULL)
-  
-  firstSecondDerivResult <- calculateFirstSecondDerivatives(spline.fit.result$strainGrid$Strain, spline.fit.result$coefs)
+  if (is.null(spline.fit.result)) {
+    return(NULL)
+  }
+  firstSecondDerivResult <- calculateFirstSecondDerivatives(
+    spline.fit.result$strainGrid$Strain,
+    spline.fit.result$coefs
+  )
   # not great but we need a different spline fit and first and second derivatives for the fds method
   fds.spline.fit.result <- fitStressSpline(numericDifferentiation(bone), fitFirstDeriv = TRUE)
-  if (is.null(fds.spline.fit.result)) return(NULL)
-  fds.firstSecondDerivResult <- calculateFirstSecondDerivatives(fds.spline.fit.result$strainGrid$Strain, fds.spline.fit.result$coefs)
+  if (is.null(fds.spline.fit.result)) {
+    return(NULL)
+  }
+  fds.firstSecondDerivResult <- calculateFirstSecondDerivatives(
+    fds.spline.fit.result$strainGrid$Strain,
+    fds.spline.fit.result$coefs
+  )
   
   return(
     c(
@@ -54,17 +63,17 @@ ym.calculate <- function(bone) {
 # returns: original bone with two new columns: first.deriv and second.deriv
 numericDifferentiation <- function(bone) {
   return(bone |>
-    mutate(
+    dplyr::mutate(
       lag2Strain = lag(Strain, 2),
       first.deriv = (Stress - lag(Stress, 2)) / (Strain - lag2Strain),
       second.deriv = (first.deriv - lag(first.deriv, 2)) / (Strain - lag2Strain)
     ) |>
-    filter(!is.na(first.deriv), is.finite(first.deriv)) |>
+    dplyr::filter(!is.na(first.deriv), is.finite(first.deriv)) |>
     dplyr::select(-lag2Strain))
 }
 
-# fit a model with an abstract formula.
-# TODO CHANGE THIS TO MARS PACKAGE METHOD MAYBE
+# fit a spline model
+# returns list of model, predictions, and coefficients
 fitSpline <- function(formula, bone, strain) {
   result <- tryCatch(
     {
@@ -80,7 +89,7 @@ fitSpline <- function(formula, bone, strain) {
   return(result)
 }
 
-# creates a grid with Strain points spaced argument increment apart.
+# creates a grid with Strain points spaced argument interval apart.
 # arg interval: grid spacing
 # returns tibble with one gridded Strain column.
 createGrid <- function(bone, interval = global.grid.interval) {
@@ -121,12 +130,13 @@ fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
   return(result)
 }
 
+
 # calculates the first and second derivatives of `strain` values using the coefficients from a spline fit.
 # arg strain: strain values to calculate derivatives for
 # arg coefficients: the coefficients of a spline fit to original Stress/Strain data
 calculateFirstSecondDerivatives <- function(strain, coefficients) {
-  first.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 1)
-  second.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 2)
+  first.deriv.basis.mat <- dbs(strain, df = global.max.df, derivs = 1)
+  second.deriv.basis.mat <- dbs(strain, df = global.max.df, derivs = 2)
   
   return(list(first.deriv = first.deriv.basis.mat %*% coefficients[-1], # coefficients[1] is the intercept
          second.deriv = second.deriv.basis.mat %*% coefficients[-1]))
@@ -143,6 +153,12 @@ SVI <- function(index, first.deriv, n = 200) {
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
   window <- first.deriv[start.index:end.index]
+  
+  vec <- seq(1, n*2, length.out = length(window))
+  
+  model <- lm(window ~ vec)
+  print(summary(model))
+  
   
   # Since we can not guarantee that the first derivative values in the window 
   # have a constant slope (really a symmetric distribution), using the usual standard deviation formula is not ok.

@@ -63,7 +63,7 @@ medianStrainSlope <- function(slopes, strains, scores) {
       calculation = "median strain",
       method = global.methods.all[strain.median.index][[1]],
       slope = slopes[strain.median.index][[1]],
-      strain = strain.median,
+      strain = strains[strain.median.index][[1]],
       score = scores[strain.median.index][[1]]
     )
   )
@@ -91,7 +91,7 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
       calculation = "minimum score",
       method = chosenMethods[min.score.index][[1]],
       slope = methods.slopes[min.score.index][[1]],
-      strain = strains[min.score.index][[1]],
+      strain = strains[chosenMethods[min.score.index]][[1]],
       score = scores[min.score.index][[1]]
     )
   )
