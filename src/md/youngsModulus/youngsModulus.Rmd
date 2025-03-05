@@ -99,7 +99,7 @@ fds.score <- vector()
 
 ```{r}
 do.plot <- FALSE
-do.save <- TRUE
+do.save <- FALSE
 for (bone in bones) {
   result <- ym.calculate(bone)
   if (is.null(result)) next
@@ -207,13 +207,22 @@ for (bone in bones) {
 
 ```{r}
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
-write_csv(results, "./results/results.csv")
+write_csv(results, "./results/youngsModulus/results_2.csv")
 ```
 
-# db scanning
+# linear model as score
+
 ```{r}
-dbBone <- data.fetch(subject.name = "pf09lt1")
-ym.identifyElasticRegion(dbBone)
+ym.calculate(data.fetch(subject.name = "pf01cp1"))
+```
+
+```{r}
+for (bone in bones) {
+  result <- ym.calculate(bone)
+  if (is.null(result)) next
+  #print(result)
+  print(result$name)
+}
 ```
 
 

@@ -15,11 +15,6 @@ source("./src/script/plot.R")
 source("./src/script/image.R")
 ```
 
-```{r}
-bone <- data.fetch(subject.name = "pf01ut1")
-ym.calculateAndDetermine(bone)
-```
-
 
 ```{r}
 bones <- data.generator()
@@ -35,7 +30,7 @@ inconclusive <- vector(length = 273)
 
 ```{r}
 doPlot <- FALSE
-doSave <- TRUE
+doSave <- FALSE
 
 i <- 1
 for (bone in bones) {

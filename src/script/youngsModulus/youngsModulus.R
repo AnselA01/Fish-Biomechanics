@@ -3,7 +3,7 @@ library(splines2)
 source("./src/script/helpers/general.R")
 
 # per-bone variables
-name <- ""
+global.name <- ""
 r.squared <- NA
 
 # constants
@@ -16,7 +16,7 @@ global.grid.interval <- 0.0001
 # 2. Slope at the inflection point
 # 3. First local max of the first derivative spline fit
 ym.calculate <- function(bone) {
-  name <<- getName(bone)
+  global.name <<- getName(bone)
   bone <- filter(bone, Strain < global.strain.filter)
   
   spline.fit.result <- fitStressSpline(bone, fitFirstDeriv = FALSE)
@@ -53,7 +53,7 @@ ym.calculate <- function(bone) {
         fds.firstSecondDerivResult$first.deriv,
         fds.spline.fit.result$strainGrid$Strain
       ),
-      name = name,
+      name = global.name,
       r.squared = r.squared
     )
   )
@@ -104,7 +104,7 @@ fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
   # fit and predict stress spline
   stress.spline.fit <- fitSpline(formula = Stress ~ bSpline(Strain, df = global.degrees.freedom), bone, strainGrid)
   if (is.null(stress.spline.fit)) {
-    message(name, ": Failed to fit spline to stress")
+    message(global.name, ": Failed to fit spline to stress")
     return(NULL)
   }
   strainGrid$stress.spline.fit <- stress.spline.fit$predictions
@@ -116,13 +116,13 @@ fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
   if (fitFirstDeriv) {
     deriv.spline.fit <- fitSpline(formula = first.deriv ~ bSpline(Strain, df = global.degrees.freedom), bone, strainGrid)
     if (is.null(deriv.spline.fit)) {
-      message(name,  ": Failed to fit spline to first derivatives")
+      message(global.name,  ": Failed to fit spline to first derivatives")
       return(NULL)
     }
     result$first.deriv.spline.fit <- deriv.spline.fit$predictions
     result$first.deriv.coefs <- coef(deriv.spline.fit$model)
     if (anyNA(result$first.deriv.coefs)) {
-      message(name, ": Failed to fit all knots in first derivative spline fit")
+      message(global.name, ": Failed to fit all knots in first derivative spline fit")
       return(NULL)
     }
   }
@@ -148,23 +148,25 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
 # arg n: window size is 2 * n + 1 NOTE may be lower if you reach the bounds of the first.deriv vector
 # returns: absolute value of a modified coefficient of variation score that uses the first derivative value at the selected
 # index as the "anchor" to compare the deviation to. 
-SVI <- function(index, first.deriv, n = 200) {
+SVI <- function(index, first.deriv, n = 100) {
   selected.first.deriv <- first.deriv[index]
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
   window <- first.deriv[start.index:end.index]
   
+  
   vec <- seq(1, n*2, length.out = length(window))
+  # plot(x = vec, y = window, main = paste(name, global.name))
   
   model <- lm(window ~ vec)
-  print(summary(model))
-  
+  # print(summary(model))
   
   # Since we can not guarantee that the first derivative values in the window 
-  # have a constant slope (really a symmetric distribution), using the usual standard deviation formula is not ok.
+  # have a constant slope (really a normal distribution), using the usual standard deviation formula is not ok.
   # Our modified deviation measure uses the distance from the selected first derivative value instead of the distance from the window mean. 
   # This modified variation method is analogous to the error of a regression model.
-  deviation <- sqrt(mean((first.deriv - selected.first.deriv)^2, na.rm = TRUE))
+  # deviation <- sqrt(mean((first.deriv - selected.first.deriv)^2, na.rm = TRUE))
+  deviation <- sqrt(mean((window - selected.first.deriv)^2, na.rm = TRUE))
   return(abs(deviation / selected.first.deriv))
 }
 
