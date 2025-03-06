@@ -1,8 +1,9 @@
 source("./src/script/youngsModulus/youngsModulus.R")
 source("./src/script/helpers/general.R")
 
-global.methods.all <- c("max", "inflection", "fds")
+global.methods.all <- c("fds", "inflection", "max")
 global.similar.threshold.percent <- 5
+global.strain.similar.threshold.percent <- 20
 
 # inconclusive thresholds
 global.inconclusive.slope.threshold <- 20
@@ -19,13 +20,13 @@ ym.calculateAndDetermine <- function(bone) {
     message(getName(bone), ": could not calculate young's modulus")
     return(NULL)
   }
-  return(list(results = results, choice = ym.determine(results)))
+  return(list(results = results, choice = ym.determine(results, bone)))
 }
 
 # determines correct value of young's modulus from a ym.result
 # arg ym.result: the return value from ym.calculate
 # returns: method name, slope, strain, and score of determined method
-ym.determine <- function(ym.result) {
+ym.determine <- function(ym.result, bone) {
   global.name <<- ym.result$name
   
   ym.result.values <- extractYmResultValues(ym.result)
@@ -34,7 +35,16 @@ ym.determine <- function(ym.result) {
   result.scores <- ym.result.values$scores
   
   matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
+  nearby.pairs <- nearby(strains = result.strains, maxStrain = max(bone$Strain))
+  print(nearby.pairs)
 
+  if (length(nearby.pairs == 2)) {
+    # check if the match is inflection and fds AND both their scores are > 1
+    if (all(c("fds", "inflection") %in% nearby.pairs)) {
+      print(result.scores)
+    }    
+  }
+  
   # if there are no matching pairs take the method with the median strain. If there is a matching pair(s) take the method with the minimum score.
   decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores)
             else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs)
@@ -97,14 +107,40 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   )
 }
 
+percentDifference <- function(x, y) {
+  return(round(abs(x - y) / pmax(x, y) * 100, 1))
+}
+
+# determines nearby methods
+# returns a list of lists of matching pairs
+nearby <- function(strains, maxStrain) {
+  strains <- matrix(c(strains$fds, strains$inflection, strains$max), ncol = 3, byrow = TRUE)
+
+  # differences between all column pairs
+  strain.percents <- mapply(function(strain) (strain / maxStrain) * 100, strains)
+  strain.percent.diffs <- abs(outer(strain.percents, strain.percents, FUN = `-`))
+
+  # similar.mat is a 3x3 matrix whose intersections indicate whether the two methods have similar slopes and scores.
+  similar.mat <- strain.percent.diffs <= global.strain.similar.threshold.percent
+  colnames(similar.mat) <- global.methods.all
+  rownames(similar.mat) <- global.methods.all
+  diag(similar.mat) <- FALSE # no self comparisons
+
+  # return a list of lists where each inner list is the names of the matching pair
+  upper.triangle <- which(similar.mat, arr.ind = TRUE)
+  matching.indices <- upper.triangle[upper.triangle[, "row"] < upper.triangle[, "col"], ]
+  pairs <- lapply(seq_len(nrow(upper.triangle)), function(row) {
+    index <- upper.triangle[row, ]
+    return(list(rownames(similar.mat)[index["row"]], colnames(similar.mat)[index["col"]]))
+  })
+  
+  return(unique(unlist(pairs[1:(sum(similar.mat) / 2)]))) # divide by 2 because matches are x,y and y,x and we want only one of them
+}
+
 # determines which methods have similar slopes and scores. Prioritizes exact matches even if all pairs match.
 # Similarity is defined by a <= 10% percent difference between two values from the larger value.
 # returns a list of lists of matching pairs
 similarity <- function(slopes, strains, scores) {
-  percentDifference <- function(x, y) {
-    return(round(abs(x - y) / pmax(x, y) * 100, 1))
-  }
-
   strains <- matrix(c(strains$max, strains$inflection, strains$fds), ncol = 3, byrow = TRUE)
   colnames(strains) <- global.methods.all
   slopes <- matrix(c(slopes$max, slopes$inflection, slopes$fds), ncol = 3, byrow = TRUE)

@@ -15,6 +15,11 @@ source("./src/script/plot.R")
 source("./src/script/image.R")
 ```
 
+```{r}
+var <- ym.calculateAndDetermine(data.fetch(subject.name = "pf12cp1"))
+```
+
+
 
 ```{r}
 bones <- data.generator()

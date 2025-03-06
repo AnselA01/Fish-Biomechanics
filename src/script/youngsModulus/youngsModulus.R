@@ -142,13 +142,13 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
          second.deriv = second.deriv.basis.mat %*% coefficients[-1]))
 }
 
-# Slope Variability Index evaluates the variance of slopes +- 200 ticks (0.0001) away from the selected index.
-# we theorize that a "good" young's modulus position has an SVI near 0 which indicates low regional variance.
+# Slope Variability Index evaluates the variance of slopes +- n ticks (0.0001) away from the selected index.
+# we theorize that a "good" young's modulus position has an SVI near 0, indicating low regional variance.
 # arg first.deriv: values which to calculate SVI from a grid with intervals 0.0001.
 # arg n: window size is 2 * n + 1 NOTE may be lower if you reach the bounds of the first.deriv vector
 # returns: absolute value of a modified coefficient of variation score that uses the first derivative value at the selected
 # index as the "anchor" to compare the deviation to. 
-SVI <- function(index, first.deriv, n = 100) {
+SVI <- function(index, first.deriv, name, n = 300) {
   selected.first.deriv <- first.deriv[index]
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
@@ -165,7 +165,6 @@ SVI <- function(index, first.deriv, n = 100) {
   # have a constant slope (really a normal distribution), using the usual standard deviation formula is not ok.
   # Our modified deviation measure uses the distance from the selected first derivative value instead of the distance from the window mean. 
   # This modified variation method is analogous to the error of a regression model.
-  # deviation <- sqrt(mean((first.deriv - selected.first.deriv)^2, na.rm = TRUE))
   deviation <- sqrt(mean((window - selected.first.deriv)^2, na.rm = TRUE))
   return(abs(deviation / selected.first.deriv))
 }
@@ -178,7 +177,7 @@ globalMax <- function(first.deriv, strain) {
     list(
       slope = first.deriv[d1.max.index],
       strain = strain[d1.max.index],
-      score = SVI(d1.max.index, first.deriv)
+      score = SVI(d1.max.index, first.deriv, "global max")
     )
   )
 }
@@ -207,7 +206,7 @@ inflectionPoint <- function(first.deriv, second.deriv, strain) {
     list(
       slope = first.deriv[[d2.inflection.index]],
       strain = strain[[d2.inflection.index]],
-      score = SVI(d2.inflection.index, first.deriv)
+      score = SVI(d2.inflection.index, first.deriv, "infexltion")
     )
   )
 }
@@ -230,7 +229,7 @@ localMax <- function(first.deriv.spline.fit, first.deriv, strain) {
     list(
       slope = first.deriv[d1.localMax.index],
       strain = strain[d1.localMax.index],
-      score = SVI(d1.localMax.index, first.deriv)
+      score = SVI(d1.localMax.index, first.deriv, "fds")
     )
   )
 }

@@ -99,16 +99,19 @@ fds.score <- vector()
 
 ```{r}
 do.plot <- FALSE
-do.save <- FALSE
+do.save <- TRUE
 for (bone in bones) {
   result <- ym.calculate(bone)
   if (is.null(result)) next
   
-  choice <- ym.determine(result)
-  
-  maxColor <- ifelse(choice$method == "max", "darkGreen", "red")
-  inflectionColor <- ifelse(choice$method == "inflection", "darkGreen", "red")
-  fdsColor <- ifelse(choice$method == "fds", "darkGreen", "red")
+
+  minScore <- min(result$max.score, result$inflection.score, result$fds.score)
+  scores <- list(max = result$max.score, inflection = result$inflection.score, fds = result$fds.score)
+  minScoreMethod <- names(scores)[which.min(scores)]
+
+  maxColor <- ifelse(minScoreMethod == "max", "darkGreen", "red")
+  inflectionColor <- ifelse(minScoreMethod == "inflection", "darkGreen", "red")
+  fdsColor <- ifelse(minScoreMethod == "fds", "darkGreen", "red")
   
   names <- append(names, result$name)
   rsquared <- append(rsquared, result$r.squared)
@@ -200,7 +203,7 @@ for (bone in bones) {
     }
   }
   if (do.save) {
-    image.save(bone, plot, directory = "ymResults/decisions")
+    image.save(bone, plot, directory = "ymResults/min_score_decisions")
   }
 }
 ```
@@ -210,9 +213,10 @@ results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, in
 write_csv(results, "./results/youngsModulus/results_2.csv")
 ```
 
-# linear model as score
+# plotting svi
 
 ```{r}
+ym.calculate(data.fetch(subject.name = "pf19ut2"))
 ym.calculate(data.fetch(subject.name = "pf01cp1"))
 ```
 
