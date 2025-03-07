@@ -3,7 +3,7 @@ source("./src/script/helpers/general.R")
 
 global.methods.all <- c("fds", "inflection", "max")
 global.similar.threshold.percent <- 5
-global.strain.similar.threshold.percent <- 20
+global.strain.similar.threshold.percent <- 25
 
 # inconclusive thresholds
 global.inconclusive.slope.threshold <- 20
@@ -36,12 +36,23 @@ ym.determine <- function(ym.result, bone) {
   
   matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
   nearby.pairs <- nearby(strains = result.strains, maxStrain = max(bone$Strain))
-  print(nearby.pairs)
 
   if (length(nearby.pairs == 2)) {
-    # check if the match is inflection and fds AND both their scores are > 1
+    # check if the match is inflection and fds AND both their scores are higher than max
     if (all(c("fds", "inflection") %in% nearby.pairs)) {
-      print(result.scores)
+      if (result.scores$fds > result.scores$max && result.scores$inflection > result.scores$max) {
+        return(
+          list(
+            name = global.name,
+            methods = c("max"),
+            calculation = "max",
+            method = "max",
+            slope = result.slopes$max,
+            strain = result.strains$max,
+            score = result.scores$max
+          )
+        )
+      }
     }    
   }
   
@@ -64,17 +75,17 @@ medianStrainSlope <- function(slopes, strains, scores) {
   strains.unlist <- unlist(strains)
   strain.median <- median(strains.unlist)
   strain.median.index <- which(strains.unlist == strain.median)
-  method.median <- global.methods.all[strain.median.index]
+  method.median <- names(strains.unlist[strain.median.index])
   
   return(
     list(
       name = global.name,
       methods = global.methods.all,
       calculation = "median strain",
-      method = global.methods.all[strain.median.index][[1]],
-      slope = slopes[strain.median.index][[1]],
-      strain = strains[strain.median.index][[1]],
-      score = scores[strain.median.index][[1]]
+      method = global.methods.all[strain.median.index],
+      slope = slopes[method.median],
+      strain = strains[method.median],
+      score = scores[method.median]
     )
   )
 }
@@ -93,16 +104,18 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   }
   
   min.score.index <- which.min(unlist(scores[chosenMethods]))
+  method.min = names(scores[chosenMethods][min.score.index])
+
   methods.slopes <- unlist(slopes[chosenMethods])
   return(
     list(
       name = global.name,
       methods = chosenMethods,
       calculation = "minimum score",
-      method = chosenMethods[min.score.index][[1]],
-      slope = methods.slopes[min.score.index][[1]],
-      strain = strains[chosenMethods[min.score.index]][[1]],
-      score = scores[min.score.index][[1]]
+      method = method.min,
+      slope = slopes[method.min],
+      strain = strains[method.min],
+      score = scores[method.min]
     )
   )
 }
@@ -173,19 +186,19 @@ extractYmResultValues <- function(ym.result) {
   return(
     list(
       slopes = list(
+        fds = ym.result$fds.slope,
         max = ym.result$max.slope,
-        inflection = ym.result$inflection.slope,
-        fds = ym.result$fds.slope
+        inflection = ym.result$inflection.slope
       ),
       strains = list(
+        fds = ym.result$fds.strain,
         max = ym.result$max.strain,
-        inflection = ym.result$inflection.strain,
-        fds = ym.result$fds.strain
+        inflection = ym.result$inflection.strain
       ),
       scores = list(
+        fds = ym.result$fds.score,
         max = ym.result$max.score,
-        inflection = ym.result$inflection.score,
-        fds = ym.result$fds.score
+        inflection = ym.result$inflection.score
       )
     )
   )

@@ -148,7 +148,7 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
 # arg n: window size is 2 * n + 1 NOTE may be lower if you reach the bounds of the first.deriv vector
 # returns: absolute value of a modified coefficient of variation score that uses the first derivative value at the selected
 # index as the "anchor" to compare the deviation to. 
-SVI <- function(index, first.deriv, name, n = 300) {
+SVI <- function(index, first.deriv, name, n = 400) {
   selected.first.deriv <- first.deriv[index]
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
@@ -158,7 +158,7 @@ SVI <- function(index, first.deriv, name, n = 300) {
   vec <- seq(1, n*2, length.out = length(window))
   # plot(x = vec, y = window, main = paste(name, global.name))
   
-  model <- lm(window ~ vec)
+  # model <- lm(window ~ vec)
   # print(summary(model))
   
   # Since we can not guarantee that the first derivative values in the window 
@@ -206,7 +206,7 @@ inflectionPoint <- function(first.deriv, second.deriv, strain) {
     list(
       slope = first.deriv[[d2.inflection.index]],
       strain = strain[[d2.inflection.index]],
-      score = SVI(d2.inflection.index, first.deriv, "infexltion")
+      score = SVI(d2.inflection.index, first.deriv, "inflection")
     )
   )
 }

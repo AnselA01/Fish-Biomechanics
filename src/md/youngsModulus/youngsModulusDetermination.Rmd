@@ -16,7 +16,7 @@ source("./src/script/image.R")
 ```
 
 ```{r}
-var <- ym.calculateAndDetermine(data.fetch(subject.name = "pf12cp1"))
+var <- ym.calculateAndDetermine(data.fetch(subject.name = "pf09lt2"))
 ```
 
 
