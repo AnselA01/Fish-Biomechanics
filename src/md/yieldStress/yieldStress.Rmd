@@ -55,9 +55,3 @@ yield.tib <- tibble(names, yield.stress = yield.stress.vec, yield.strain = yield
 write_csv(yield.tib, "./results/yieldStress/yieldStress.csv")
 ```
 
-
-```{r}
-bone <- data.fetch(subject.name = "pf01cp4")
-ys.calculate(bone)
-```
-

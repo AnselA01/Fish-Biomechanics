@@ -3,12 +3,17 @@
 Takashi Maie Lab and the Center for Interdisciplinary Research (CIR), St. Olaf College
 
 St. Olaf faculty
+
 - Takashi Maie, PhD. (Maie Lab)
+
 - Laura Boem-Vock, PhD. (CIR)
 
 Underagraduate CIR fellows
+
+
 - Ansel Alldredge (CIR)
 - Abigail Hahs (CIR)
+
 - Otto Schmidt (CIR)
 
 ## Project 
@@ -38,7 +43,6 @@ This project aims to identify three tensile properties of yellow perch vertebrae
         - 
         - 
         - 
-
 
     - `script` - R source files.
     
