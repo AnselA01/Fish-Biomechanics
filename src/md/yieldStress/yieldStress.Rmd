@@ -9,7 +9,6 @@ library(tidyverse)
 
 source("./src/script/yieldStress/yieldStress.R")
 source("./src/script/youngsModulus/youngsModulus.R")
-source("./src/script/helpers/preprocess.R")
 source("./src/script/helpers/data.R")
 source("./src/script/helpers/plot.R")
 source("./src/script/helpers/image.R")
