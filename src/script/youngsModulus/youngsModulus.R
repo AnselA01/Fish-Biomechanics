@@ -148,18 +148,11 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
 # arg n: window size is 2 * n + 1 NOTE may be lower if you reach the bounds of the first.deriv vector
 # returns: absolute value of a modified coefficient of variation score that uses the first derivative value at the selected
 # index as the "anchor" to compare the deviation to. 
-SVI <- function(index, first.deriv, name, n = 400) {
+SVI <- function(index, first.deriv, n = 500) {
   selected.first.deriv <- first.deriv[index]
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
   window <- first.deriv[start.index:end.index]
-  
-  
-  vec <- seq(1, n*2, length.out = length(window))
-  # plot(x = vec, y = window, main = paste(name, global.name))
-  
-  # model <- lm(window ~ vec)
-  # print(summary(model))
   
   # Since we can not guarantee that the first derivative values in the window 
   # have a constant slope (really a normal distribution), using the usual standard deviation formula is not ok.
@@ -177,36 +170,39 @@ globalMax <- function(first.deriv, strain) {
     list(
       slope = first.deriv[d1.max.index],
       strain = strain[d1.max.index],
-      score = SVI(d1.max.index, first.deriv, "global max")
+      score = SVI(d1.max.index, first.deriv)
     )
   )
+}
+
+# arg which - take the nth inflection point
+inflectionIndex <- function(second.deriv) {
+  if (anyNA(second.deriv)) {
+    return(NULL)
+  }
+  for (i in 2:(length(second.deriv) - 1)) {
+    if (sign(second.deriv[i]) > sign(second.deriv[i + 1])) {
+      return(i)
+    }
+  }
+  return(NULL)
 }
 
 # finds the inflection point of arg 2 (second deriv)
 # returns: first derivative value at the inflection point and corresponding strain value and slope score
 inflectionPoint <- function(first.deriv, second.deriv, strain) {
-  inflectionIndex <- function(second.deriv) {
-    if (anyNA(second.deriv)) {
-      return(NULL)
-    }
-    for (i in 2:(length(second.deriv) - 1)) {
-      if (sign(second.deriv[i]) > sign(second.deriv[i + 1])) {
-        return(i)
-      }
-    }
-    return (NULL)
-  }
-  
   d2.inflection.index <- inflectionIndex(second.deriv)
+  
   if (is.null(d2.inflection.index)) {
-    message(name, ": Failed to find second derivative inflection point")
+    message(global.name, ": Failed to find second derivative inflection point")
     return(NULL)
   }
+  
   return(
     list(
       slope = first.deriv[[d2.inflection.index]],
       strain = strain[[d2.inflection.index]],
-      score = SVI(d2.inflection.index, first.deriv, "inflection")
+      score = SVI(d2.inflection.index, first.deriv)
     )
   )
 }
@@ -229,7 +225,7 @@ localMax <- function(first.deriv.spline.fit, first.deriv, strain) {
     list(
       slope = first.deriv[d1.localMax.index],
       strain = strain[d1.localMax.index],
-      score = SVI(d1.localMax.index, first.deriv, "fds")
+      score = SVI(d1.localMax.index, first.deriv)
     )
   )
 }

@@ -73,7 +73,7 @@ plot_spline_model <- function(data, df) {
 
 
 ```{r}
-bone <- data.fetch(subject = "pf01cp3")
+bone <- data.fetch(subject = "pf12cp2")
 plot_spline_model(bone, 10)
 ```
 

@@ -11,47 +11,51 @@ source("./src/script/youngsModulus/youngsModulusDetermination.R")
 source("./src/script/youngsModulus/youngsModulus.R")
 source("./src/script/helpers/data.R")
 source("./src/script/helpers/general.R")
-source("./src/script/plot.R")
-source("./src/script/image.R")
+source("./src/script/helpers/plot.R")
+source("./src/script/helpers/image.R")
 ```
 
 ```{r}
-var <- ym.calculateAndDetermine(data.fetch(subject.name = "pf09lt2"))
+var <- ym.calculateAndDetermine(data.fetch(subject.name = "pf02ut3"))
 ```
 
 
 
 ```{r}
 bones <- data.generator()
-names <- vector(length = 273)
-method <- vector(length = 273)
-calculation <- vector(length = 273)
-slope <- vector(length = 273)
-score <- vector(length = 273)
-strain <- vector(length = 273)
-rsquared <- vector(length = 273)
-inconclusive <- vector(length = 273)
 ```
 
 ```{r}
+names <- vector()
+methods <- vector()
+calculations <- vector()
+slopes <- vector()
+scores <- vector()
+strains <- vector()
+rsquareds <- vector()
+inconclusives <- vector()
+
 doPlot <- FALSE
 doSave <- FALSE
 
 i <- 1
 for (bone in bones) {
-  ym.result <- ym.calculate(bone)
-  if (is.null(ym.result)) next
-  choose <- ym.determine(ym.result)
+  choose <- ym.calculateAndDetermine(bone)$choice
+  if (is.null(choose)) next
   
+  slope <- choose$slope[[1]]
+  score <- choose$score[[1]]
+  strain <- choose$strain[[1]]
+
   name <- getName(bone)
   names[i] <- name
-  method[i] <- choose$method
-  calculation[i] <- choose$calculation
-  slope[i] <- choose$slope
-  score[i] <- choose$score
-  strain[i] <- choose$strain
-  rsquared[i] <- ym.result$r.squared
-  inconclusive[i] <- choose$inconclusive
+  methods[i] <- choose$method
+  calculations[i] <- choose$calculation
+  slopes[i] <- slope
+  scores[i] <- score
+  strains[i] <- strain
+  rsquareds[i] <- ym.result$r.squared
+  inconclusives[i] <- choose$inconclusive
   i <- i + 1
   
   if (doPlot || doSave) {
@@ -60,10 +64,10 @@ for (bone in bones) {
       choose$method,
       "<br>",
       "<b>Slope:</b>",
-      round(choose$slope, 1),
+      round(slope, 1),
       "<br>",
       "<b>Score</b>",
-      round(choose$score, 3),
+      round(score, 3),
       "<br>",
       "<b>R-squared:</b>",
       round(ym.result$r.squared, 1),
@@ -74,8 +78,8 @@ for (bone in bones) {
       bone,
       layers = list(
         geom_segment(
-          x = choose$strain,
-          xend = choose$strain,
+          x = strain,
+          xend = strain,
           y = 0,
           yend = max(bone$Stress),
           color = "red"
@@ -92,13 +96,26 @@ for (bone in bones) {
   if (doSave) {
     image.save(bone, plot, directory = "ymResults/decisions")
   }
-  
 }
 ```
 
 ```{r}
-results <- data.frame(names, method, calculation, slope, score, strain, rsquared, inconclusive)
-write_csv(results, "results/youngsModulus/decisions_2.csv")
+results <- data.frame(
+  name = names,
+  method = methods,
+  calculation = calculations,
+  slope = slopes,
+  score = scores,
+  strain = strains,
+  rsquared = rsquareds,
+  inconclusive = inconclusives
+)
+write_csv(results, "results/youngsModulus/decisions.csv")
 ```
+
+```{r}
+results %>% filter(calculations == "max") %>% dplyr::select(names, inconclusives)
+```
+
 
 

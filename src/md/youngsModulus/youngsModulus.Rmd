@@ -71,8 +71,9 @@ plot.subject("20lt3") # initial noise
 
 ## Intervention
 ```{r}
-pf02ut3 <- data.fetch(subject = "pf09ut3")
-ym.calculate(pf02ut3)
+bone <- data.fetch(subject = "pf02ut4")
+var <- ym.calculate(bone)
+ym.determine(var, bone)
 ```
 
 
@@ -97,20 +98,25 @@ fds.score <- vector()
 ```
 
 ```{r}
-do.plot <- FALSE
-do.save <- TRUE
+do.plot <- TRUE
+do.save <- FALSE
 for (bone in bones) {
+  if (getName(bone) != "pf14LT1") next
   result <- ym.calculate(bone)
   if (is.null(result)) next
   
+  choose <- ym.calculateAndDetermine(bone)$choice
+  if (is.null(choose)) next
+  
+  
+  slope <- choose$slope[[1]]
+  score <- choose$score[[1]]
+  strain <- choose$strain[[1]]
 
-  minScore <- min(result$max.score, result$inflection.score, result$fds.score)
-  scores <- list(max = result$max.score, inflection = result$inflection.score, fds = result$fds.score)
-  minScoreMethod <- names(scores)[which.min(scores)]
 
-  maxColor <- ifelse(minScoreMethod == "max", "darkGreen", "red")
-  inflectionColor <- ifelse(minScoreMethod == "inflection", "darkGreen", "red")
-  fdsColor <- ifelse(minScoreMethod == "fds", "darkGreen", "red")
+  maxColor <- ifelse(choose$method == "max", "darkGreen", "red")
+  inflectionColor <- ifelse(choose$method == "inflection", "darkGreen", "red")
+  fdsColor <- ifelse(choose$method == "fds", "darkGreen", "red")
   
   names <- append(names, result$name)
   rsquared <- append(rsquared, result$r.squared)
@@ -132,10 +138,7 @@ for (bone in bones) {
     round(result$inflection.slope, 1),
     "<br>",
     "<b style='color:", fdsColor, ";'>FDS:</b>",
-    round(result$fds.slope, 1),
-    "<br>",
-    "<b style='color:black;'>R-squared:</b>",
-    round(result$r.squared, 2)
+    round(result$fds.slope, 1)
   )
   
   if (do.plot || do.save) {
@@ -167,30 +170,30 @@ for (bone in bones) {
           "text",
           x = result$max.strain,
           y = max(bone$Stress),
-          label = round(result$max.score, 3),
+          label = "Max",
           angle = 0,
           color = maxColor,
-          size = 2,
+          size = 3,
           fontface = "bold"
         ),
         annotate(
           "text",
           x = result$inflection.strain,
           y = max(bone$Stress * 0.925),
-          label = round(result$inflection.score, 3),
+          label = "Inflection",
           angle = 0,
           color = inflectionColor,
-          size = 2,
+          size = 3,
           fontface = "bold"
         ),
         annotate(
           "text",
           x = result$fds.strain,
           y = max(bone$Stress * 0.85),
-          label = round(result$fds.score, 3),
+          label = "FDS",
           angle = 0,
           color = fdsColor,
-          size = 2,
+          size = 3,
           fontface = "bold"
         ),
         labs(subtitle = plot.subtitle)
@@ -202,14 +205,14 @@ for (bone in bones) {
     }
   }
   if (do.save) {
-    image.save(bone, plot, directory = "ymResults/min_score_decisions")
+    image.save(bone, plot, directory = "ymResults/decisions2")
   }
 }
 ```
 
 ```{r}
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
-write_csv(results, "./results/youngsModulus/results_2.csv")
+write_csv(results, "./results/youngsModulus/results_newinflection.csv")
 ```
 
 # plotting svi

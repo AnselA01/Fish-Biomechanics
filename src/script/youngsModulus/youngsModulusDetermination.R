@@ -3,11 +3,11 @@ source("./src/script/helpers/general.R")
 
 global.methods.all <- c("fds", "inflection", "max")
 global.similar.threshold.percent <- 5
-global.strain.similar.threshold.percent <- 25
+global.strain.similar.threshold.percent <- 5
 
 # inconclusive thresholds
 global.inconclusive.slope.threshold <- 20
-global.inconclusive.score.threshold <- 2
+global.inconclusive.score.threshold <- 0.70
 
 global.name <- ""
 
@@ -15,9 +15,11 @@ global.name <- ""
 # arg: bone
 # returns: list of calculation result and choice
 ym.calculateAndDetermine <- function(bone) {
+  global.name <<- getName(bone)
+  message(global.name, " doing calculate and determine")
   results <- ym.calculate(bone)
   if (is.null(results)) {
-    message(getName(bone), ": could not calculate young's modulus")
+    message(global.name, " could not calculate young's modulus")
     return(NULL)
   }
   return(list(results = results, choice = ym.determine(results, bone)))
@@ -27,8 +29,6 @@ ym.calculateAndDetermine <- function(bone) {
 # arg ym.result: the return value from ym.calculate
 # returns: method name, slope, strain, and score of determined method
 ym.determine <- function(ym.result, bone) {
-  global.name <<- ym.result$name
-  
   ym.result.values <- extractYmResultValues(ym.result)
   result.slopes <- ym.result.values$slopes
   result.strains <- ym.result.values$strains
@@ -37,10 +37,20 @@ ym.determine <- function(ym.result, bone) {
   matching.pairs <- similarity(slopes = result.slopes, strains = result.strains, scores = result.scores)
   nearby.pairs <- nearby(strains = result.strains, maxStrain = max(bone$Strain))
 
+  # if there are no matching pairs take the method with the median strain. If there is a matching pair(s) take the method with the minimum score.
+  decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores)
+            else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs)
+  decision$inconclusive <- inconclusiveDecision(decision)
+  
   if (length(nearby.pairs == 2)) {
+    if (decision$method == "max") { # ok
+      return(decision)
+    }
     # check if the match is inflection and fds AND both their scores are higher than max
-    if (all(c("fds", "inflection") %in% nearby.pairs)) {
-      if (result.scores$fds > result.scores$max && result.scores$inflection > result.scores$max) {
+    if (all(c("fds", "inflection") %in% nearby.pairs) && !("max" %in% nearby.pairs)) {
+      max_score.threshold <- result.scores$max * 0.75 # the max score must not be too much higher
+      # if (result.scores$fds > result.scores$max && result.scores$inflection > result.scores$max) {
+      if (result.scores$fds > max_score.threshold && result.scores$inflection > max_score.threshold) {
         return(
           list(
             name = global.name,
@@ -49,17 +59,14 @@ ym.determine <- function(ym.result, bone) {
             method = "max",
             slope = result.slopes$max,
             strain = result.strains$max,
-            score = result.scores$max
+            score = result.scores$max,
+            inconclusive = result.scores$max > global.inconclusive.score.threshold
           )
         )
       }
     }    
   }
   
-  # if there are no matching pairs take the method with the median strain. If there is a matching pair(s) take the method with the minimum score.
-  decision <- if (is.null(matching.pairs)) medianStrainSlope(result.slopes, result.strains, result.scores)
-            else minScoreSlope(result.slopes, result.strains, result.scores, matching.pairs)
-  decision$inconclusive <- inconclusiveDecision(decision)
   return(decision)
 }
 
@@ -75,14 +82,15 @@ medianStrainSlope <- function(slopes, strains, scores) {
   strains.unlist <- unlist(strains)
   strain.median <- median(strains.unlist)
   strain.median.index <- which(strains.unlist == strain.median)
-  method.median <- names(strains.unlist[strain.median.index])
+  method.median <- names(strains.unlist[strain.median.index])[[1]]
   
+
   return(
     list(
       name = global.name,
       methods = global.methods.all,
       calculation = "median strain",
-      method = global.methods.all[strain.median.index],
+      method = method.median,
       slope = slopes[method.median],
       strain = strains[method.median],
       score = scores[method.median]
@@ -104,7 +112,7 @@ minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   }
   
   min.score.index <- which.min(unlist(scores[chosenMethods]))
-  method.min = names(scores[chosenMethods][min.score.index])
+  method.min = names(scores[chosenMethods][min.score.index])[[1]]
 
   methods.slopes <- unlist(slopes[chosenMethods])
   return(
