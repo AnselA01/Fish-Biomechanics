@@ -27,7 +27,7 @@ data.fetch <- function(fish.type = "pf", fish_numbers = c(1:21), segments = c("c
 
   # they just want one
   if (!missing(subject.name)) {
-    return(findOne(parseSubjectName(subject.name)))
+    return(findOne(parseSubjectName(tolower(subject.name))))
   }
 
   results.max <- length(fish_numbers) * length(segments) * length(trials)

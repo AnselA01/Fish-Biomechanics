@@ -27,19 +27,11 @@ area <- read_csv("data/area.csv")
 
 
 ```{r}
-pf09cp01 <- read_tsv("data/pf09/pf09cp01.csv", skip = 15)
+bone <- data.fetch(subject.name = "pf14CP1")
+spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
 
-area = 3.203110e-06
-length_initial = 2.60
-load = 0.8
-data_clean(pf09cp01, area, length_initial, load)
-```
-
-```{r}
-cp01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09cp01)
-
-pf09cp01$spline_fit <- predict(cp01spline_model)
-ggplot(pf09cp01, aes(x = Strain)) +
+spline_fit <- predict(spline_model)
+ggplot(bone, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 
   theme_minimal()
