@@ -31,6 +31,7 @@ bone <- data.fetch(subject.name = "pf14CP1")
 spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
 
 spline_fit <- predict(spline_model)
+spline_fit <- append(spline_fit, rep(NA, length.out = length(bone) - length(spline_fit)))
 ggplot(bone, aes(x = Strain)) +
   geom_point(aes(y = Stress)) +
   geom_line(aes(y = spline_fit), color = "blue") + 

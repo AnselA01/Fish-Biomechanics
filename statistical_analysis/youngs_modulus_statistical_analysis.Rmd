@@ -20,6 +20,8 @@ library(stats)
 library(readr)
 library(lme4)
 library(HLMdiag)
+library(ggResidpanel)
+library(ggrepel)
 
 setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
 data_directory <- "./data"
@@ -61,13 +63,216 @@ length_data <- read.csv(("Perch study - MAIE Lab - Tally.csv"))
 decisions_length <- merge(decisions_good, length_data, by.x = "fish_name", by.y = "Individual", all.x = T) 
 ```
 
-*Visualizations*
+## Visualizations - Usefull
 
 ```{r}
 decisions_good |> # rem this bone order is flipped
   ggplot(aes(x = bone_type, y = slope)) + 
   geom_boxplot() 
 ```
+
+*YM vs fish length*
+
+```{r}
+p1 <- decisions_length |>
+  filter(bone_type == "UT") |>
+  ggplot(aes(x = Length..cm., y = slope)) + 
+  geom_point(aes(color = fish_name)) +
+  geom_smooth(method = lm, se = F) +
+  scale_y_continuous(limits = c(0,500)) +
+  labs(title = "UT")
+
+p2 <- decisions_length |>
+  filter(bone_type == "MT") |>
+  ggplot(aes(x = Length..cm., y = slope)) +
+  geom_point(aes(color = fish_name)) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "MT") +
+  scale_y_continuous(limits = c(0,500))
+
+p3 <- decisions_length |>
+  filter(bone_type == "LT") |>
+  ggplot(aes(x = Length..cm., y = slope)) +
+  geom_point(aes(color = fish_name)) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "LT") +
+  scale_y_continuous(limits = c(0,500))
+
+p4 <- decisions_length |>
+  filter(bone_type == "CP") |>
+  ggplot(aes(x = Length..cm., y = slope)) +
+  geom_point(aes(color = fish_name)) +
+  geom_smooth(method = lm, se = F) +
+  labs(title = "CP") +
+  scale_y_continuous(limits = c(0,550))
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+
+*Within fish variability*
+
+```{r}
+# color the 10 misidentified bones
+#decisions_length <- decisions_length |>
+ # mutate(color_group = ifelse(misidentified_flag, name, "Good"))
+
+# Order x axis by length
+
+# Plot with unique colors for highlighted fish
+p1 <- decisions_length |>
+  filter(bone_type == "CP") |>
+  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
+  ggplot(aes(x = fish_name, y = slope)) +
+  geom_point(size = 3, alpha = 0.5) +
+  # scale_color_manual(values = c(setNames(rainbow(15), color_group), "Good" = "black")) +
+  labs(title = "CP", x = "Fish Name", y = "Young's Modulus") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  scale_y_continuous(limits = c(0, 600))
+
+p2 <- decisions_length |>
+  filter(bone_type == "LT") |>
+  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
+  ggplot(aes(x = fish_name, y = slope)) +
+  geom_point(size = 3, alpha = 0.5) +
+  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
+  labs(title = "LT", x = "Fish Name", y = "Young's Modulus") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  scale_y_continuous(limits = c(0, 600))
+
+p3 <- decisions_length |>
+  filter(bone_type == "MT") |>
+  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
+  ggplot(aes(x = fish_name, y = slope)) +
+  geom_point(size = 3, alpha = 0.5) +
+  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
+  labs(title = "MT", x = "Fish Name", y = "Young's Modulus") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  scale_y_continuous(limits = c(0, 600))
+
+p4 <- decisions_length |>
+  filter(bone_type == "UT") |>
+  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
+  ggplot(aes(x = fish_name, y = slope)) +
+  geom_point(size = 3, alpha = 0.5) +
+  # scale_color_manual(values = c(setNames(rainbow(15), ), "Good" = "black")) +
+  labs(title = "UT", x = "Fish Name", y = "Young's Modulus") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  scale_y_continuous(limits = c(0, 600))
+
+grid.arrange(p1,p2,p3,p4)
+```
+
+*between fish variability*
+
+```{r}
+decisions_good |>
+  ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope)) +
+  geom_point(aes(color = fish_name)) +
+  geom_smooth(aes(group = fish_name, color = fish_name), se=F) + 
+  facet_wrap(~ fish_name) +
+  labs(x = "Bone Type", y = "Young's Modulus") +
+  theme(legend.position = "none")
+```
+
+
+## Statistical Analysis
+
+*Youngs modulus*
+
+```{r}
+a1 <- aov(slope~bone_type, data = decisions_good)
+summary(a1)   # p = 0.017
+
+TukeyHSD(a1)
+# difference between UT and MT is significant
+```
+
+*Multilevel model*
+
+```{r}
+# Random intercept for each fish.
+m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = decisions_length, REML = TRUE)
+summary(m1)
+
+m0 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
+anova(m1, m0) # p = 0.008
+```
+
+*Residuals*
+
+```{r}
+resid_panel(m1)
+## In general, residuals are pretty good. QQ plot is bad on right end.
+## Data is a little right skewed?
+
+# OUTLIERS
+
+# Add columns for ID and Pearson residuals
+decisions_resid <- decisions_length %>%
+  mutate(Pearson_resids = residuals(m1, type = "pearson"),
+         id = row_number())
+
+# create smaller data set with points we want to label
+outliers <- decisions_resid %>%
+  filter(Pearson_resids > 2 | Pearson_resids < (-2))
+
+ggplot(data = decisions_resid, mapping = aes(x = id, y = Pearson_resids)) +
+  geom_point(alpha = 1/4) +
+  geom_hline(yintercept = c(-2, 2), color = "red") +
+  geom_point(size = 3, shape = 1, data = outliers) +
+  geom_label_repel(aes(label = name, colour = name), 
+    data = outliers, show.legend = FALSE)
+```
+
+*log(YM)*
+
+```{r}
+m11 <- lmer(I(log(slope)) ~  bone_type + (1 | fish_name), data = decisions_length, REML = TRUE)
+summary(m11)
+
+m00 <- lmer(I(log(slope)) ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
+anova(m11, m00) # p=0.0007
+
+resid_panel(m11)
+# this looks better
+
+# OUTLIERS
+
+# Add columns for ID and Pearson residuals
+decisions_resid2 <- decisions_length %>%
+  mutate(Pearson_resids = residuals(m11, type = "pearson"),
+         id = row_number())
+
+# create smaller data set with points we want to label
+outliers2 <- decisions_resid2 %>%
+  filter(Pearson_resids > 2 | Pearson_resids < (-2))
+
+ggplot(data = decisions_resid2, mapping = aes(x = id, y = Pearson_resids)) +
+  geom_point(alpha = 1/4) +
+  geom_hline(yintercept = c(-2, 2), color = "red") +
+  geom_point(size = 3, shape = 1, data = outliers2) +
+  geom_label_repel(aes(label = name, colour = name), 
+    data = outliers2, show.legend = FALSE)
+```
+
+
+*multilevel models with UT as reference level*
+
+```{r}
+decisions_relevel_UT <- decisions_good |>
+   mutate(bone_type = fct_relevel(bone_type, "UT", "CP", "LT", "MT"))
+
+
+m2.ut <- lmer(I(log(slope)) ~  relevel(bone_type, ref = "UT") + (1 | fish_name), data = decisions_relevel_UT, REML = TRUE)
+
+
+summary(m2.ut) # differences between UT-MT and UT-LT are significant
+```
+
+## Visualizations - Not as good
+
+*bone number on x axis*
 
 ```{r}
 decisions_good |>
@@ -134,7 +339,7 @@ decisions_good |>
 grid.arrange(p1, p2, p3, p4)
 ```
 
-*slope v bone size*
+*YM v bone size*
 
 ```{r}
 p1 <- decisions_area |>
@@ -172,132 +377,7 @@ p4 <- decisions_area |>
 grid.arrange(p1,p2,p3,p4)
 ```
 
-## 3/11 Tuesday Meeting - new stuff
-
-*fish length*
-
-```{r}
-p1 <- decisions_length |>
-  filter(bone_type == "CP") |>
-  ggplot(aes(x = Length..cm., y = slope)) + 
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  scale_y_continuous(limits = c(0,500)) +
-  labs(title = "CP")
-
-p2 <- decisions_length |>
-  filter(bone_type == "LT") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "LT") +
-  scale_y_continuous(limits = c(0,500))
-
-p3 <- decisions_length |>
-  filter(bone_type == "MT") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "MT") +
-  scale_y_continuous(limits = c(0,500))
-
-p4 <- decisions_length |>
-  filter(bone_type == "UT") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "UT") +
-  scale_y_continuous(limits = c(0,550))
-
-grid.arrange(p1,p2,p3,p4)
-```
-
-
-*Within fish variability*
-
->> Including the misidentified doesn't look that bad, but really changes the results of the stat analysis. The p value on LRT goes way up.
-
-```{r}
-# color the 10 misidentified bones
-decisions_length <- decisions_length |>
-  mutate(color_group = ifelse(misidentified_flag, name, "Good"))
-
-# Order x axis by length
-
-# Plot with unique colors for highlighted fish
-p1 <- decisions_length |>
-  filter(bone_type == "CP") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope, color = color_group)) +
-  geom_point(size = 3) +
-  # scale_color_manual(values = c(setNames(rainbow(15), color_group), "Good" = "black")) +
-  labs(title = "CP") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
-
-p2 <- decisions_length |>
-  filter(bone_type == "LT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope, color = color_group)) +
-  geom_point(size = 3) +
-  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
-  labs(title = "LT") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
-
-p3 <- decisions_length |>
-  filter(bone_type == "MT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope, color = color_group)) +
-  geom_point(size = 3) +
-  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
-  labs(title = "MT") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
-
-p4 <- decisions_length |>
-  filter(bone_type == "UT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope, color = color_group)) +
-  geom_point(size = 3) +
-  geom_jitter() + 
-  # scale_color_manual(values = c(setNames(rainbow(15), ), "Good" = "black")) +
-  labs(title = "UT") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
-
-grid.arrange(p1,p2,p3,p4)
-```
-
-*between fish variability*
-
-```{r}
-decisions_good |>
-  ggplot(aes(x = bone_type, y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(aes(group = fish_name, color = fish_name), se=F)
-
-decisions_good |>
-  ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(aes(group = fish_name, color = fish_name), se=F) + 
-  facet_wrap(~ fish_name) +
-  labs(x = "Bone Type", y = "Youngs Modulus") +
-  theme(legend.position = "none")
-```
-
-
-*Youngs modulus*
-
-```{r}
-a1 <- aov(slope~bone_type, data = decisions_good)
-summary(a1)   # p = 0.162, not a significant difference 
-
-TukeyHSD(a1)
-
-# differences between each group are not significant, most significant difference is between UT and MT, p=0.124
-```
-
+## Analysis - not usefull
 
 ```{r}
 a2 <- aov(slope~fish_name, data = decisions_good) # p < .001. fine; only significant difference is between pf18 and pf07
@@ -307,27 +387,9 @@ TukeyHSD(a2)
 # indicates variability between fish
 ```
 
-*Multilevel model*
+*multilevel changing reference level*
 
 ```{r}
-# Random intercept for each fish.
-m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = decisions_length, REML = TRUE)
-summary(m1)
-
-# t stats are small, not significant
-
-m0 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
-anova(m1, m0)
-
-#dotplot_diag(m1)
-
-# the model including bone type is not significantly better than the model without bone type. p = 0.065
-```
-
-*multilevel models changing the reference level*
-
-```{r}
-
 decisions_relevel_CP <- decisions_good |> 
    mutate(bone_type = fct_relevel(bone_type, "CP", "LT", "MT", "UT"))
 
@@ -337,23 +399,15 @@ decisions_relevel_LT <- decisions_good |>
 decisions_relevel_MT <- decisions_good |>
    mutate(bone_type = fct_relevel(bone_type, "MT", "CP", "LT", "UT"))
 
-decisions_relevel_UT <- decisions_good |>
-   mutate(bone_type = fct_relevel(bone_type, "UT", "CP", "LT", "MT"))
-
 m2.cp <- lmer(slope ~  relevel(bone_type, ref = "CP") + (1 | fish_name), data = decisions_relevel_CP, REML = TRUE)
 
 m2.lt <- lmer(slope ~  relevel(bone_type, ref = "LT") + (1 | fish_name), data = decisions_relevel_LT, REML = TRUE)
 
 m2.mt <- lmer(slope ~  relevel(bone_type, ref = "MT") + (1 | fish_name), data = decisions_relevel_MT, REML = TRUE)
 
-m2.ut <- lmer(slope ~  relevel(bone_type, ref = "UT") + (1 | fish_name), data = decisions_relevel_UT, REML = TRUE)
-
 summary(m2.cp)
 summary(m2.lt)
 summary(m2.mt)
-summary(m2.ut) # t stat between UT and MT is -2.567
-
-# The UT bones are the most different.
 ```
 
 *group bones by location. (CP and UT) vs (MT and LT)*
@@ -388,32 +442,3 @@ anova(m4, m0) # p = 0.02416
 
 # Is there a problem with doing this since then our data is only inner or outer?
 ```
-
-## Ignore 
-
-*use average YM for each fish and bone*
-
-```{r}
-avg <- decisions_good |>
-  group_by(fish_type, fish_num, bone_type) |>
-  mutate(bone_num = as.numeric(bone_num),
-         avg = sum(slope)/max(bone_num))
-
-a4 <- aov(avg~bone_type, data = avg)
-summary(a4)   # p = 0.08, not a significant difference 
-
-TukeyHSD(a4)
-
-m00 <- lmer(slope ~  1 + (1 | fish_name), data = avg, REML = TRUE)
-
-m3 <- lmer(avg ~  bone_type + (1 | fish_name), data = avg, REML = TRUE)
-summary(m3) # t stat for UT is a little better
-
-anova(m3, m00)
-
-# There is a significant difference when we use the average.
-```
-
-
-
-
