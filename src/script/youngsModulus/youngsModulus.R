@@ -5,6 +5,7 @@ source("./src/script/helpers/general.R")
 # per-bone variables
 global.name <- ""
 r.squared <- NA
+SVI.plots <- list()
 
 # constants
 global.max.df <- 10 # the starting number of degrees of freedom when fitting splines
@@ -37,26 +38,27 @@ ym.calculate <- function(bone) {
     fds.spline.fit.result$coefs
   )
   
-  return(
-    c(
-      max = globalMax(
-        firstSecondDerivResult$first.deriv,
-        spline.fit.result$strainGrid$Strain
-      ),
-      inflection = inflectionPoint(
-        firstSecondDerivResult$first.deriv,
-        firstSecondDerivResult$second.deriv,
-        spline.fit.result$strainGrid$Strain
-      ),
-      fds = localMax(
-        fds.spline.fit.result$first.deriv.spline.fit,
-        fds.firstSecondDerivResult$first.deriv,
-        fds.spline.fit.result$strainGrid$Strain
-      ),
-      name = global.name,
-      r.squared = r.squared
-    )
+  results <- c(
+    max = globalMax(
+      firstSecondDerivResult$first.deriv,
+      spline.fit.result$strainGrid$Strain
+    ),
+    inflection = inflectionPoint(
+      firstSecondDerivResult$first.deriv,
+      firstSecondDerivResult$second.deriv,
+      spline.fit.result$strainGrid$Strain
+    ),
+    fds = localMax(
+      fds.spline.fit.result$first.deriv.spline.fit,
+      fds.firstSecondDerivResult$first.deriv,
+      fds.spline.fit.result$strainGrid$Strain
+    ),
+    name = global.name,
+    r.squared = r.squared
   )
+  
+  gridExtra::grid.arrange(grobs = SVI.plots, nrow = 3, top = getName(bone, sep = " "))
+  return(results)
 }
 
 # performs numeric differentiation on Stress and Strain values
@@ -148,18 +150,43 @@ calculateFirstSecondDerivatives <- function(strain, coefficients) {
 # arg n: window size is 2 * n + 1 NOTE may be lower if you reach the bounds of the first.deriv vector
 # returns: absolute value of a modified coefficient of variation score that uses the first derivative value at the selected
 # index as the "anchor" to compare the deviation to. 
-SVI <- function(index, first.deriv, n = 500) {
+SVI <- function(index, first.deriv, name = NULL, n = 500) {
   selected.first.deriv <- first.deriv[index]
   start.index <- max(1, index - n) # cap start and end at index 1 and strain length
   end.index <- min(length(first.deriv), index + n)
   window <- first.deriv[start.index:end.index]
+  
+  vec <- seq(1, n*2, length.out = length(window))
   
   # Since we can not guarantee that the first derivative values in the window 
   # have a constant slope (really a normal distribution), using the usual standard deviation formula is not ok.
   # Our modified deviation measure uses the distance from the selected first derivative value instead of the distance from the window mean. 
   # This modified variation method is analogous to the error of a regression model.
   deviation <- sqrt(mean((window - selected.first.deriv)^2, na.rm = TRUE))
-  return(abs(deviation / selected.first.deriv))
+  
+  cov <- abs(deviation / selected.first.deriv)
+
+  # plotting SVI
+  if (length(name)) {
+    ggplot(data = data.frame(vec, window), aes(x = vec, y = window)) + 
+      geom_point() + 
+      # geom_hline(yintercept = selected.first.deriv, color = "red") + 
+      labs(x = "", y = if_else(name == "Max", "First derivative", ""), title = name, subtitle = paste0("CV=", round(cov, 2))) + 
+      theme_classic() + 
+      theme(axis.text.x = element_blank()) -> plot
+    
+      if (name == "Max") {
+        SVI.plots[[1]] <<- plot
+      }
+      if (name == "Inflection") {
+        SVI.plots[[2]] <<- plot
+      }
+      if (name == "FDS") {
+        SVI.plots[[3]] <<- plot
+      }
+  }
+  
+  return(cov)
 }
 
 # finds global max of first derivatives
@@ -170,7 +197,7 @@ globalMax <- function(first.deriv, strain) {
     list(
       slope = first.deriv[d1.max.index],
       strain = strain[d1.max.index],
-      score = SVI(d1.max.index, first.deriv)
+      score = SVI(d1.max.index, first.deriv, "Max")
     )
   )
 }
@@ -202,7 +229,7 @@ inflectionPoint <- function(first.deriv, second.deriv, strain) {
     list(
       slope = first.deriv[[d2.inflection.index]],
       strain = strain[[d2.inflection.index]],
-      score = SVI(d2.inflection.index, first.deriv)
+      score = SVI(d2.inflection.index, first.deriv, "Inflection")
     )
   )
 }
@@ -225,7 +252,7 @@ localMax <- function(first.deriv.spline.fit, first.deriv, strain) {
     list(
       slope = first.deriv[d1.localMax.index],
       strain = strain[d1.localMax.index],
-      score = SVI(d1.localMax.index, first.deriv)
+      score = SVI(d1.localMax.index, first.deriv, "FDS")
     )
   )
 }

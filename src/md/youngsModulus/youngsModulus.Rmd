@@ -101,18 +101,16 @@ fds.score <- vector()
 do.plot <- TRUE
 do.save <- FALSE
 for (bone in bones) {
-  if (getName(bone) != "pf14LT1") next
+  if (getName(bone) != "PF05UT3") next
   result <- ym.calculate(bone)
   if (is.null(result)) next
   
   choose <- ym.calculateAndDetermine(bone)$choice
   if (is.null(choose)) next
   
-  
   slope <- choose$slope[[1]]
   score <- choose$score[[1]]
   strain <- choose$strain[[1]]
-
 
   maxColor <- ifelse(choose$method == "max", "darkGreen", "red")
   inflectionColor <- ifelse(choose$method == "inflection", "darkGreen", "red")
@@ -142,6 +140,11 @@ for (bone in bones) {
   )
   
   if (do.plot || do.save) {
+    spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
+
+    spline_fit <- predict(spline_model)
+    spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
+    
     plot <- plot.plot(
       bone,
       layers = list(
@@ -196,7 +199,19 @@ for (bone in bones) {
           size = 3,
           fontface = "bold"
         ),
-        labs(subtitle = plot.subtitle)
+        labs(subtitle = plot.subtitle), 
+        geom_line(aes(y = spline_fit), color = "blue", size = 1),
+        # scale_colour_manual(
+        #   name = 'Spline fit',
+        #   values = c('blue' = 'blue'),
+        #   labels = c("")
+        # ),
+        theme(legend.position = "top",
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              plot.caption = element_text(size = 12),
+              plot.subtitle = element_markdown(size = 12)
+              )
       )
     )
   

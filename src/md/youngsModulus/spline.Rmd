@@ -33,17 +33,12 @@ spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Str
 spline_fit <- predict(spline_model)
 spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
 ggplot(bone, aes(x = Strain)) +
-  geom_point(aes(y = Stress), size = 1) +
-  geom_line(aes(y = spline_fit), color = "blue", size = 1) + 
-  theme_minimal()
-
-mt01spline_model <- lm(Stress ~ ns(Strain, df = 10), data = pf09mt01)
-
-pf09mt01$spline_fit <- predict(mt01spline_model)
-ggplot(pf09mt01, aes(x = Strain)) + #Tg
-  geom_point(aes(y = Stress)) +
-  geom_line(aes(y = spline_fit), color = "blue") + 
-  theme_minimal()
+  geom_point(aes(y = Stress), size = 2) +
+  geom_line(aes(y = spline_fit, color = "blue"), size = 2) +
+    scale_colour_manual(name = 'Spline fit', 
+       values = c('blue' = 'blue'), labels = c("")) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
 ```
 
 

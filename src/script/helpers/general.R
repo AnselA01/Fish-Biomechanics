@@ -14,5 +14,5 @@ parseSubjectName <- function(subject.name) {
 # something is up with this
 # gets name of subject from bone df
 getName <- function(bone, sep = "") {
-  return(paste(bone$Individual[[1]], bone$Segment[[1]], bone$Trial[[1]], sep = sep))
+  return(paste(toupper(bone$Individual[[1]]), bone$Segment[[1]], bone$Trial[[1]], sep = sep))
 }
