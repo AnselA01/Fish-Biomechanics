@@ -33,7 +33,7 @@ script_directory <- "./src/script/"
 decisions <- read_csv("results/youngsModulus/decisions.csv")
 yieldStress <- read_csv("results/yieldStress/yieldStress.csv")
 method <- read_csv("results/youngsModulus/results.csv")
-misidentified <- c("pf05UT2", "pf16MT2")
+misidentified <- c("pf05UT2", "pf16MT2", "pf07UT4", "pf11CP1")
 area <- read_csv("data/area.csv")
 
 area_clean <- area |>
