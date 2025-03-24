@@ -57,13 +57,25 @@ decisions_good <- decisions |>
 
 decisions_area <- merge(decisions_good, area_clean, by.x = "name", by.y = "fish_name")
 
+decisions_nomis <- decisions |>
+  mutate(misidentified_flag = if_else(name %in% misidentified, TRUE, FALSE)) |> 
+  dplyr::filter(!inconclusive) %>%
+  mutate(
+    fish_type = str_sub(name, 1, 2),
+    fish_num = str_sub(name, 3, 4),
+    bone_type = str_sub(name, 5, 6),
+    # bone_type = factor relvel todo
+    bone_num = str_sub(name, 7, 8),
+    fish_name = str_sub(name, 1, 4)
+  ) |>
+  dplyr::filter(fish_type != "sv", misidentified_flag == FALSE)
 
 length_data <- read.csv(("Perch study - MAIE Lab - Tally.csv"))
 
 decisions_length <- merge(decisions_good, length_data, by.x = "fish_name", by.y = "Individual", all.x = T) 
 ```
 
-## Visualizations - Usefull
+## Visualizations - Useful
 
 ```{r}
 decisions_good |> # rem this bone order is flipped
@@ -113,68 +125,134 @@ grid.arrange(p1,p2,p3,p4)
 *Within fish variability*
 
 ```{r}
-# color the 10 misidentified bones
-#decisions_length <- decisions_length |>
- # mutate(color_group = ifelse(misidentified_flag, name, "Good"))
-
 # Order x axis by length
 
 # Plot with unique colors for highlighted fish
-p1 <- decisions_length |>
-  filter(bone_type == "CP") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope)) +
-  geom_point(size = 3, alpha = 0.5) +
-  # scale_color_manual(values = c(setNames(rainbow(15), color_group), "Good" = "black")) +
-  labs(title = "CP", x = "Fish Name", y = "Young's Modulus") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
+# p1 <- decisions_length |>
+#   filter(bone_type == "CP") |>
+#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
+#   ggplot(aes(x = Length..cm., y = slope,color = fish_name, group = fish_name)) +
+#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
+#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
+#   labs(title = "CP", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
+#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
+#   theme_minimal() +
+#   theme(
+#             axis.text.x = element_text(size = 11),
+#         axis.title.x = element_text(size = 14),
+#         axis.title.y = element_text(size = 14),
+#         axis.text.y = element_text(size = 11)
+# )
 
-p2 <- decisions_length |>
-  filter(bone_type == "LT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope)) +
-  geom_point(size = 3, alpha = 0.5) +
-  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
-  labs(title = "LT", x = "Fish Name", y = "Young's Modulus") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
+decisions_length |>
+  # filter(bone_type == "LT") |>
+  mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
+  ggplot(aes(x = Length..cm., y = slope, color = fish_name, group = fish_name)) +
+  geom_hline(yintercept = 125, color = "gray", size = 0.25) + 
+  geom_hline(yintercept = 250, color = "gray", size = 0.25) + 
+  geom_hline(yintercept = 375, color = "gray", size = 0.25) + 
+  geom_point(size = 3, alpha = 0.85) +
+  geom_line(size = 1, alpha = 0.75, show.legend = FALSE) +
+  labs(x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)", color = "Fish\nName") +
+  theme(axis.text.x = element_text(
+    angle = 45,
+    vjust = 1,
+    hjust = 1
+  )) +
+  scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    legend.title = element_text(hjust = 0.5, size = 13, face = "bold"),
+    legend.position = "bottom",
+    legend.text = element_text(size = 12),
+    legend.margin = margin(10, 10, 10, -25),
+    strip.text = element_text(face = "bold", size = 13),
+    panel.grid = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray")
+  ) +
+  guides(color = guide_legend(nrow = 2)) +
+  facet_wrap( ~ fct_relevel(bone_type, "UT", "MT", "LT", "CP"))
 
-p3 <- decisions_length |>
-  filter(bone_type == "MT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope)) +
-  geom_point(size = 3, alpha = 0.5) +
-  # scale_color_manual(values = c(setNames(rainbow(15), misidentified_flag), "Good" = "black")) +
-  labs(title = "MT", x = "Fish Name", y = "Young's Modulus") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
+# p3 <- decisions_length |>
+#   filter(bone_type == "MT") |>
+#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
+#   ggplot(aes(x = Length..cm.,  y = slope, color = fish_name, group = fish_name)) +
+#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
+#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
+#   labs(title = "MT", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
+#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
+#   theme_minimal() + 
+#   theme(plot.title = element_text(face = "bold"),
+#         axis.text.x = element_text(size = 11),
+#         axis.title.x = element_text(size = 14),
+#         axis.title.y = element_text(size = 12),
+#         axis.text.y = element_text(size = 11),
+# )
 
-p4 <- decisions_length |>
-  filter(bone_type == "UT") |>
-  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
-  ggplot(aes(x = fish_name, y = slope)) +
-  geom_point(size = 3, alpha = 0.5) +
-  # scale_color_manual(values = c(setNames(rainbow(15), ), "Good" = "black")) +
-  labs(title = "UT", x = "Fish Name", y = "Young's Modulus") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 600))
-
-grid.arrange(p1,p2,p3,p4)
+# p4 <- decisions_length |>
+#   filter(bone_type == "UT") |>
+#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
+#   ggplot(aes(x = Length..cm., y = slope, color = fish_name, group = fish_name)) +
+#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
+#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
+#   labs(title = "UT", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
+#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
+#   theme_mtext(face = "bold"),
+#     axis.text.x = element_text(size = 12),
+#         axis.title.x = element_text(size = 14),
+#         axis.title.y = element_text(size = 14),
+#         axis.text.y = el0ement_text(size = 12),
+#         plot.margin = margin(0, 145, 5, 0)
+#         )
+# 
+# grid.arrange(p1,p2,p3,p4)
 ```
+
 
 *between fish variability*
 
 ```{r}
-decisions_good |>
-  ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(aes(group = fish_name, color = fish_name), se=F) + 
-  facet_wrap(~ fish_name) +
-  labs(x = "Bone Type", y = "Young's Modulus") +
-  theme(legend.position = "none")
+decisions_length %>% 
+  mutate(xlabel = ifelse(as.numeric(fish_num) >= 8 & fish_num <= 14, bone_type, NA)) %>% 
+  mutate(fish_name = fct_reorder(fish_name, Length..cm.)) |>
+ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope, color = fish_name)) +
+  geom_hline(yintercept = 125, color = "gray", size = 0.25) + 
+  geom_hline(yintercept = 250, color = "gray", size = 0.25) + 
+  geom_hline(yintercept = 375, color = "gray", size = 0.25) + 
+  geom_point(size = 3) +
+  geom_smooth(
+    aes(group = fish_name),
+    se = F,
+    size = 0.75
+  ) +
+  facet_wrap( ~ fish_name,
+              nrow = 3,
+              labeller = labeller(fish_name = toupper)) +
+  labs(x = "Bone Type", y = "Young's Modulus (N/m^2)") +
+ scale_y_continuous(
+    breaks = c(0, 250, 500)
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.y = element_text(size = 12),
+    axis.text.x = element_text(size = 12),
+    panel.spacing = unit(0.2, "lines"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_rect(fill = NA, color = "gray"),
+    strip.text = element_text(size = 13, face = "bold")
+  )
 ```
-
 
 ## Statistical Analysis
 
@@ -197,6 +275,16 @@ summary(m1)
 
 m0 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
 anova(m1, m0) # p = 0.008
+```
+
+*Multilevel with no misidentified*
+
+```{r}
+m3 <- lmer(slope ~  bone_type + (1 | fish_name), data = decisions_nomis, REML = TRUE)
+summary(m1)
+
+m4 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_nomis, REML = TRUE)
+anova(m3, m4) # p = 0.006
 ```
 
 *Residuals*
@@ -263,9 +351,7 @@ ggplot(data = decisions_resid2, mapping = aes(x = id, y = Pearson_resids)) +
 decisions_relevel_UT <- decisions_good |>
    mutate(bone_type = fct_relevel(bone_type, "UT", "CP", "LT", "MT"))
 
-
 m2.ut <- lmer(I(log(slope)) ~  relevel(bone_type, ref = "UT") + (1 | fish_name), data = decisions_relevel_UT, REML = TRUE)
-
 
 summary(m2.ut) # differences between UT-MT and UT-LT are significant
 ```

@@ -1,4 +1,7 @@
+
 library(splines2)
+library(gridExtra)
+library(cowplot)
 
 source("./src/script/helpers/general.R")
 
@@ -57,7 +60,9 @@ ym.calculate <- function(bone) {
     r.squared = r.squared
   )
   
-  gridExtra::grid.arrange(grobs = SVI.plots, nrow = 3, top = getName(bone, sep = " "))
+  gridExtra::grid.arrange(grobs = SVI.plots,
+                          ncol = 3,
+                          top = textGrob(getName(bone, sep = " "), gp = gpar(fontface = "bold", cex = 1.25)))
   return(results)
 }
 
@@ -167,26 +172,35 @@ SVI <- function(index, first.deriv, name = NULL, n = 500) {
   cov <- abs(deviation / selected.first.deriv)
 
   # plotting SVI
-  if (length(name)) {
-    ggplot(data = data.frame(vec, window), aes(x = vec, y = window)) + 
-      geom_point() + 
-      # geom_hline(yintercept = selected.first.deriv, color = "red") + 
-      labs(x = "", y = if_else(name == "Max", "First derivative", ""), title = name, subtitle = paste0("CV=", round(cov, 2))) + 
-      theme_classic() + 
-      theme(axis.text.x = element_blank()) -> plot
-    
-      if (name == "Max") {
-        SVI.plots[[1]] <<- plot
-      }
-      if (name == "Inflection") {
-        SVI.plots[[2]] <<- plot
-      }
-      if (name == "FDS") {
-        SVI.plots[[3]] <<- plot
-      }
-  }
+  if (length(name)) plot.svi(name, cov, data =  data.frame(strain = vec, slope = window))
   
   return(cov)
+}
+
+# saves SVI plot 
+plot.svi <- function(name, cov, data) {
+  plot <- ggplot(data, aes(x = strain, y = slope)) + 
+    geom_point() + 
+    labs(x = "", y = if_else(name == "Max", "First derivative", ""), title = name, subtitle = paste("CV:", round(cov, 2))) + 
+    theme_classic() + 
+    theme(
+      plot.title = element_text(face = "bold", size = 32),
+      axis.title.y = element_text(size = 30),
+      axis.text.y = element_text(size = 28),
+      axis.text.x = element_blank(),
+      axis.ticks.x = element_blank()
+          )
+  
+  if (name == "Max") {
+    SVI.plots[[1]] <<- plot
+  }
+  if (name == "Inflection") {
+    SVI.plots[[2]] <<- plot
+  }
+  if (name == "FDS") {
+    SVI.plots[[3]] <<- plot
+  }
+  return(NA)
 }
 
 # finds global max of first derivatives

@@ -6,22 +6,13 @@ plot.plot <- function(data, layers = c()) {
   library(ggtext)
   
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
-    geom_line(size = 1) +
+    geom_line(size = 1.5) +
     labs(
       title = getName(data, sep = " "),
       x = "Strain",
       y = "Stress"
     ) +
-    theme_classic() +
-    theme(plot.caption = element_text(hjust = 0, size = 7), 
-          plot.subtitle = element_markdown(hjust = 0, size = 7),
-          axis.title.x = element_text(size = 7),
-          axis.title.y = element_text(size = 7),
-          axis.text.x = element_text(size = 7),
-          axis.text.y = element_text(size = 7),
-          plot.title = element_text(hjust = 0.5)
-          )
-  
+    theme_classic()
   # add custom layers 
   for (layer in layers) {
     base.plot <- base.plot + layer

@@ -101,6 +101,7 @@ fds.score <- vector()
 do.plot <- TRUE
 do.save <- FALSE
 for (bone in bones) {
+  # if (getName(bone) != "PF09UT1") next
   if (getName(bone) != "PF05UT3") next
   result <- ym.calculate(bone)
   if (is.null(result)) next
@@ -112,105 +113,73 @@ for (bone in bones) {
   score <- choose$score[[1]]
   strain <- choose$strain[[1]]
 
-  maxColor <- ifelse(choose$method == "max", "darkGreen", "red")
-  inflectionColor <- ifelse(choose$method == "inflection", "darkGreen", "red")
-  fdsColor <- ifelse(choose$method == "fds", "darkGreen", "red")
+  green <- "#228b22"
+  red <- "#c60000"
+  maxColor <- ifelse(choose$method == "max", green, red)
+  inflectionColor <- ifelse(choose$method == "inflection", green, red)
+  fdsColor <- ifelse(choose$method == "fds", green, red)
   
   names <- append(names, result$name)
   rsquared <- append(rsquared, result$r.squared)
+  
   max.slope <- append(max.slope, result$max.slope)
   max.strain <- append(max.strain, result$max.strain)
   max.score <- append(max.score, result$max.score)
+  
   inflection.slope <- append(inflection.slope, result$inflection.slope)
   inflection.strain <- append(inflection.strain, result$inflection.strain)
   inflection.score <- append(inflection.score, result$inflection.score)
+  
   fds.slope <- append(fds.slope, result$fds.slope)
   fds.strain <- append(fds.strain, result$fds.strain)
   fds.score <- append(fds.score, result$fds.score)
   
-  plot.subtitle <- paste(
-    "<b style='color:", maxColor, ";'>Max:</b>",
-    round(result$max.slope, 1),
-    "<br>",
-    "<b style='color:", inflectionColor, ";'>Inflection:</b>",
-    round(result$inflection.slope, 1),
-    "<br>",
-    "<b style='color:", fdsColor, ";'>FDS:</b>",
-    round(result$fds.slope, 1)
-  )
+   # TODO: result can return multiple values for slope and strain! bad!! slice-head fixes this but it could cause problems in other places
+  max.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$max.strain))]) %>% slice_head()
+  inflection.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$inflection.strain))]) %>% slice_head()
+  fds.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$fds.strain))]) %>% slice_head()
   
+  max.stress <- max.stress.df %>% pull(Stress)
+  inflection.stress <- inflection.stress.df %>% pull(Stress)
+  fds.stress <- fds.stress.df %>% pull(Stress)
+  
+  stress.df <- rbind(max.stress.df, inflection.stress.df, fds.stress.df) %>% 
+    mutate(label = c(paste0("Max\n", round(result$max.slope, 0)), paste0("Inflection\n", round(result$inflection.slope, 0)), paste0("FDS\n", round(result$fds.slope, 0))),
+           color = c(maxColor, inflectionColor, fdsColor))
+
   if (do.plot || do.save) {
     spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
 
     spline_fit <- predict(spline_model)
-    spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
-    
+
     plot <- plot.plot(
-      bone,
+      bone %>% filter(Strain < 0.2),
       layers = list(
-        geom_segment(
-          x = result$max.strain,
-          xend = result$max.strain,
-          y = 0,
-          yend = max(bone$Stress * 0.80),
-          color = maxColor
+        # labs(subtitle = plot.subtitle), 
+        geom_line(aes(y = spline_fit), color = "#006eff", size = 0.75),
+        geom_point(
+          data = stress.df,
+          aes(x = Strain, y = Stress),
+          color = stress.df$color,
+          size = 4,
+          alpha = 0.8
         ),
-        geom_segment(
-          x = result$inflection.strain,
-          xend = result$inflection.strain,
-          y = 0,
-          yend = max(bone$Stress * 0.80),
-          color = inflectionColor
+        geom_label_repel(
+          data = stress.df,
+          aes(x = Strain, y = Stress, label = label),
+          color = stress.df$color,
+          size = 8,
+          fontface = "bold",
+          direction = "both",
+          force = 20,
+          arrow = arrow(length = unit(0.01, "npc"))
         ),
-        geom_segment(
-          x = result$fds.strain,
-          xend = result$fds.strain,
-          y = 0,
-          yend = max(bone$Stress * 0.80),
-          color = fdsColor
-        ),
-        annotate(
-          "text",
-          x = result$max.strain,
-          y = max(bone$Stress),
-          label = "Max",
-          angle = 0,
-          color = maxColor,
-          size = 3,
-          fontface = "bold"
-        ),
-        annotate(
-          "text",
-          x = result$inflection.strain,
-          y = max(bone$Stress * 0.925),
-          label = "Inflection",
-          angle = 0,
-          color = inflectionColor,
-          size = 3,
-          fontface = "bold"
-        ),
-        annotate(
-          "text",
-          x = result$fds.strain,
-          y = max(bone$Stress * 0.85),
-          label = "FDS",
-          angle = 0,
-          color = fdsColor,
-          size = 3,
-          fontface = "bold"
-        ),
-        labs(subtitle = plot.subtitle), 
-        geom_line(aes(y = spline_fit), color = "blue", size = 1),
-        # scale_colour_manual(
-        #   name = 'Spline fit',
-        #   values = c('blue' = 'blue'),
-        #   labels = c("")
-        # ),
         theme(legend.position = "top",
-              axis.title.x = element_text(size = 12),
-              axis.title.y = element_text(size = 12),
-              plot.caption = element_text(size = 12),
-              plot.subtitle = element_markdown(size = 12)
+              axis.title.x = element_text(size = 30),
+              axis.text.x = element_text(size = 24),
+              axis.title.y = element_text(size = 30),
+              axis.text.y = element_text(size = 28),
+              plot.title = element_text(face = "bold", size = 32, hjust = 0.5)
               )
       )
     )
