@@ -101,8 +101,8 @@ fds.score <- vector()
 do.plot <- TRUE
 do.save <- FALSE
 for (bone in bones) {
-  # if (getName(bone) != "PF09UT1") next
-  if (getName(bone) != "PF05UT3") next
+  if (getName(bone) != "PF09UT1") next
+  # if (getName(bone) != "PF05UT3") next
   result <- ym.calculate(bone)
   if (is.null(result)) next
   
@@ -142,48 +142,119 @@ for (bone in bones) {
   max.stress <- max.stress.df %>% pull(Stress)
   inflection.stress <- inflection.stress.df %>% pull(Stress)
   fds.stress <- fds.stress.df %>% pull(Stress)
-  
-  stress.df <- rbind(max.stress.df, inflection.stress.df, fds.stress.df) %>% 
-    mutate(label = c(paste0("Max\n", round(result$max.slope, 0)), paste0("Inflection\n", round(result$inflection.slope, 0)), paste0("FDS\n", round(result$fds.slope, 0))),
-           color = c(maxColor, inflectionColor, fdsColor))
-
+  # 
+  labels.df <- rbind(max.stress.df, inflection.stress.df, fds.stress.df) %>% 
+    mutate(
+      Strain_lab = c(
+        # max, inflection, fds
+        max.stress.df$Strain[[1]], 0.12, 0.02
+      ),
+      Stress_lab = c(
+        # max, inflection, fds
+        13, inflection.stress, 9.5
+      ),
+      label = c(
+        paste0(
+          "<span style='font-size: 22px;'>Max<br><i>E</i>=",
+          round(result$max.slope, 0),
+          "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Maximum first<br>derivative of spline</span>"
+        ),
+        paste0(
+          "<span style='font-size: 22px;'>Inflection<br><i>E</i>=",
+          round(result$inflection.slope, 0),
+          "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Location where second derivative<br>of spline changes to negative value<br>taken from first derivatives of spline</span>"
+        ),
+        paste0(
+          "<span style='font-size: 22px;'>FDS<br><i>E</i>=",
+          round(result$fds.slope, 0),
+          "</span><br>selected<br><span style='font-size: 15px; color: black;'>First max of spline fit to<br>first derivatives of raw data</span>"
+        )
+      ), 
+      color = c(maxColor, inflectionColor, fdsColor)
+    )
+  # 
   if (do.plot || do.save) {
     spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
 
     spline_fit <- predict(spline_model)
+    # spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
 
-    plot <- plot.plot(
+    plot <- ggplot(
       bone %>% filter(Strain < 0.2),
-      layers = list(
-        # labs(subtitle = plot.subtitle), 
-        geom_line(aes(y = spline_fit), color = "#006eff", size = 0.75),
-        geom_point(
-          data = stress.df,
-          aes(x = Strain, y = Stress),
-          color = stress.df$color,
-          size = 4,
-          alpha = 0.8
+      # bone,
+       aes(x = Strain, y = Stress)) +
+      # labs(subtitle = plot.subtitle),
+      # highlighting the linear elastic region
+       geom_rect(
+        xmin = 0.0425,
+        xmax = 0.065,
+        ymin = 2.25,
+        ymax = 7.5,
+        fill = "#FFF77D"
+       ) +
+      geom_text(
+        aes(x = 0.05375, y = 2.95),
+        label = "Elastic (linear)\nregion",
+        size = 3.25,
+        family = "Droid Serif") +
+      # annotating the spline fit
+      geom_text(
+        aes(x = 0.1225, y = 11),
+        label = "Spline fit to data\nsegmented to strain < 0.2",
+        color = "#006eff",
+        size = 5,
+        lineheight = 0.75,
+        hjust = 0,
+        family = "Droid Serif"
+      ) +
+      # the raw data
+      geom_line(size = 1.5) +
+      geom_line(aes(y = spline_fit), color = "#006eff", size = 0.75) +
+      geom_point(
+        data = labels.df,
+        aes(x = Strain, y = Stress),
+        color = stress.df$color,
+        size = 4,
+        alpha = 0.8
+      ) +
+      # the segment from point to label
+      geom_segment(
+        data = labels.df,
+        aes(
+          x = Strain_lab,
+          y = Stress_lab,
+          xend = Strain,
+          yend = Stress
         ),
-        geom_label_repel(
-          data = stress.df,
-          aes(x = Strain, y = Stress, label = label),
-          color = stress.df$color,
-          size = 8,
-          fontface = "bold",
-          direction = "both",
-          force = 20,
-          arrow = arrow(length = unit(0.01, "npc"))
-        ),
-        theme(legend.position = "top",
-              axis.title.x = element_text(size = 30),
-              axis.text.x = element_text(size = 24),
-              axis.title.y = element_text(size = 30),
-              axis.text.y = element_text(size = 28),
-              plot.title = element_text(face = "bold", size = 32, hjust = 0.5)
-              )
+        color = labels.df$color,
+        linetype = "dotted"
+      ) +
+      # the method and ym labels
+      geom_richtext(
+        data = labels.df,
+        aes(x = Strain_lab, y = Stress_lab, label = label),
+        color = labels.df$color,
+        alpha = 0.85,
+        # size = 6.5,
+        fontface = "bold",
+        lineheight = 0.0001,
+        family = "Droid Serif"
+      ) +
+      labs(
+        title = getName(bone, sep = " "),
+        x = "Strain",
+        y = "Stress"
+      ) +
+      theme_classic() +
+      theme(
+        legend.position = "top",
+        axis.title.x = element_text(size = 22),
+        axis.text.x = element_text(size = 20),
+        axis.title.y = element_text(size = 22),
+        axis.text.y = element_text(size = 20),
+        plot.title = element_text(face = "bold", size = 24, hjust = 0.5)
       )
-    )
-  
+    
     if (do.plot) {
       print(plot)
     }
@@ -196,23 +267,7 @@ for (bone in bones) {
 
 ```{r}
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
-write_csv(results, "./results/youngsModulus/results_newinflection.csv")
-```
-
-# plotting svi
-
-```{r}
-ym.calculate(data.fetch(subject.name = "pf19ut2"))
-ym.calculate(data.fetch(subject.name = "pf01cp1"))
-```
-
-```{r}
-for (bone in bones) {
-  result <- ym.calculate(bone)
-  if (is.null(result)) next
-  #print(result)
-  print(result$name)
-}
+# write_csv(results, "./results/youngsModulus/results_newinflection.csv")
 ```
 
 

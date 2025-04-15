@@ -9,7 +9,6 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(coro)
 library(gridExtra)
 library(ggtext)
 library(segmented)
@@ -128,31 +127,13 @@ grid.arrange(p1,p2,p3,p4)
 # Order x axis by length
 
 # Plot with unique colors for highlighted fish
-# p1 <- decisions_length |>
-#   filter(bone_type == "CP") |>
-#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
-#   ggplot(aes(x = Length..cm., y = slope,color = fish_name, group = fish_name)) +
-#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
-#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
-#   labs(title = "CP", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
-#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
-#   theme_minimal() +
-#   theme(
-#             axis.text.x = element_text(size = 11),
-#         axis.title.x = element_text(size = 14),
-#         axis.title.y = element_text(size = 14),
-#         axis.text.y = element_text(size = 11)
-# )
-
 decisions_length |>
-  # filter(bone_type == "LT") |>
   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
   ggplot(aes(x = Length..cm., y = slope, color = fish_name, group = fish_name)) +
   geom_hline(yintercept = 125, color = "gray", size = 0.25) + 
   geom_hline(yintercept = 250, color = "gray", size = 0.25) + 
   geom_hline(yintercept = 375, color = "gray", size = 0.25) + 
-  geom_point(size = 3, alpha = 0.85) +
+  geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
   geom_line(size = 1, alpha = 0.75, show.legend = FALSE) +
   labs(x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)", color = "Fish\nName") +
   theme(axis.text.x = element_text(
@@ -163,56 +144,16 @@ decisions_length |>
   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
   theme_minimal() +
   theme(
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
-    axis.text.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12),
-    legend.title = element_text(hjust = 0.5, size = 13, face = "bold"),
-    legend.position = "bottom",
-    legend.text = element_text(size = 12),
-    legend.margin = margin(10, 10, 10, -25),
-    strip.text = element_text(face = "bold", size = 13),
+    axis.title.x = element_text(size = 22),
+    axis.title.y = element_text(size = 20),
+    axis.text.y = element_text(size = 22),
+    axis.text.x = element_text(size = 20),
+    strip.text = element_text(face = "bold", size = 20),
     panel.grid = element_blank(),
     panel.border = element_rect(fill = NA, color = "gray")
   ) +
   guides(color = guide_legend(nrow = 2)) +
   facet_wrap( ~ fct_relevel(bone_type, "UT", "MT", "LT", "CP"))
-
-# p3 <- decisions_length |>
-#   filter(bone_type == "MT") |>
-#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
-#   ggplot(aes(x = Length..cm.,  y = slope, color = fish_name, group = fish_name)) +
-#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
-#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
-#   labs(title = "MT", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
-#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
-#   theme_minimal() + 
-#   theme(plot.title = element_text(face = "bold"),
-#         axis.text.x = element_text(size = 11),
-#         axis.title.x = element_text(size = 14),
-#         axis.title.y = element_text(size = 12),
-#         axis.text.y = element_text(size = 11),
-# )
-
-# p4 <- decisions_length |>
-#   filter(bone_type == "UT") |>
-#   mutate(fish_name = fct_reorder(toupper(fish_name), Length..cm.)) |>
-#   ggplot(aes(x = Length..cm., y = slope, color = fish_name, group = fish_name)) +
-#   geom_point(size = 3, alpha = 0.85, show.legend = FALSE) +
-#   geom_line(size = 1, alpha = 0.7, show.legend = FALSE) +
-#   labs(title = "UT", x = "Fish Length (cm)", y = "Young's Modulus (N/m^2)") +
-#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-#   scale_y_continuous(breaks = c(0, 250, 500), limits = c(0, 500)) +
-#   theme_mtext(face = "bold"),
-#     axis.text.x = element_text(size = 12),
-#         axis.title.x = element_text(size = 14),
-#         axis.title.y = element_text(size = 14),
-#         axis.text.y = el0ement_text(size = 12),
-#         plot.margin = margin(0, 145, 5, 0)
-#         )
-# 
-# grid.arrange(p1,p2,p3,p4)
 ```
 
 
@@ -226,11 +167,12 @@ ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope, color 
   geom_hline(yintercept = 125, color = "gray", size = 0.25) + 
   geom_hline(yintercept = 250, color = "gray", size = 0.25) + 
   geom_hline(yintercept = 375, color = "gray", size = 0.25) + 
-  geom_point(size = 3) +
+  geom_point(size = 3, show.legend = FALSE) +
   geom_smooth(
     aes(group = fish_name),
     se = F,
-    size = 0.75
+    size = 0.75,
+    show.legend = FALSE
   ) +
   facet_wrap( ~ fish_name,
               nrow = 3,
@@ -241,16 +183,15 @@ ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope, color 
   ) +
   theme_minimal() +
   theme(
-    legend.position = "none",
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
-    axis.text.y = element_text(size = 12),
-    axis.text.x = element_text(size = 12),
+    axis.title.x = element_text(size = 22),
+    axis.title.y = element_text(size = 22),
+    axis.text.y = element_text(size = 20),
+    axis.text.x = element_text(size = 20),
     panel.spacing = unit(0.2, "lines"),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
     panel.border = element_rect(fill = NA, color = "gray"),
-    strip.text = element_text(size = 13, face = "bold")
+    strip.text = element_text(size = 22, face = "bold")
   )
 ```
 
@@ -271,7 +212,6 @@ TukeyHSD(a1)
 ```{r}
 # Random intercept for each fish.
 m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = decisions_length, REML = TRUE)
-summary(m1)
 
 m0 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
 anova(m1, m0) # p = 0.008
@@ -485,7 +425,7 @@ decisions_relevel_LT <- decisions_good |>
 decisions_relevel_MT <- decisions_good |>
    mutate(bone_type = fct_relevel(bone_type, "MT", "CP", "LT", "UT"))
 
-m2.cp <- lmer(slope ~  relevel(bone_type, ref = "CP") + (1 | fish_name), data = decisions_relevel_CP, REML = TRUE)
+m2.cp <- lmer(log(slope) ~  relevel(bone_type, ref = "CP") + (1 | fish_name), data = decisions_relevel_CP, REML = TRUE)
 
 m2.lt <- lmer(slope ~  relevel(bone_type, ref = "LT") + (1 | fish_name), data = decisions_relevel_LT, REML = TRUE)
 
