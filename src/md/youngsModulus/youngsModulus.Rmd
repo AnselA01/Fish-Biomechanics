@@ -9,6 +9,7 @@ library(tidyverse)
 
 source("./src/script/youngsModulus/youngsModulus.R")
 source("./src/script/youngsModulus/youngsModulusDetermination.R")
+source("./src/script/youngsModulus/automatedCalculation.R")
 source("./src/script/helpers/data.R")
 source("./src/script/helpers/plot.R")
 source("./src/script/helpers/image.R")
@@ -267,12 +268,8 @@ for (bone in bones) {
 
 ```{r}
 results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, inflection.strain, fds.strain, max.score, inflection.score, fds.score, rsquared)
-# write_csv(results, "./results/youngsModulus/results_newinflection.csv")
 ```
 
-
-
-
-
-
-
+```{r}
+res <- automated_youngs_modulus_calculation()
+```

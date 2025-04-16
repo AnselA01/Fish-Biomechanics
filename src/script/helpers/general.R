@@ -16,3 +16,12 @@ parseSubjectName <- function(subject.name) {
 getName <- function(bone, sep = "") {
   return(paste(toupper(bone$Individual[[1]]), bone$Segment[[1]], bone$Trial[[1]], sep = sep))
 }
+
+# standardizes name like PF01CP1 to the correct filename pf01cp01
+standardize_name <- function(name) {
+  name <- tolower(name)
+  prefix <- substr(name, 1, nchar(name) - 1)         
+  num <- sub(".*?(\\d{1,2})$", "\\1", name)    
+  num_padded <- sprintf("%02d", as.integer(num))
+  return(paste0(substr(name, 1, nchar(name) - nchar(num)), num_padded))
+}

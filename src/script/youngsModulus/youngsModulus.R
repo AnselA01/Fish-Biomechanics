@@ -61,9 +61,10 @@ ym.calculate <- function(bone) {
     r.squared = r.squared
   )
   
-  gridExtra::grid.arrange(grobs = SVI.plots,
-                          ncol = 3,
-                          top = textGrob(getName(bone, sep = " "), gp = gpar(fontface = "bold", fontsize = 28)))
+  # uncomment for coefficient of variation (score) plots lol
+  # gridExtra::grid.arrange(grobs = SVI.plots,
+  #                         ncol = 3,
+  #                         top = textGrob(getName(bone, sep = " "), gp = gpar(fontface = "bold", fontsize = 28)))
   return(results)
 }
 

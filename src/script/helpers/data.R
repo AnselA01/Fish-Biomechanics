@@ -67,13 +67,14 @@ findOne <- function(attributes) {
 
 batchProcessFiles <- function(filepaths) {
   message("Fetching data...")
-  with_progress({ # a progress bar!
+  with_progress({
     progress.bar <- progressor(steps = length(filepaths))
+    
     lapply(filepaths, function(filepath) {
       data <- readAndProcessFile(filepath)
       progress.bar()
-      return(data)
-    })
+      data
+    }) %>% compact()
   })
 }
 
@@ -146,6 +147,10 @@ file.read <- function(filepath) {
   
   df <- suppressWarnings(suppressMessages(read_delim(filepath, skip = num.skip, delim = delim)))
   
+  if (!length(names(df))) {
+    return(NULL)
+  }
+
   if (!is.null(df)) {
     return(clean_fish_data(df))
   }
@@ -164,7 +169,7 @@ recalculateDistance <- function(df, loadFilter) {
   return(
     df |> 
       dplyr::filter(Load > loadFilter) |> 
-      mutate(Distance = Distance - first(Distance)) # should new distance be negative?
+      dplyr::mutate(Distance = Distance - first(Distance)) # should new distance be negative?
   )
 }
 
@@ -173,7 +178,7 @@ recalculateStressStrain <- function(df, metadata, area_data) {
   area <- new_values[1]$Area
   length_initial <- new_values[2]$Length
   return(df |> 
-           mutate(
+           dplyr::mutate(
              Stress = (Load / area)/10^6,
              Strain = abs(length_initial - (length_initial - Distance)) / length_initial))
 
@@ -191,7 +196,7 @@ getAreaAndInitialLength <- function(metadata, area_data) {
 }
 
 attachMetadata <- function(df, metadata) {
-  return(df |> mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
+  return(df |> dplyr::mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
 }
 
 
@@ -200,9 +205,8 @@ clean_fish_data <- function(df) {
            dplyr::rename(Load = "Load [N]",
                   Time = "Time [s]",
                   Distance = "Distance [mm]") |> 
-           dplyr::select(-where(is.logical))) # if the last column is blank (it sometimes or always is), remove it
+           dplyr::select(-where(is.logical))) # if the last column is blank (it sometimes is), remove it
 }
-
 
 data_clean <- function(data_name, area, length_initial, load) {
   
@@ -212,13 +216,13 @@ data_clean <- function(data_name, area, length_initial, load) {
   
   processed_data <- data |>
     dplyr::select(-7) |>
-    rename(Load = "Load [N]",
+    dplyr::rename(Load = "Load [N]",
            Time = "Time [s]",
            Stress = "Stress [MPa]",
            Strain = "Strain [%]",
            Distance = "Distance [mm]") |>
-    filter(Load > load) |>
-    mutate(Area = area,
+    dplyr::filter(Load > load) |>
+    dplyr::mutate(Area = area,
            Distance = Distance - first(Distance),
            LengthInitial = length_initial,
            Stress = 10^-6 * (Load / Area),
