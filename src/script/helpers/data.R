@@ -78,14 +78,15 @@ batchProcessFiles <- function(filepaths) {
   })
 }
 
-data.generator <- function(data.dir = "./data", fish.type, fish.number, segment) {
-  filepaths <- getBoneFilepaths(data.dir, fish.type, fish.number, segment)
+data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = NULL, segment = NULL, trial = NULL) {
+  filepaths <- getBoneFilepaths(data.dir, fish.type, fish.number, segment, trial)
   data <- batchProcessFiles(filepaths)
   if (length(data) == 0) stop(paste("No data found for fish", fish.number))
   
   return(data)
 }
 
+library(memoise)
 
 readAndProcessFile <- function(filepath) {
   metadata <- parseFileName(filepath)
@@ -99,34 +100,48 @@ readAndProcessFile <- function(filepath) {
   return(attachMetadata(processed_data, metadata))
 }
 
-getBoneFilepaths <- function(data.dir = "./data", fish.type, fish.number, segment, trial) {
+# cache data so we don't have to fetch and process the data every single time data.generator is called
+cache <- cache_filesystem("~/.cache/fishdata")
+# readAndProcessFile <- memoise(readAndProcessFile, cache = cache)
+
+getBoneFilepaths <- function(data.dir = file.path("data"), fish.type, fish.number, segment, trial) {
   path <- data.dir
-  pattern <- "[^area].csv"
-  if (!missing(fish.number)) {
-    if (!missing(segment)) {
-      pattern <- paste0(tolower(segment), "[0-9]{2}")
-          
+  # matches the bone file naming scheme like pf01cp01 or pf100cp100
+  pattern <- "[a-zA-Z]{2}\\d+[a-zA-Z]{2}\\d+\\.csv$"
+  if (!is.null(fish.number)) {
+    if (!is.null(segment)) {
+      pattern <- paste0(tolower(segment), "[0-9]+")
+  
     }
       folder <- paste0(fish.type, str_pad(fish.number, 2, side = "left", pad = "0"))
       # get only one bone
-      if (!missing(trial)) {
+      if (!is.null(trial)) {
         path <- paste0(data.dir, "/", folder, "/")
         pattern <- paste0(folder, segment, str_pad(trial, 2, side = "left", pad = "0"), ".csv")
         return(unlist(list.files(path = path, pattern = pattern, recursive = FALSE, full.names = TRUE)))
       }
   }
   
-  # gets all in data folder
+  # they didn't specify segment or trial number, give them everything!
   return(list.files(path = path, pattern = pattern, recursive = TRUE, full.names = TRUE))
 }
 
 parseFileName <- function(filepath) {
-  file.name <- sub(".*/", "", filepath)
-  individual <- str_sub(file.name, 1, 4)
-  segment <- toupper(str_sub(file.name, 5, 6))
-  trial <- parse_number(str_sub(file.name, 7, 8))
+  file.name <- basename(filepath)
+  # segments the file name into the bone metadata
+  match <- str_match(file.name, "^([a-zA-Z]{2})(\\d+)([a-zA-Z]{2})(\\d+)\\.csv$")
+  
+  if (is.na(match[1, 1])) {
+    stop(paste("Invalid filename format:", file.name))
+  }
+  
+  individual <- paste0(match[1, 2], str_pad(match[1, 3], 2, pad = "0"))
+  segment <- toupper(match[1, 4])
+  trial <- as.integer(match[1, 5])
+  
   return(c(individual, segment, trial))
 }
+
 
 # files are either comma or tab separated. This is indicated by the presence of "sep=\t" on the first line of the file. 
 # If this line is there, the file is tab separated. If it is not, the file is comma separated.
