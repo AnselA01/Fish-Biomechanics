@@ -13,11 +13,11 @@ cleanArea <- function(df) {
   )
 }
 
-global.area <- cleanArea(suppressMessages(read_csv("data/area.csv")))
-global.load_filter <- 0.8
+global.area <- cleanArea(suppressMessages(read_csv("data/area.csv"))) # this must be here for everything to work
+global.load_filter <- 0.8 # see 
 
 
-# Get your bones here! data.fetch fetches any number of fish, segments, and trials.
+# data.fetch fetches any number of fish, segments, and trials.
 # arg fish_numbers: a list of fish numbers 1-21. default is all (1-21)
 # arg segments: a list of segments "cp", "lt", "mt", or "ut". default is all
 # arg trials: a list of trials. default is 1
@@ -81,7 +81,7 @@ batchProcessFiles <- function(filepaths) {
 data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = NULL, segment = NULL, trial = NULL) {
   filepaths <- getBoneFilepaths(data.dir, fish.type, fish.number, segment, trial)
   data <- batchProcessFiles(filepaths)
-  if (length(data) == 0) stop(paste("No data found for fish", fish.number))
+  if (length(data) == 0) stop("No data found")
   
   return(data)
 }
@@ -97,12 +97,12 @@ readAndProcessFile <- function(filepath) {
   }
   
   processed_data <- recalculate(data, global.load_filter, metadata, global.area)
+  if (is.null(processed_data)) {
+    print("yes")
+  }
   return(attachMetadata(processed_data, metadata))
 }
 
-# cache data so we don't have to fetch and process the data every single time data.generator is called
-cache <- cache_filesystem("~/.cache/fishdata")
-# readAndProcessFile <- memoise(readAndProcessFile, cache = cache)
 
 getBoneFilepaths <- function(data.dir = file.path("data"), fish.type, fish.number, segment, trial) {
   path <- data.dir
@@ -172,6 +172,11 @@ file.read <- function(filepath) {
   return(NULL)
 }
 
+# cache file reads so we don't have to fetch the data every single time data.generator is called
+cache <- cache_filesystem("~/.cache/fishdata")
+# file.read <- memoise(file.read, cache = cache)
+
+
 # wrapper around recalculate distance and recalculate stress strain
 recalculate <- function(df, load_filter, metadata, area_data) {
   return(
@@ -190,6 +195,9 @@ recalculateDistance <- function(df, loadFilter) {
 
 recalculateStressStrain <- function(df, metadata, area_data) {
   new_values <- getAreaAndInitialLength(metadata, area_data)
+  if (is.null(new_values)) {
+    return(NULL)
+  }
   area <- new_values[1]$Area
   length_initial <- new_values[2]$Length
   return(df |> 
@@ -200,6 +208,9 @@ recalculateStressStrain <- function(df, metadata, area_data) {
 }
 
 getAreaAndInitialLength <- function(metadata, area_data) {
+  if (!metadata[1] %in% area_data$Individual) {
+    return(NULL)
+  }
   return (
     area_data |> 
       dplyr::filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 

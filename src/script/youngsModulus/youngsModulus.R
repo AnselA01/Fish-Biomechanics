@@ -14,7 +14,7 @@ SVI.plots <- list()
 global.max.df <- 10 # the starting number of degrees of freedom when fitting splines
 global.strain.filter <- 0.2
 global.grid.interval <- 0.0001
-global.svi.window.size <- 500
+global.svi.window.size <- 500 # dont change this
 
 # Calculates Young's Modulus for a bone using three methods:
 # 1. Global max slope
@@ -102,6 +102,10 @@ fitSpline <- function(formula, bone, strain) {
 # arg interval: grid spacing
 # returns tibble with one gridded Strain column.
 createGrid <- function(bone, interval = global.grid.interval) {
+  if (max(bone$Strain) == -Inf) {
+    view(bone)
+  }
+  
   return(data.frame(Strain = seq(from = 0, to = max(bone$Strain), by = interval)))
 }
 
@@ -111,7 +115,7 @@ fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
   strainGrid <- createGrid(bone)
   
   # fit and predict stress spline
-  stress.spline.fit <- fitSpline(formula = Stress ~ bSpline(Strain, df = global.degrees.freedom), bone, strainGrid)
+  stress.spline.fit <- suppressWarnings(fitSpline(formula = Stress ~ bSpline(Strain, df = global.degrees.freedom), bone, strainGrid))
   if (is.null(stress.spline.fit)) {
     message(global.name, ": Failed to fit spline to stress")
     return(NULL)

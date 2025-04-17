@@ -1,4 +1,6 @@
-# See youngsModulus.R and youngsModulusDetermination.R
+# A wrapper around youngsModulus.R and youngsModulusDetermination.R to 
+# perform Young's Modulus calculation and decision making for all data in
+# the "data" directory
 
 current_date <- NULL
 
@@ -24,8 +26,6 @@ automated_youngs_modulus_calculation <- function() {
   results_and_choices <- list(results = results, choices = choices)
   
   save_results_choices_inconclusives(results_and_choices)
-
-  return(results_and_choices)
 }
 
 calculate_result_and_choose <- function(bone) {

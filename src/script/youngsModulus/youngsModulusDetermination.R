@@ -7,7 +7,7 @@ global.strain.similar.threshold.percent <- 5
 
 # inconclusive thresholds
 global.inconclusive.slope.threshold <- 20
-global.inconclusive.score.threshold <- 0.70
+global.inconclusive.score.threshold <- 0.65
 
 global.name <- ""
 
