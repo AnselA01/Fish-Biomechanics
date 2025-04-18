@@ -222,125 +222,67 @@ m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = results_final, REML = TR
 anova(m1, m0)
 ```
 
-Interpretation: The model with the bone type ....
+Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p<0.001).
 
 *Residuals*
 
+We check residuals to make sure the model fit is good and to see if any of the variables need to be transformed.
+
 ```{r}
 resid_panel(m1)
-## In general, residuals are pretty good. QQ plot is bad on right end.
-## Data is a little right skewed?
-
-# OUTLIERS
-
-# Add columns for ID and Pearson residuals
-decisions_resid <- decisions_length %>%
-  mutate(Pearson_resids = residuals(m1, type = "pearson"),
-         id = row_number())
-
-# create smaller data set with points we want to label
-outliers <- decisions_resid %>%
-  filter(Pearson_resids > 2 | Pearson_resids < (-2))
-
-ggplot(data = decisions_resid, mapping = aes(x = id, y = Pearson_resids)) +
-  geom_point(alpha = 1/4) +
-  geom_hline(yintercept = c(-2, 2), color = "red") +
-  geom_point(size = 3, shape = 1, data = outliers) +
-  geom_label_repel(aes(label = name, colour = name), 
-    data = outliers, show.legend = FALSE)
 ```
 
-*log(YM)*
+Interpretation: The histogram of residuals is right skewed and the QQ plot is not linear at the right end. As a result, we will log transform the response variable(E)
+
+*log(E)*
 
 ```{r}
-m11 <- lmer(I(log(slope)) ~  bone_type + (1 | fish_name), data = decisions_length, REML = TRUE)
-summary(m11)
+m00 <- lmer(I(log(slope)) ~  1 + (1 | fish_name), data = results_final, REML = TRUE)
 
-m00 <- lmer(I(log(slope)) ~  1 + (1 | fish_name), data = decisions_length, REML = TRUE)
+m11 <- lmer(I(log(slope)) ~  bone_type + (1 | fish_name), data = results_final, REML = TRUE)
+
 anova(m11, m00) # p=0.0007
-
-resid_panel(m11)
-# this looks better
-
-# OUTLIERS
-
-# Add columns for ID and Pearson residuals
-decisions_resid2 <- decisions_length %>%
-  mutate(Pearson_resids = residuals(m11, type = "pearson"),
-         id = row_number())
-
-# create smaller data set with points we want to label
-outliers2 <- decisions_resid2 %>%
-  filter(Pearson_resids > 2 | Pearson_resids < (-2))
-
-ggplot(data = decisions_resid2, mapping = aes(x = id, y = Pearson_resids)) +
-  geom_point(alpha = 1/4) +
-  geom_hline(yintercept = c(-2, 2), color = "red") +
-  geom_point(size = 3, shape = 1, data = outliers2) +
-  geom_label_repel(aes(label = name, colour = name), 
-    data = outliers2, show.legend = FALSE)
 ```
 
-
-*multilevel models with UT as reference level*
+Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p<0.001).
 
 ```{r}
-decisions_relevel_UT <- decisions_good |>
+resid_panel(m11)
+```
+
+Interpretation: The histogram of the residuals is a normal distribution and the QQ plot is linear. The log-transformation successfully enhanced the model.
+
+*Changing the reference level *
+
+By changing the reference level from the default (CP), we can see of there are significant differences when compared to a different bone type.
+
+```{r}
+# create new data and manually relevel the bone types
+decisions_relevel_UT <- results_final |>
    mutate(bone_type = fct_relevel(bone_type, "UT", "CP", "LT", "MT"))
 
+# run the model
 m2.ut <- lmer(I(log(slope)) ~  relevel(bone_type, ref = "UT") + (1 | fish_name), data = decisions_relevel_UT, REML = TRUE)
 
-summary(m2.ut) # differences between UT-MT and UT-LT are significant
+summary(m2.ut)
 ```
 
-# Other Analysis
+Interpretation: The E values for the UT bones are significantly greater than the values for the other bone types as seen by t values > |2|. Since E is logged, we can say that the MT bones have values 28.5% lower than UT ($1-e^{-0.33626}$), LT bones are 22.7% lower ($1-e^{-0.25781}$), and CP bones are 18.3% lower than UT ($1 - e^{-0.20214}$). 
 
-*multilevel changing reference level*
+We can continue changing the reference level.
 
 ```{r}
-decisions_relevel_CP <- results_good |> 
-   mutate(bone_type = fct_relevel(bone_type, "CP", "LT", "MT", "UT"))
-
-m2.cp <- lmer(log(slope) ~  relevel(bone_type, ref = "CP") + (1 | fish_name), data = decisions_relevel_CP, REML = TRUE)
-
-summary(m2.cp)
-
-decisions_relevel_LT <- decisions_good |>
+decisions_relevel_LT <- results_final |>
    mutate(bone_type = fct_relevel(bone_type, "LT", "CP", "MT", "UT"))
 
 m2.lt <- lmer(slope ~  relevel(bone_type, ref = "LT") + (1 | fish_name), data = decisions_relevel_LT, REML = TRUE)
 
 summary(m2.lt)
 
-decisions_relevel_MT <- decisions_good |>
+decisions_relevel_MT <- results_final |>
    mutate(bone_type = fct_relevel(bone_type, "MT", "CP", "LT", "UT"))
 
 m2.mt <- lmer(slope ~  relevel(bone_type, ref = "MT") + (1 | fish_name), data = decisions_relevel_MT, REML = TRUE)
 
 summary(m2.mt)
-```
-
-*group bones by location. (CP and UT) vs (MT and LT)*
-
-```{r}
-decisions_by_location <- decisions_good |>
-  mutate(location = case_when(bone_type %in% c("CP", "UT") ~ "outer",
-        bone_type %in% c("MT", "LT") ~ "inner"))
-
-
-a5 <- aov(slope ~ location, data = decisions_by_location)
-summary(a5)
-
-TukeyHSD(a5)
-
-m0 <- lmer(slope ~  1 + (1 | fish_name), data = decisions_by_location, REML = TRUE)
-
-m4 <- lmer(slope ~  location + (1 | fish_name), data = decisions_by_location, REML = TRUE)
-summary(m4) # t = 2.282
-
-anova(m4, m0) # p = 0.02416
-
-# When we group the bones by location, the model with the bone location is significantly better than the model without the bone location (p=0.02416). 
-
-# Is there a problem with doing this since then our data is only inner or outer?
 ```
