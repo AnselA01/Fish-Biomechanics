@@ -72,6 +72,9 @@ batchProcessFiles <- function(filepaths) {
     
     lapply(filepaths, function(filepath) {
       data <- readAndProcessFile(filepath)
+      if (is.null(data)) {
+        return(NULL)
+      }
       progress.bar()
       data
     }) %>% compact()
@@ -89,8 +92,9 @@ data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = 
 library(memoise)
 
 readAndProcessFile <- function(filepath) {
-  metadata <- parseFileName(filepath)
+  # metadata <- parseFileName(filepath)
   data <- file.read(filepath)
+  metadata <- pullMetadata(filepath)
   
   if (is.null(data)) {
     return(NULL)
@@ -98,9 +102,15 @@ readAndProcessFile <- function(filepath) {
   
   processed_data <- recalculate(data, global.load_filter, metadata, global.area)
   if (is.null(processed_data)) {
-    print("yes")
+    return(NULL)
   }
   return(attachMetadata(processed_data, metadata))
+}
+
+pullMetadata <- function(filepath) {
+  identifier <- readLines(filepath, n = 2)
+  print(identifier)
+  
 }
 
 
@@ -162,7 +172,7 @@ file.read <- function(filepath) {
   
   df <- suppressWarnings(suppressMessages(read_delim(filepath, skip = num.skip, delim = delim)))
   
-  if (!length(names(df))) {
+  if (!length(names(df))) { # empty
     return(NULL)
   }
 
@@ -171,11 +181,6 @@ file.read <- function(filepath) {
   }
   return(NULL)
 }
-
-# cache file reads so we don't have to fetch the data every single time data.generator is called
-cache <- cache_filesystem("~/.cache/fishdata")
-# file.read <- memoise(file.read, cache = cache)
-
 
 # wrapper around recalculate distance and recalculate stress strain
 recalculate <- function(df, load_filter, metadata, area_data) {
@@ -208,9 +213,10 @@ recalculateStressStrain <- function(df, metadata, area_data) {
 }
 
 getAreaAndInitialLength <- function(metadata, area_data) {
-  if (!metadata[1] %in% area_data$Individual) {
-    return(NULL)
+  if(!bone_is_in_area_data(metadata, area_data[, 3:5])) {
+    return (NULL)
   }
+  
   return (
     area_data |> 
       dplyr::filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 

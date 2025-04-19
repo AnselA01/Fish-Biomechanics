@@ -25,3 +25,11 @@ standardize_name <- function(name) {
   num_padded <- sprintf("%02d", as.integer(num))
   return(paste0(substr(name, 1, nchar(name) - nchar(num)), num_padded))
 }
+
+# is bone metadata found in the area data provided in the "data/area.csv" folder?
+# arg metadata: a vector of three bone identifiers: segment (pf01), segment (UT), trial # (01)
+# arg area_identifiers: a dataframe with three columns.
+# returns whether the vector matches a row in area_identifiers
+bone_is_in_area_data <- function(metadata, area_identifiers) {
+  return(any(apply(area_identifiers, 1, function(row) all(row == metadata))))
+}
