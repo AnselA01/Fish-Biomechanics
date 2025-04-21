@@ -1,6 +1,8 @@
 library(coro)
 library(furrr)
 library(progressr)
+library(plyr)
+library(stringr)
 
 cleanArea <- function(df) {
   return (
@@ -224,7 +226,7 @@ getAreaAndInitialLength <- function(metadata, area_data) {
 }
 
 attachMetadata <- function(df, metadata) {
-  return(df |> dplyr::mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
+  return(df |> dplyr::mutate(Individual = metadata$individual, Segment = metadata$segment, Trial = metadata$trial))
 }
 
 clean_fish_data <- function(df) {

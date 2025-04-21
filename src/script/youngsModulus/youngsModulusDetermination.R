@@ -106,10 +106,10 @@ medianStrainSlope <- function(slopes, strains, scores) {
 # returns slope of method with lowest score
 minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
   # check for one under 1 and two over.
-  scores.under.one <- numUnderOneScore(scores = result.scores)
-  if (length(scores.under.one) == 1) {
-    return(minScore(result.slopes, result.strain, result.scores))
-  }
+  # scores.under.one <- numUnderOneScore(scores = result.scores)
+  # if (length(scores.under.one) == 1) {
+  #   return(minScore(result.slopes, result.strain, result.scores))
+  # }
   
   min.score.index <- which.min(unlist(scores[chosenMethods]))
   method.min = names(scores[chosenMethods][min.score.index])[[1]]

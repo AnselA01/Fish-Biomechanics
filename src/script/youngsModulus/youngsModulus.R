@@ -2,6 +2,7 @@
 library(splines2)
 library(gridExtra)
 library(cowplot)
+library(ggplot2)
 
 source("./src/script/helpers/general.R")
 
@@ -11,7 +12,7 @@ r.squared <- NA
 SVI.plots <- list()
 
 # constants
-global.max.df <- 10 # the starting number of degrees of freedom when fitting splines
+global.degrees.freedom <- 10 # the starting number of degrees of freedom when fitting splines
 global.strain.filter <- 0.2
 global.grid.interval <- 0.0001
 global.svi.window.size <- 500 # dont change this
@@ -147,8 +148,8 @@ fitStressSpline <- function(bone, fitFirstDeriv = FALSE) {
 # arg strain: strain values to calculate derivatives for
 # arg coefficients: the coefficients of a spline fit to original Stress/Strain data
 calculateFirstSecondDerivatives <- function(strain, coefficients) {
-  first.deriv.basis.mat <- dbs(strain, df = global.max.df, derivs = 1)
-  second.deriv.basis.mat <- dbs(strain, df = global.max.df, derivs = 2)
+  first.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 1)
+  second.deriv.basis.mat <- dbs(strain, df = global.degrees.freedom, derivs = 2)
   
   return(list(first.deriv = first.deriv.basis.mat %*% coefficients[-1], # coefficients[1] is the intercept
          second.deriv = second.deriv.basis.mat %*% coefficients[-1]))
