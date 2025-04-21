@@ -39,7 +39,7 @@ contains all the code used throughout this process and thus there is
 much more than is used in the final product. However, all the code is
 included here for reference as well as to help future individuals
 understand our thought process, what we have tried, and other threads of
-work which we did not finish. \
+work which we did not finish.\
 
 A couple items to highlight:
 
@@ -80,9 +80,9 @@ information.
             -   polynomial_regression - explores using polynomial
                 regression techniques to represent time series data
 
-        -   `yieldStress - prelim_incomplete`  - preliminary
-            explorations for finding the yield stress - no work in
-            folder is final or complete
+        -   `yieldStress - prelim_incomplete` - preliminary explorations
+            for finding the yield stress - no work in folder is final or
+            complete
 
             -   yieldStress - attempted generalization of a method for
                 finding the yield stress
@@ -122,29 +122,57 @@ information.
 
     -   `script` - R source files.
 
-        -   `helpers`
+        -   `helpers` - functions used throughout the alogrithm
 
-        -   `old`
+            -   data.R
+
+            -   general.R
+
+            -   image.R
+
+            -   plot.R
+
+        -   `old`  - functions no longer used in the algorithm, kept for
+            record
+
+            -   changePointAnalysis.R - functions used in implementing
+                change point analysis technique for finding the Young's
+                Modulus value. This method was not chosen and is not
+                used in the algorithm.
+
+            -   polynomialRegression.R - functions used in implementing
+                polynomial regression to represent stress/strain data.
+                This method was not chosen and is not used in the
+                algorithm.
 
         -   `yieldStress - preliminary - not complete`
 
+            -   yieldStress.R - functions related to calculating the
+                yield stress. This is not complete or functional but
+                kept for the record.
+
         -   `youngsModulus`
 
-        -   
+            -   automatedCalculation.R
 
-        -   
+            -   youngsModulus.R
 
-        -   
+            -   youngsModulusDetermination.R
 
-        -   
+-   `img` - images of stress/strain curves for all fish bones
 
-        -   
+    -   `plain` - images of stress/strain curves with no additional
+        markings
 
-        -   
+    -   `ymResults`
 
-        -   
+        -   `decisions` - images of stress/strain curves with three
+            marked Young's Modulus values and the chosen value
+            highlighted in green.
 
--   `img`
+        -   other folder - images of stress/strain curves with three
+            marked Young's Modulus values from the three different
+            methods (Max, Inflection, FDS)
 
 -   `data` - all data
 

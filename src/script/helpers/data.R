@@ -73,6 +73,7 @@ batchProcessFiles <- function(filepaths) {
     lapply(filepaths, function(filepath) {
       data <- readAndProcessFile(filepath)
       if (is.null(data)) {
+        progress.bar()
         return(NULL)
       }
       progress.bar()
@@ -89,13 +90,17 @@ data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = 
   return(data)
 }
 
-library(memoise)
-
 readAndProcessFile <- function(filepath) {
-  # metadata <- parseFileName(filepath)
-  data <- file.read(filepath)
-  metadata <- pullMetadata(filepath)
-  
+  identifying_lines <- readLines(filepath, n = 20)
+  data <- file.read(filepath, identifying_lines)
+  # the second row of the bone data is its identifier
+  metadata <- extract_metadata(identifying_lines[2])
+  # this means that the bone identifer was not in the file contents. 
+  # The backup plan is to parse it from the filename. We prefer not to assume the filename is correct.
+  if (is.na(metadata$individual)) {
+    metadata <- extract_metadata(basename(filepath))
+  }
+
   if (is.null(data)) {
     return(NULL)
   }
@@ -106,13 +111,6 @@ readAndProcessFile <- function(filepath) {
   }
   return(attachMetadata(processed_data, metadata))
 }
-
-pullMetadata <- function(filepath) {
-  identifier <- readLines(filepath, n = 2)
-  print(identifier)
-  
-}
-
 
 getBoneFilepaths <- function(data.dir = file.path("data"), fish.type, fish.number, segment, trial) {
   path <- data.dir
@@ -136,19 +134,17 @@ getBoneFilepaths <- function(data.dir = file.path("data"), fish.type, fish.numbe
   return(list.files(path = path, pattern = pattern, recursive = TRUE, full.names = TRUE))
 }
 
-parseFileName <- function(filepath) {
-  file.name <- basename(filepath)
-  # segments the file name into the bone metadata
-  match <- str_match(file.name, "^([a-zA-Z]{2})(\\d+)([a-zA-Z]{2})(\\d+)\\.csv$")
-  
-  if (is.na(match[1, 1])) {
-    stop(paste("Invalid filename format:", file.name))
+parseFileName <- function(filename) {
+  identifiers <- str_match(filename, "^([a-zA-Z]{2})(\\d+)([a-zA-Z]{2})(\\d+)\\.csv$")
+
+  if (is.na(identifiers[1, 1])) {
+    return(NULL)
   }
-  
-  individual <- paste0(match[1, 2], str_pad(match[1, 3], 2, pad = "0"))
-  segment <- toupper(match[1, 4])
-  trial <- as.integer(match[1, 5])
-  
+
+  individual <- identifiers[1,2]
+  segment <- toupper(identifiers[1, 4])
+  trial <- as.integer(identifiers[1, 5])
+
   return(c(individual, segment, trial))
 }
 
@@ -165,14 +161,13 @@ getNumRowSkip <- function(lines) {
   return(grep("^Reading", lines)[1] - 1)
 }
 
-file.read <- function(filepath) {
-  lines <- readLines(filepath, n = 20)
-  delim <- getDelim(lines)
-  num.skip <- getNumRowSkip(lines)
+file.read <- function(filepath, identifying_lines) {
+  delim <- getDelim(identifying_lines)
+  num.skip <- getNumRowSkip(identifying_lines)
   
   df <- suppressWarnings(suppressMessages(read_delim(filepath, skip = num.skip, delim = delim)))
   
-  if (!length(names(df))) { # empty
+  if (!length(names(df))) {
     return(NULL)
   }
 
@@ -185,14 +180,14 @@ file.read <- function(filepath) {
 # wrapper around recalculate distance and recalculate stress strain
 recalculate <- function(df, load_filter, metadata, area_data) {
   return(
-    recalculateDistance(df, load_filter) |>
+    recalculateDistance(df, load_filter) %>% 
       recalculateStressStrain(metadata, area_data)
   )
 }
 
 recalculateDistance <- function(df, loadFilter) {
   return(
-    df |> 
+    df %>% 
       dplyr::filter(Load > loadFilter) |> 
       dplyr::mutate(Distance = Distance - first(Distance)) # should new distance be negative?
   )
@@ -214,6 +209,7 @@ recalculateStressStrain <- function(df, metadata, area_data) {
 
 getAreaAndInitialLength <- function(metadata, area_data) {
   if(!bone_is_in_area_data(metadata, area_data[, 3:5])) {
+    message(paste0(metadata), " not found in area.csv. Skipping.")
     return (NULL)
   }
   
@@ -230,7 +226,6 @@ getAreaAndInitialLength <- function(metadata, area_data) {
 attachMetadata <- function(df, metadata) {
   return(df |> dplyr::mutate(Individual = metadata[1], Segment = metadata[2], Trial = metadata[3]))
 }
-
 
 clean_fish_data <- function(df) {
   return(df |> 

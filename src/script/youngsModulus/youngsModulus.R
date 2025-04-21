@@ -103,7 +103,6 @@ fitSpline <- function(formula, bone, strain) {
 # returns tibble with one gridded Strain column.
 createGrid <- function(bone, interval = global.grid.interval) {
   if (max(bone$Strain) == -Inf) {
-    view(bone)
   }
   
   return(data.frame(Strain = seq(from = 0, to = max(bone$Strain), by = interval)))
