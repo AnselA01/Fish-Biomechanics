@@ -2,6 +2,7 @@ library(coro)
 library(furrr)
 library(progressr)
 library(plyr)
+library(dplyr)
 library(stringr)
 
 cleanArea <- function(df) {

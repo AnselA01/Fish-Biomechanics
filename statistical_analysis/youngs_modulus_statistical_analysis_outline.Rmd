@@ -33,8 +33,10 @@ script_directory <- "./src/script/"
 results = the latest results data
 length_data = fish length data from Takashi
 
+Need to make sure file path is accurate.
+
 ```{r}
-results <- read_csv("results/youngs-modulus/2025-04-17/choices.csv")
+results <- read_csv("results/youngs-modulus/2025-04-21/choices.csv")
 length_data <- read.csv("data/Perch study - MAIE Lab - Tally.csv")
 
 results_good <- results |>
@@ -254,7 +256,7 @@ Interpretation: The histogram of the residuals is a normal distribution and the 
 
 *Changing the reference level *
 
-By changing the reference level from the default (CP), we can see of there are significant differences when compared to a different bone type.
+By changing the reference level from the default (CP), we can see if there are significant differences when compared to a different bone type.
 
 ```{r}
 # create new data and manually relevel the bone types

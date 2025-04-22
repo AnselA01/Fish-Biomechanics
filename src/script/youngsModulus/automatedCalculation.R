@@ -2,18 +2,22 @@
 # perform Young's Modulus calculation and decision making for all data in
 # the "data" directory
 
-library(readr)
-library(tibble)
 
-source("./src/script/helpers/data.R")
-source("./src/script/helpers/general.R")
-source("./src/script/youngsModulus/youngsModulus.R")
-source("./src/script/youngsModulus/youngsModulusDetermination.R")
+# in case only the automated function is run
+load_necessary_files <- function() {
+  library(readr)
+  library(tibble)
+  
+  source("./src/script/helpers/data.R")
+  source("./src/script/helpers/general.R")
+  source("./src/script/youngsModulus/youngsModulus.R")
+  source("./src/script/youngsModulus/youngsModulusDetermination.R")
+}
 
 current_date <- NULL
 
 automated_youngs_modulus_calculation <- function(bone_data) {
-  
+  load_necessary_files()
   tryCatch({
     bone_data <- handle_data_fetch(bone_data)
   }, error = function(e) {

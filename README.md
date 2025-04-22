@@ -23,13 +23,17 @@ Underagraduate CIR fellows
 
 ## Project
 
-This project aims to identify three tensile properties of yellow perch
+This project aims to identify the Young's Modulus of yellow perch
 vertebrae from collected stress-strain data. Data are not shared in the
 repo.
 
+## For Those Looking to Use Automated Algorithm to Get Young's Modulus Values
+
+## For Those Looking Use
+
 ## For Those Looking to Continue Working on This Project
 
-The following README files details the code in rstudio create by the
+The following README file details the code in rstudio create by the
 undergraduate CIR fellows listed above during the 2024-2025 academic
 year. During this time, the fellows have developed an automated
 algorithm which takes in the time series data of applied force and
@@ -50,20 +54,24 @@ not have enough time complete this process by the end of the year. Thus
 none of the code is finalized but the ideas may be useful in the future.
 
 Within the explanation folder there are additional documents detailing
-further this project. This includes a document explaing and
-demonstrating the statistical analysis conducted to determine whether
-exterior vertebral bones were significantly stronger than interior
-bones. We found this to be significant. There is also information for
-those who simply wish to use our automated algorithm of finding the
-Young's Modulus. If this is you there is no need to read this document
+further this project. This includes the following documents:
+
+-   methods doc pdf
+
+-   statistical analysis - demonstrating the statistical analysis
+    conducted to determine whether exterior vertebral bones were
+    significantly stronger than interior bones. We found this to be
+    significant.
+
+-   poster pdf
+
+There is also information for those who simply wish to use our automated
+algorithm of finding the Young's Modulus but are not working further on
+the project. If this is you there is no need to read this document
 further. Instead refer to \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ for the needed
 information.
 
-## Tensile Property extraction
-
-## Statistical Analysis
-
-## Repo - Methods for tiding data and extracting tensile properties.
+## Repo - Methods for Tiding Data, Extracting Tensile Properties, Statistical Analysis.
 
 -   `src` - all Rmd and R source files
 
@@ -113,7 +121,7 @@ information.
 
             -   threshold justification - explanation for use of
                 filtering out any data with a stress value less than
-                0.2. This filtering threshold is used in the data
+                0.8 N. This filtering threshold is used in the data
                 cleaning process.
 
             -   youngsModulus -
@@ -122,17 +130,20 @@ information.
 
     -   `script` - R source files.
 
-        -   `helpers` - functions used throughout the alogrithm
+        -   `helpers` - functions used throughout the algorithm
 
-            -   data.R
+            -   data.R - includes functions for fetching bone data for
+                use in algorithm, data cleaning, file parsing, and
+                calculation of stress and strain values.
 
-            -   general.R
+            -   general.R - ???
 
-            -   image.R
+            -   image.R - function which saves fish ggplots as images
+                files
 
-            -   plot.R
+            -   plot.R - plotting functions
 
-        -   `old`  - functions no longer used in the algorithm, kept for
+        -   `old` - functions no longer used in the algorithm, kept for
             record
 
             -   changePointAnalysis.R - functions used in implementing
@@ -231,11 +242,11 @@ Calculation of Young's modulus is performed using three methods:
 3.  FDS - This method takes the data below a strain value of 0.2, and
     takes the numerical derivatives between points with a lag of 2 (due
     to repeated strain-steps in dataset with different stress values)
-    and fits a spline to the derivatives with 10 degress of freedom. The
+    and fits a spline to the derivatives with 10 degrees of freedom. The
     first local maxima of the spline of the derivatives is found to a
     precision of 0.0001 units of strain. A spline of the original data
     with 10 degrees of freedom is fit. This spline's derivative is
-    evaluated at the local maxima strain value. This is teh Young's
+    evaluated at the local maxima strain value. This is the Young's
     Modulus value.
 
 #### Selection
@@ -253,7 +264,7 @@ Steps:
 
 1.  CSV data in the form `AAXBBX.csv` where AA is two-letter fish name
 
--   Eeach set of results is saved in a new folder named with the current
+-   Each set of results is saved in a new folder named with the current
     day's date.
 
 -   choices.csv lists the chosen value for each bone
