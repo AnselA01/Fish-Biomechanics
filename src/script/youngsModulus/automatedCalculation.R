@@ -13,30 +13,61 @@ source("./src/script/youngsModulus/youngsModulusDetermination.R")
 current_date <- NULL
 
 automated_youngs_modulus_calculation <- function(bone_data) {
+  
+  tryCatch({
+    bone_data <- handle_data_fetch(bone_data)
+  }, error = function(e) {
+    stop("Error fetching data. Stopping", e)
+  })
+  
+  results_and_choices <- NULL
+  tryCatch({
+    results_and_choices <- handle_calculate_results(bone_data)
+  }, error = function(e) {
+    stop("Error calculating results. Stopping.", e)
+  })
+  
+  tryCatch({
+    save_results_choices_inconclusives(results_and_choices)
+  }, error = function(e) {
+    stop("Error saving results. Stopping.", e)
+  })
+}
+
+handle_data_fetch <- function(bone_data) {
   if (missing(bone_data) # if they did not provide data
       || (!missing(bone_data) # of if the data they provide is bad
           && ((length(bone_data) == 0)
               || is.null(bone_data)
               || sum(is.na(bone_data)) == length(bone_data)))) {
-    bone_data <- data.generator() # then fetch new data
+    bone_data <- data.generator()
   }
-  
+  return(bone_data)
+}
+
+handle_calculate_results <- function(bone_data) {
   choices <- tibble()
   results <- tibble()
   for (bone in bone_data) {
-    res <- calculate_result_and_choose(bone)
+    res <- NULL
+    tryCatch({
+      res <- calculate_result_and_choose(bone)
+    }, error = function() {
+      next
+    })
+    
     if (is.null(res)) {
-      message(paste0(getName(bone), ": Could not calculate Young's Modulus. Skipping"))
       next
     }
     
     choices <- bind_rows(choices, res$choice)
     results <- bind_rows(results, res$result)
   }
+  return(list(
+    results = results, 
+    choices = choices
+  ))
   
-  results_and_choices <- list(results = results, choices = choices)
-  
-  save_results_choices_inconclusives(results_and_choices)
 }
 
 calculate_result_and_choose <- function(bone) {
@@ -111,20 +142,26 @@ save_results_choices_inconclusives <- function(results_and_choices) {
   output_dir <- file.path("results", "youngs-modulus", as.character(current_date))
   create_dir_safe(output_dir)
   
-  message("Saving results to ", output_dir)
   
   inconclusive_data_dir <- file.path(output_dir, "inconclusive-data")
   create_dir_safe(inconclusive_data_dir)
 
   # passing date to all three is largely unnecessary but you never know, this could be run at 11:59:59
-  save_results(results_and_choices$results, output_dir) 
-  save_choices(results_and_choices$choices, output_dir)
-  save_inconclusives(results_and_choices$choices %>% 
-                       dplyr::filter(inconclusive) %>% 
-                       dplyr::pull(name),
-                     output_dir,
-                     inconclusive_data_dir
-                     )
+  tryCatch({
+    save_results(results_and_choices$results, output_dir) 
+    save_choices(results_and_choices$choices, output_dir)
+    save_inconclusives(
+      results_and_choices$choices %>%
+        dplyr::filter(inconclusive) %>%
+        dplyr::pull(name),
+      output_dir,
+      inconclusive_data_dir
+    )
+    
+    message("\033[32mResults saved to to ", output_dir, "\033[0m")
+  }, error = function(e) {
+    message("Error saving automated young's modulus results")
+  })
 }
 
 save_results <- function(results, output_results_dir) {
@@ -160,6 +197,7 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
 
     file.copy(raw_data_path, inconclusive_data_dir)
   }
+  
 }
 
 

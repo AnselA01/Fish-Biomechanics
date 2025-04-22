@@ -66,9 +66,9 @@ findOne <- function(attributes) {
   return(readAndProcessFile(filepath))
 }
 
-
+handlers("progress", append = TRUE)
 batchProcessFiles <- function(filepaths) {
-  message("Fetching data...")
+  message("\033[37mFetching data...\033[0m")
   with_progress({
     progress.bar <- progressor(steps = length(filepaths))
     
@@ -89,6 +89,8 @@ data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = 
   data <- batchProcessFiles(filepaths)
   if (length(data) == 0) stop("No data found")
   
+  message(paste("\033[37mFound", length(data), "observations\033[0m"))
+  
   return(data)
 }
 
@@ -107,7 +109,7 @@ readAndProcessFile <- function(filepath) {
     return(NULL)
   }
   
-  processed_data <- recalculate(data, global.load_filter, metadata, global.area)
+  processed_data <- recalculate(data, global.load_filter, metadata)
   if (is.null(processed_data)) {
     return(NULL)
   }
@@ -180,10 +182,10 @@ file.read <- function(filepath, identifying_lines) {
 }
 
 # wrapper around recalculate distance and recalculate stress strain
-recalculate <- function(df, load_filter, metadata, area_data) {
+recalculate <- function(df, load_filter, metadata) {
   return(
     recalculateDistance(df, load_filter) %>% 
-      recalculateStressStrain(metadata, area_data)
+      recalculateStressStrain(metadata)
   )
 }
 
@@ -195,8 +197,8 @@ recalculateDistance <- function(df, loadFilter) {
   )
 }
 
-recalculateStressStrain <- function(df, metadata, area_data) {
-  new_values <- getAreaAndInitialLength(metadata, area_data)
+recalculateStressStrain <- function(df, metadata) {
+  new_values <- getAreaAndInitialLength(metadata)
   if (is.null(new_values)) {
     return(NULL)
   }
@@ -209,14 +211,14 @@ recalculateStressStrain <- function(df, metadata, area_data) {
 
 }
 
-getAreaAndInitialLength <- function(metadata, area_data) {
-  if(!bone_is_in_area_data(metadata, area_data[, 3:5])) {
-    message(paste0(metadata), " not found in area.csv. Skipping.")
+getAreaAndInitialLength <- function(metadata) {
+  if(!bone_is_in_area_data(metadata, global.area[, 3:5])) {
+    message(paste0(metadata), " not found in area data")
     return (NULL)
   }
   
   return (
-    area_data |> 
+    global.area |> 
       dplyr::filter(Individual == metadata[1], Segment == metadata[2], Trial == metadata[3]) |> 
       summarise(
         Area = first(Area),
