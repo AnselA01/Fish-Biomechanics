@@ -58,7 +58,7 @@ results_final <- merge(results_good, length_clean, by.x = "fish_name", by.y = "I
 
 ## Visualizations
 
-* Studying the E value for each bone. There will be variability both within and between fish which will be addressed in a multilevel linear model. The most useful visualizations to capture these relationships are scatterplots. 
+* Studying the E value for each bone. There will be variability both within and between fish which will be addressed in a multilevel linear model. The most useful visualizations to capture these relationships are scatter plots. 
 
 *Youngs Modulus vs fish length*
 

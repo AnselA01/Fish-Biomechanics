@@ -32,7 +32,7 @@ automated_youngs_modulus_calculation <- function(bone_data) {
   })
   
   tryCatch({
-    save_results_choices_inconclusives(results_and_choices)
+    save_results_choices_inconclusives(results_and_choices$results, results_and_choices$choices, bone_data)
   }, error = function(e) {
     stop("Error saving results. Stopping.", e)
   })
@@ -52,6 +52,7 @@ handle_data_fetch <- function(bone_data) {
 handle_calculate_results <- function(bone_data) {
   choices <- tibble()
   results <- tibble()
+  
   for (bone in bone_data) {
     res <- NULL
     tryCatch({
@@ -74,6 +75,7 @@ handle_calculate_results <- function(bone_data) {
   
 }
 
+# calculates young's modulus and chooses best estimate.
 calculate_result_and_choose <- function(bone) {
   result <- ym.calculateAndDetermine(bone)
   if (is.null(result$results) || is.null(result$choice)) {
@@ -83,54 +85,33 @@ calculate_result_and_choose <- function(bone) {
   return(list(result = extract_result(result$results), choice = extract_choice(result$choice)))
 }
 
+# returns relevant values from young's modulus determination result
 extract_choice <- function(choice) {
-  name <- choice$name[[1]]
-  method <- choice$method[[1]]
-  slope <- choice$slope[[1]]
-  score <- choice$score[[1]]
-  strain <- choice$strain[[1]]
-  inconclusive <- choice$inconclusive
-  
-  return(
-    tibble(
-      name = name,
-      method = method,
-      slope = slope,
-      score = score,
-      strain = strain,
-      inconclusive = inconclusive
-    )
-  )
+  return(tibble(
+    name  = choice$name[[1]],
+    method  = choice$method[[1]],
+    slope  = choice$slope[[1]],
+    score  = choice$score[[1]],
+    strain  = choice$strain[[1]],
+    inconclusive  = choice$inconclusive
+  ))
 }
 
-# extracts and returns relevant values from young's modulus result
+# returns relevant values from young's modulus result
 extract_result <- function(result) {
-  name <- result$name
-  rsquared <- result$r.squared
-  max.slope <- result$max.slope
-  max.strain <- result$max.strain
-  max.score <- result$max.score
-  inflection.slope <- result$inflection.slope
-  inflection.strain <- result$inflection.strain
-  inflection.score <- result$inflection.score
-  fds.slope <- result$fds.slope
-  fds.strain <- result$fds.strain
-  fds.score <- result$fds.score
-  
-  return(
-    tibble(
-      name,
-      max.slope,
-      max.strain,
-      max.score,
-      inflection.slope,
-      inflection.strain,
-      inflection.score,
-      fds.slope,
-      fds.strain,
-      fds.score
-    )
-  )
+  return(tibble(
+    name = result$name, 
+    rsquared = result$r.squared, 
+    max.slope = result$max.slope, 
+    max.strain = result$max.strain, 
+    max.score = result$max.score, 
+    inflection.slope = result$inflection.slope, 
+    inflection.strain = result$inflection.strain, 
+    inflection.score = result$inflection.score, 
+    fds.slope = result$fds.slope, 
+    fds.strain = result$fds.strain, 
+    fds.score = result$fds.score
+  ))
 }
 
 # creates a directory `path` if it does not exist
@@ -140,27 +121,27 @@ create_dir_safe <- function(path) {
   }
 }
 
-save_results_choices_inconclusives <- function(results_and_choices) {
-  current_date <<- Sys.Date()
+# save the results, choices, inconclusives, and images.
+save_results_choices_inconclusives <- function(results, choices, data) {
+  current_date <<- Sys.Date() # set global date for use in other places in this file.
   
   output_dir <- file.path("results", "youngs-modulus", as.character(current_date))
   create_dir_safe(output_dir)
   
-  
   inconclusive_data_dir <- file.path(output_dir, "inconclusive-data")
   create_dir_safe(inconclusive_data_dir)
 
-  # passing date to all three is largely unnecessary but you never know, this could be run at 11:59:59
   tryCatch({
-    save_results(results_and_choices$results, output_dir) 
-    save_choices(results_and_choices$choices, output_dir)
+    save_results(results, output_dir)
+    save_choices(choices, output_dir)
     save_inconclusives(
-      results_and_choices$choices %>%
+      choices %>%
         dplyr::filter(inconclusive) %>%
         dplyr::pull(name),
       output_dir,
       inconclusive_data_dir
     )
+    save_images(results, choices, data)
     
     message("\033[32mResults saved to to ", output_dir, "\033[0m")
   }, error = function(e) {
@@ -198,9 +179,13 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
     filename <- paste0(standardize_name(bone_name), ".csv")
     # find file name for bone name
     raw_data_path <- file.path("data", dirname, filename)
-
+    
     file.copy(raw_data_path, inconclusive_data_dir)
   }
+}
+
+# saves images of data with young's modulus values and locations indicated
+save_images <- function(results, choices, data) {
   
 }
 

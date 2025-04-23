@@ -12,8 +12,7 @@ r.squared <- NA
 SVI.plots <- list()
 
 # constants
-global.degrees.freedom <- 10 # the starting number of degrees of freedom when fitting splines
-global.strain.filter <- 0.2
+global.degrees.freedom <- 10 
 global.grid.interval <- 0.0001
 global.svi.window.size <- 500 # dont change this
 

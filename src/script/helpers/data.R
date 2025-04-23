@@ -5,19 +5,23 @@ library(plyr)
 library(dplyr)
 library(stringr)
 
-cleanArea <- function(df) {
+cleanArea <- function(area_df) {
+  # first check if they have provided the good names
+  if (all(c("Segment", "Trial", "Area", "Length", "Width") %in% names(area_df))) return(area_df)
   return (
-    df |> 
-      dplyr::rename(Segment = "Segment (UT, MT, LT or CP)",
-                    Trial = "Trial # (at least 01-03)",
-                    Area = "Area (m^2)",
-                    Length = "Length (mm)",
-                    Width = "Width or Diameter (mm)")
+    area_df |>
+      dplyr::rename(
+        Segment = "Segment (UT, MT, LT or CP)",
+        Trial = "Trial # (at least 01-03)",
+        Area = "Area (m^2)",
+        Length = "Length (mm)",
+        Width = "Width or Diameter (mm)"
+      )
   )
 }
 
 global.area <- cleanArea(suppressMessages(read_csv("data/area.csv"))) # this must be here for everything to work
-global.load_filter <- 0.8 # see 
+global.load_filter <- 0.8 # see src/md/youngsModulus.../thresholdjustification.Rmd
 
 
 # data.fetch fetches any number of fish, segments, and trials.
@@ -96,11 +100,14 @@ data.generator <- function(data.dir = "./data", fish.type = NULL, fish.number = 
 }
 
 readAndProcessFile <- function(filepath) {
-  identifying_lines <- readLines(filepath, n = 20)
+  identifying_lines <- readLines(filepath, n = 30)
+  if (length(identifying_lines) == 0) {
+    return(NULL)
+  }
   data <- file.read(filepath, identifying_lines)
-  # the second row of the bone data is its identifier
+  # the second row of the data is its identifier
   metadata <- extract_metadata(identifying_lines[2])
-  # this means that the bone identifer was not in the file contents. 
+  # this means that the bone identifer is not in the file contents. 
   # The backup plan is to parse it from the filename. We prefer not to assume the filename is correct.
   if (is.na(metadata$individual)) {
     metadata <- extract_metadata(basename(filepath))
@@ -117,10 +124,10 @@ readAndProcessFile <- function(filepath) {
   return(attachMetadata(processed_data, metadata))
 }
 
+pattern <- "[a-zA-Z]{2}\\d+[a-zA-Z]{2}\\d+\\.csv$"
 getBoneFilepaths <- function(data.dir = file.path("data"), fish.type, fish.number, segment, trial) {
   path <- data.dir
   # matches the bone file naming scheme like pf01cp01 or pf100cp100
-  pattern <- "[a-zA-Z]{2}\\d+[a-zA-Z]{2}\\d+\\.csv$"
   if (!is.null(fish.number)) {
     if (!is.null(segment)) {
       pattern <- paste0(tolower(segment), "[0-9]+")
@@ -154,20 +161,34 @@ parseFileName <- function(filename) {
 }
 
 
-# files are either comma or tab separated. This is indicated by the presence of "sep=\t" on the first line of the file. 
-# If this line is there, the file is tab separated. If it is not, the file is comma separated.
-# Returns correct file delimiter character
-getDelim <- function(lines) {
-  return(ifelse(grepl("sep=", lines[[1]]), "\t", ","))
+# dynamically grabs correct file delimiter. Grabs all text after "sep=". Will either be a comma "," or a tab "\t".
+
+getDelim <- function(identifying_lines) {
+  delim <- str_extract(identifying_lines[[1]], "(?<=sep=).*")
+  no_delim <- is.na(delim) | delim == "" # condition for bone file has no delim.
+  
+  if (any(no_delim)) { # uh oh no delim. Parse it from the text separating "Reading" and "Load". 
+    delim <- str_extract(identifying_lines, "(?<=Reading)(.*?)(?=Load)") %>% 
+      na.omit() %>% 
+      as.vector()
+  } 
+  
+  if (any(no_delim)) {
+    return(NULL)
+  }
+  return(delim)
 }
 
 # Returns correct number of lines to skip. Logic to find this is to skip up to where the line starts with "Reading".
-getNumRowSkip <- function(lines) {
-  return(grep("^Reading", lines)[1] - 1)
+getNumRowSkip <- function(identifying_lines) {
+  return(grep("^Reading", identifying_lines)[1] - 1)
 }
 
 file.read <- function(filepath, identifying_lines) {
   delim <- getDelim(identifying_lines)
+  if (is.null(delim)) {
+    return(NULL)
+  }
   num.skip <- getNumRowSkip(identifying_lines)
   
   df <- suppressWarnings(suppressMessages(read_delim(filepath, skip = num.skip, delim = delim)))

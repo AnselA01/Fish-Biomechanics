@@ -6,6 +6,8 @@ editor_options:
 
 # Statistical Analysis of the Variation in Material Properties of Vertebrae Regions in Yellow Perch
 
+Updated: April 22, 2025
+
 Takashi Maie Lab and the Center for Interdisciplinary Research (CIR),
 St. Olaf College
 
@@ -17,61 +19,85 @@ St. Olaf faculty
 
 Underagraduate CIR fellows
 
--   Ansel Alldredge (CIR)
+-   Ansel Alldredge (CIR) -
+    [aalldredge001\@gmail.com](mailto:aalldredge001@gmail.com){.email}
+    \| 763-670-1770
 -   Abigail Hahs (CIR)
--   Otto Schmidt (CIR)
+-   Otto Schmidt (CIR) -
+    [ottohschmidt4\@gmail.com](mailto:ottohschmidt4@gmail.com){.email}
+    \| 651-402-6313
 
-## Project
+## Project Overview
 
 This project aims to identify the Young's Modulus of yellow perch
-vertebrae from collected stress-strain data. Data are not shared in the
-repo.
+vertebrae from collected stress-strain time series data. Data are not
+shared in the repo.
 
-## For Those Looking to Use Automated Algorithm to Get Young's Modulus Values
-
-## For Those Looking Use
-
-## For Those Looking to Continue Working on This Project
-
-The following README file details the code in rstudio create by the
-undergraduate CIR fellows listed above during the 2024-2025 academic
+The following **README.md** file details the code in rstudio create by
+the undergraduate CIR fellows listed above during the 2024-2025 academic
 year. During this time, the fellows have developed an automated
 algorithm which takes in the time series data of applied force and
 compression length for a tensile compression test of fish vertebral
-bones and calculates the Young's Modulus of each bone. The repo below
-contains all the code used throughout this process and thus there is
-much more than is used in the final product. However, all the code is
-included here for reference as well as to help future individuals
-understand our thought process, what we have tried, and other threads of
-work which we did not finish.\
+bones and calculates the Young's Modulus of each bone. Then statistical
+analysis of these Young's Modulus values is conducted. The project can
+be divided into these two portions:
 
-A couple items to highlight:
+1.  The Algorithm
+2.  The Statistical Analysis.
 
-Throughout the repo there are folders label yield stress and often are
+## For Those Looking to Use the Automated Algorithm to Get Young's Modulus Values
+
+The document **youngs_modulus_calculation_entry.Rmd** details the steps
+to run the algorithm and get a Young's Modulus value for each fish bone.
+The document **Automated Young's Modulus Calculation Workflow** found in
+the **explanation** **folder** includes resources for ensuring the
+algorithm runs properly as well as troubleshooting.
+
+## For Those Looking to Use the Statistical Analysis of Young's Modulus Values
+
+The document **youngs_modulus_statistical_analysis_outline.Rmd** in the
+**statistical analysis folder** details the statistical analysis
+conducted on the bones of 21 perch. The statistical methods are
+described in detail and justification for the process in discussed.
+
+## For Those Looking for Pre-Written Text for an Academic Paper Describing the Algorithm and/or Statistical Analysis
+
+The document **Algorithm - Final Write Up** in the **explanation
+folder** includes paragraphs written by the CIR fellows that may be used
+in an academic paper or other similar product.
+
+## For Those Looking to Continue Working on This Project
+
+The following resources will be helpful for those picking up this
+project:
+
+1.  This **README.md** here is a useful starting point and a home base
+    for all the explanatory documents associated with the project. The
+    Repo section below details the code structure of the project. There
+    is much more than is used in the final product. However, all the
+    code is included here for reference as well as to help future
+    individuals understand our thought process, what we have tried, and
+    other threads of work which we did not finish.
+2.  The document **Algorithm - Final Write Up** in the **explanation
+    folder** includes extensive explanation about the algorithm with
+    insights and justification for the process. Reading this document in
+    full is the single best way to orient yourself to the details of the
+    algorithm portion of the project.
+3.  The document **youngs_modulus_statistical_analysis_outline.Rmd** in
+    the **statistical analysis folder** details the statistical analysis
+    conducted on the bones of 21 perch. The statistical methods are
+    described in detail and justification for the process in discussed.
+    Reading this document in full is the single best way to orient
+    yourself ot the details of the statistical analysis portion of the
+    project.\
+
+## Repo - Methods for Tiding Data, Extracting Tensile Properties, Statistical Analysis.
+
+Throughout the repo there are folders labeled yield stress and often are
 accompanied by the label "incomplete" or "not final." We began looking
 at automated ways to calculate the yield stress for each bone but did
 not have enough time complete this process by the end of the year. Thus
 none of the code is finalized but the ideas may be useful in the future.
-
-Within the explanation folder there are additional documents detailing
-further this project. This includes the following documents:
-
--   methods doc pdf
-
--   statistical analysis - demonstrating the statistical analysis
-    conducted to determine whether exterior vertebral bones were
-    significantly stronger than interior bones. We found this to be
-    significant.
-
--   poster pdf
-
-There is also information for those who simply wish to use our automated
-algorithm of finding the Young's Modulus but are not working further on
-the project. If this is you there is no need to read this document
-further. Instead refer to \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ for the needed
-information.
-
-## Repo - Methods for Tiding Data, Extracting Tensile Properties, Statistical Analysis.
 
 -   `src` - all Rmd and R source files
 
@@ -216,6 +242,8 @@ information.
 
         -   README - details the contents of each folder in
             youngs-modulus and how the results may be used
+
+SHOULD WE KEEP THE REST OF THIS??????
 
 ## Methodology
 
