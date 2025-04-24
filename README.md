@@ -6,7 +6,7 @@ editor_options:
 
 # Statistical Analysis of the Variation in Material Properties of Vertebrae Regions in Yellow Perch
 
-Updated: April 22, 2025
+Updated: April 24, 2025
 
 Takashi Maie Lab and the Center for Interdisciplinary Research (CIR),
 St. Olaf College
@@ -22,7 +22,9 @@ Underagraduate CIR fellows
 -   Ansel Alldredge (CIR) -
     [aalldredge001\@gmail.com](mailto:aalldredge001@gmail.com){.email}
     \| 763-670-1770
--   Abigail Hahs (CIR)
+-   Abigail Hahs (CIR) -
+    [abbyhahs\@gmail.com](mailto:abbyhahs@gmail.com){.email} \|
+    612-345-2682
 -   Otto Schmidt (CIR) -
     [ottohschmidt4\@gmail.com](mailto:ottohschmidt4@gmail.com){.email}
     \| 651-402-6313
@@ -58,13 +60,15 @@ algorithm runs properly as well as troubleshooting.
 The document **youngs_modulus_statistical_analysis_outline.Rmd** in the
 **statistical analysis folder** details the statistical analysis
 conducted on the bones of 21 perch. The statistical methods are
-described in detail and justification for the process in discussed.
+described in detail and justification for the process in discussed. ADD
+GOOGLE DOC!
 
 ## For Those Looking for Pre-Written Text for an Academic Paper Describing the Algorithm and/or Statistical Analysis
 
 The document **Algorithm - Final Write Up** in the **explanation
 folder** includes paragraphs written by the CIR fellows that may be used
-in an academic paper or other similar product.
+in an academic paper or other similar product. IN EACH DOCUMENT AT
+BOTTOM HAVE THE PAPER TEXT
 
 ## For Those Looking to Continue Working on This Project
 
@@ -243,7 +247,7 @@ none of the code is finalized but the ideas may be useful in the future.
         -   README - details the contents of each folder in
             youngs-modulus and how the results may be used
 
-SHOULD WE KEEP THE REST OF THIS??????
+SHOULD WE KEEP THE REST OF THIS?????? - PROBABLY DELETE THIS
 
 ## Methodology
 

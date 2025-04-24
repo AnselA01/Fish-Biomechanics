@@ -7,12 +7,15 @@ editor_options:
   chunk_output_type: console
 ---
 
+This rmd provides a walk through of how the statistical analysis was completed for the Youngs Modulus data.
+
 # Set up and Data Cleaning
 
 Load in the required packages and set up document to obtain data from the directory.
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(dplyr)
 library(gridExtra)
 library(ggtext)
 library(segmented)
@@ -25,9 +28,9 @@ library(lme4)
 library(HLMdiag)
 library(ggResidpanel)
 
-setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
-data_directory <- "./data"
-script_directory <- "./src/script/"
+#setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
+#data_directory <- "./data"
+#script_directory <- "./src/script/"
 ```
 
 results = the latest results data
@@ -36,9 +39,11 @@ length_data = fish length data from Takashi
 Need to make sure file path is accurate.
 
 ```{r}
-results <- read_csv("results/youngs-modulus/2025-04-21/choices.csv")
+# data
+results <- read_csv("results/youngs-modulus/2025-04-22/choices.csv")
 length_data <- read.csv("data/Perch study - MAIE Lab - Tally.csv")
 
+# filter results to contain only the fish that are not marked inconclusive and are the species PF, split the name to into different sections to differentiate the type (PF), number (01-21), bone number (1-4), and fish name (PF #) 
 results_good <- results |>
   dplyr::filter(!inconclusive) %>%
   mutate(
@@ -50,9 +55,11 @@ results_good <- results |>
   ) |>
   dplyr::filter(fish_type != "SV")
 
+# change the fish to be uppercase to match the name format in results_good
 length_clean <- length_data |>
   mutate(Individual = toupper(Individual))
 
+# merge results good with length clean. Keep all rows from results_good even if a length is not found. There should be a length value for every fish
 results_final <- merge(results_good, length_clean, by.x = "fish_name", by.y = "Individual", all.x = T) 
 ```
 
@@ -60,52 +67,9 @@ results_final <- merge(results_good, length_clean, by.x = "fish_name", by.y = "I
 
 * Studying the E value for each bone. There will be variability both within and between fish which will be addressed in a multilevel linear model. The most useful visualizations to capture these relationships are scatter plots. 
 
-*Youngs Modulus vs fish length*
-
-```{r}
-p1 <- results_final |>
-  # filter to contain only one bone type
-  filter(bone_type == "UT") |>
-  # plot the fish length and slope
-  ggplot(aes(x = Length..cm., y = slope)) + 
-  # give each fish a color
-  geom_point(aes(color = fish_name)) +
-  # approximate with a linear slope
-  geom_smooth(method = lm, se = F) +
-  # set the y axis limits so each plot matches
-  scale_y_continuous(limits = c(0,500)) +
-  labs(title = "UT")
-
-p2 <- results_final |>
-  filter(bone_type == "MT") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "MT") +
-  scale_y_continuous(limits = c(0,500))
-
-p3 <- results_final |>
-  filter(bone_type == "LT") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "LT") +
-  scale_y_continuous(limits = c(0,500))
-
-p4 <- results_final |>
-  filter(bone_type == "CP") |>
-  ggplot(aes(x = Length..cm., y = slope)) +
-  geom_point(aes(color = fish_name)) +
-  geom_smooth(method = lm, se = F) +
-  labs(title = "CP") +
-  scale_y_continuous(limits = c(0,550))
-
-grid.arrange(p1,p2,p3,p4)
-```
-
-Here we see that for MT, LT, and CP bones as the fish length increases, so does the E value.
-
 *Within Fish Variability*
+
+Since most fish have > 1 observation for each bone type, checking the within fish variability determines if the observations for each fish are similar or different. Checking this helps determine if any of the values look "off" which would result in checking the algorithm or if the use of a multilevel model is justified.
 
 ```{r}
 results_final |>
@@ -141,9 +105,12 @@ results_final |>
   facet_wrap( ~ fct_relevel(bone_type, "UT", "MT", "LT", "CP"))
 ```
 
-This plot depicts the variability within fish for E values. The UT and CP bones appear to have more variation than the MT and LT bones. 
+This plot depicts the variability within fish for E values. The x axis is the fish length, the y axis is the E value, and each fish has a different color.
+Generally, the UT and CP bones have more variation than the MT and LT bones. There is also evidence of E values increasing with length for MT, LT, and CP bones. E values for UT do not seem to have a relationship with length.
 
 *Between Fish Variability*
+
+The between fish variability is useful in that we can easily compare between fish and catch discrepancies in E values or expected shape.
 
 ```{r}
 results_final %>% 
@@ -186,7 +153,7 @@ ggplot(aes(x = fct_relevel(bone_type, "UT", "MT", "LT", "CP"), y = slope, color 
   )
 ```
 
-In this plot we can see the E values for each fish and compare the curves. A "U" shape is expected. We can see that the shapes between fish are very different indicating variation.
+This plot depicts the variability between fish for E vales. The x axis is bone type, ordered by location in the spine (UT, MT, LT, CP), the y axis is E, the fish are ordered according to length and the colors correspond to the same fish in within fish variability. We expect to see a "U" shape with higher UT and CP values compared to MT and LT. About 50% of the fish display this trend, while others show no trend or the opposite trend, thus indicating variability between fish.
 
 ## Statistical Analysis
 
@@ -194,7 +161,7 @@ In this plot we can see the E values for each fish and compare the curves. A "U"
 
 *Initial Statistical Analysis*
 
-* Analysis of Variance test determines if there is an initial association between bone type and E value before adding effects of the individual fish.
+* An Analysis of Variance test determines if there is an initial association between bone type and E value before adding effects of the individual fish.
 * Tukey test looks at each bone type and determines if there are significant differences comparatively. 
 
 ```{r}
@@ -202,19 +169,19 @@ a1 <- aov(slope~bone_type, data = results_final)
 summary(a1) 
 ```
 
-* We have significant evidence that bone type is associated with Youngs Modulus (p<0.001).
+* We have significant evidence that bone type is associated with Youngs Modulus (p=0.0083).
 
 ```{r}
 TukeyHSD(a1)
 ```
 
-* There is a significant difference in Youngs Modulus values for UT compared to LT bones (p=0.03) and UT compared to MT bones (p<0.001).
+* There is a significant difference in Youngs Modulus values for UT compared to MT bones (p=0.004).
 
 *Multilevel model*
 
 A multilevel model allows us to introduce a random intercept for each fish and take into account that each fish is different.
 
-* We first create a model with only the intercept (m0) and then compare it to the model where we add bone type as a predictor (m1). An ANOVA test tells us if the model with bone type is significantly better at predicting E values.
+* We first create a model with only the intercept (m0) and then compare it to the model where we add bone type as a predictor (m1). An ANOVA test tells us if the model with bone type is significantly better at predicting E values than the model with only the intercept.
 
 ```{r}
 m0 <- lmer(slope ~  1 + (1 | fish_name), data = results_final, REML = TRUE)
@@ -224,7 +191,7 @@ m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = results_final, REML = TR
 anova(m1, m0)
 ```
 
-Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p<0.001).
+Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p=0.002).
 
 *Residuals*
 
@@ -234,7 +201,7 @@ We check residuals to make sure the model fit is good and to see if any of the v
 resid_panel(m1)
 ```
 
-Interpretation: The histogram of residuals is right skewed and the QQ plot is not linear at the right end. As a result, we will log transform the response variable(E)
+Interpretation: The histogram of residuals is right skewed and the QQ plot is not linear at the right end. As a result, we will log transform the response variable(E). 
 
 *log(E)*
 
@@ -242,11 +209,12 @@ Interpretation: The histogram of residuals is right skewed and the QQ plot is no
 m00 <- lmer(I(log(slope)) ~  1 + (1 | fish_name), data = results_final, REML = TRUE)
 
 m11 <- lmer(I(log(slope)) ~  bone_type + (1 | fish_name), data = results_final, REML = TRUE)
+summary(m11)
 
-anova(m11, m00) # p=0.0007
+anova(m11, m00)
 ```
 
-Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p<0.001).
+Interpretation: The log transformed model with the bone type is significantly better at predicting the E values than the log transformed model with just the intercept (p<0.001).
 
 ```{r}
 resid_panel(m11)
@@ -288,3 +256,5 @@ m2.mt <- lmer(slope ~  relevel(bone_type, ref = "MT") + (1 | fish_name), data = 
 
 summary(m2.mt)
 ```
+
+Interpretation: All t values for bones not including UT were <= |2|, thus indicating that there are no significant differences between any of the other bone pairs.

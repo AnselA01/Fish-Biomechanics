@@ -49,7 +49,6 @@ ym.determine <- function(ym.result, bone) {
     # check if the match is inflection and fds AND both their scores are higher than max
     if (all(c("fds", "inflection") %in% nearby.pairs) && !("max" %in% nearby.pairs)) {
       max_score.threshold <- result.scores$max * 0.75 # the max score must not be too much higher
-      # if (result.scores$fds > result.scores$max && result.scores$inflection > result.scores$max) {
       if (result.scores$fds > max_score.threshold && result.scores$inflection > max_score.threshold) {
         return(
           list(
@@ -159,7 +158,7 @@ nearby <- function(strains, maxStrain) {
 }
 
 # determines which methods have similar slopes and scores. Prioritizes exact matches even if all pairs match.
-# Similarity is defined by a <= 10% percent difference between two values from the larger value.
+# Similarity is defined by a <= 5% percent difference between two values from the larger value.
 # returns a list of lists of matching pairs
 similarity <- function(slopes, strains, scores) {
   strains <- matrix(c(strains$max, strains$inflection, strains$fds), ncol = 3, byrow = TRUE)

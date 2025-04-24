@@ -49,6 +49,7 @@ handle_data_fetch <- function(bone_data) {
   return(bone_data)
 }
 
+# calculates results and choices for one bone
 handle_calculate_results <- function(bone_data) {
   choices <- tibble()
   results <- tibble()
