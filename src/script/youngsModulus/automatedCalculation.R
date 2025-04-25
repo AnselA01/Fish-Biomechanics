@@ -10,12 +10,14 @@ load_necessary_files <- function() {
   
   source("./src/script/helpers/data.R")
   source("./src/script/helpers/general.R")
+  source("./src/script/helpers/image.R")
   source("./src/script/youngsModulus/youngsModulus.R")
   source("./src/script/youngsModulus/youngsModulusDetermination.R")
 }
 
 current_date <- NULL
 
+# arg bone_data is optional
 automated_youngs_modulus_calculation <- function(bone_data) {
   load_necessary_files()
   tryCatch({
@@ -32,7 +34,7 @@ automated_youngs_modulus_calculation <- function(bone_data) {
   })
   
   tryCatch({
-    save_results_choices_inconclusives(results_and_choices$results, results_and_choices$choices, bone_data)
+    save_results_choices_inconclusives(results_and_choices$data, results_and_choices$results, results_and_choices$choices)
   }, error = function(e) {
     stop("Error saving results. Stopping.", e)
   })
@@ -69,7 +71,12 @@ handle_calculate_results <- function(bone_data) {
     choices <- bind_rows(choices, res$choice)
     results <- bind_rows(results, res$result)
   }
+
+  data_filtered <- Filter(function(bone) { getName(bone) %in% results$name
+    }, bone_data)
+  
   return(list(
+    data = data_filtered,
     results = results, 
     choices = choices
   ))
@@ -123,7 +130,7 @@ create_dir_safe <- function(path) {
 }
 
 # save the results, choices, inconclusives, and images.
-save_results_choices_inconclusives <- function(results, choices, data) {
+save_results_choices_inconclusives <- function(data, results, choices) {
   current_date <<- Sys.Date() # set global date for use in other places in this file.
   
   output_dir <- file.path("results", "youngs-modulus", as.character(current_date))
@@ -131,6 +138,9 @@ save_results_choices_inconclusives <- function(results, choices, data) {
   
   inconclusive_data_dir <- file.path(output_dir, "inconclusive-data")
   create_dir_safe(inconclusive_data_dir)
+  
+  images_dir <- file.path(output_dir, "images")
+  create_dir_safe(images_dir)
 
   tryCatch({
     save_results(results, output_dir)
@@ -142,11 +152,11 @@ save_results_choices_inconclusives <- function(results, choices, data) {
       output_dir,
       inconclusive_data_dir
     )
-    save_images(results, choices, data)
+    save_images(data, results, choices, images_dir)
     
-    message("\033[32mResults saved to to ", output_dir, "\033[0m")
+    message("\033[32mResults saved to ", output_dir, "\033[0m")
   }, error = function(e) {
-    message("Error saving automated young's modulus results")
+    message("Error saving automated young's modulus results", e)
   })
 }
 
@@ -168,6 +178,7 @@ save_inconclusives <- function(inconclusive_names, output_dir, output_inconclusi
   
   inconclusive_txtfile_text <- c(paste("Generated on:", Sys.time()), inconclusive_names)
   inconclusives_txt_path <- file.path(output_dir, "inconclusives.txt")
+  writeLines(character(0), inconclusives_txt_path) # empty the file
   writeLines(inconclusive_txtfile_text, inconclusives_txt_path)
 }
 
@@ -186,7 +197,28 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
 }
 
 # saves images of data with young's modulus values and locations indicated
-save_images <- function(results, choices, data) {
+save_images <- function(data, results, choices, images_dir) {
+  message("\033[32mSaving images...\033[0m")
+  
+  plotList <- list()
+  numBones <- length(data)
+  
+  for (i in 1:numBones) {
+    plot <- plot.youngsModulusDecision(data[[i]], results[i, ], choices[i, ])
+  
+    name <- tolower(getName(data[[i]]))
+    matches <- str_match(name, "^([a-z]{2,})([0-9]{2,})") # first two+ lowercase letters and first two+ numbers for the folder name
+    individual <- paste0(matches[,2], matches[,3])
+    
+    individual_dir <- file.path(images_dir, individual)
+    create_dir_safe(individual_dir)
+    image_path <- file.path(individual_dir, paste0(name, ".jpg"))
+    
+    image.save2(plot, image_path)
+  }
+  
+  cat("\n")
+  message("\033[32mImages saved to to ", image_dir, "\033[0m")
   
 }
 
