@@ -35,7 +35,7 @@ strains <- vector()
 rsquareds <- vector()
 inconclusives <- vector()
 
-doPlot <- FALSE
+doPlot <- TRUE
 doSave <- FALSE
 
 i <- 1

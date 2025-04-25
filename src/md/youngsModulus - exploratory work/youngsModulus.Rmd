@@ -85,185 +85,186 @@ bones <- data.generator()
 ```
 
 ```{r}
-names <- vector()
-rsquared <- vector()
-max.slope <- vector()
-max.strain <- vector()
-max.score <- vector()
-inflection.slope <- vector()
-inflection.strain <- vector()
-inflection.score <- vector()
-fds.slope <- vector()
-fds.strain <- vector()
-fds.score <- vector()
-```
-
-```{r}
-do.plot <- TRUE
-do.save <- FALSE
-for (bone in bones) {
-  if (getName(bone) != "PF09UT1") next
-  # if (getName(bone) != "PF05UT3") next
-  result <- ym.calculate(bone)
-  if (is.null(result)) next
-  
-  choose <- ym.calculateAndDetermine(bone)$choice
-  if (is.null(choose)) next
-  
-  slope <- choose$slope[[1]]
-  score <- choose$score[[1]]
-  strain <- choose$strain[[1]]
-
-  green <- "#228b22"
-  red <- "#c60000"
-  maxColor <- ifelse(choose$method == "max", green, red)
-  inflectionColor <- ifelse(choose$method == "inflection", green, red)
-  fdsColor <- ifelse(choose$method == "fds", green, red)
-  
-  names <- append(names, result$name)
-  rsquared <- append(rsquared, result$r.squared)
-  
-  max.slope <- append(max.slope, result$max.slope)
-  max.strain <- append(max.strain, result$max.strain)
-  max.score <- append(max.score, result$max.score)
-  
-  inflection.slope <- append(inflection.slope, result$inflection.slope)
-  inflection.strain <- append(inflection.strain, result$inflection.strain)
-  inflection.score <- append(inflection.score, result$inflection.score)
-  
-  fds.slope <- append(fds.slope, result$fds.slope)
-  fds.strain <- append(fds.strain, result$fds.strain)
-  fds.score <- append(fds.score, result$fds.score)
-  
-   # TODO: result can return multiple values for slope and strain! bad!! slice-head fixes this but it could cause problems in other places
-  max.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$max.strain))]) %>% slice_head()
-  inflection.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$inflection.strain))]) %>% slice_head()
-  fds.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$fds.strain))]) %>% slice_head()
-  
-  max.stress <- max.stress.df %>% pull(Stress)
-  inflection.stress <- inflection.stress.df %>% pull(Stress)
-  fds.stress <- fds.stress.df %>% pull(Stress)
-  # 
-  labels.df <- rbind(max.stress.df, inflection.stress.df, fds.stress.df) %>% 
-    mutate(
-      Strain_lab = c(
-        # max, inflection, fds
-        max.stress.df$Strain[[1]], 0.12, 0.02
-      ),
-      Stress_lab = c(
-        # max, inflection, fds
-        13, inflection.stress, 9.5
-      ),
-      label = c(
-        paste0(
-          "<span style='font-size: 22px;'>Max<br><i>E</i>=",
-          round(result$max.slope, 0),
-          "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Maximum first<br>derivative of spline</span>"
-        ),
-        paste0(
-          "<span style='font-size: 22px;'>Inflection<br><i>E</i>=",
-          round(result$inflection.slope, 0),
-          "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Location where second derivative<br>of spline changes to negative value<br>taken from first derivatives of spline</span>"
-        ),
-        paste0(
-          "<span style='font-size: 22px;'>FDS<br><i>E</i>=",
-          round(result$fds.slope, 0),
-          "</span><br>selected<br><span style='font-size: 15px; color: black;'>First max of spline fit to<br>first derivatives of raw data</span>"
-        )
-      ), 
-      color = c(maxColor, inflectionColor, fdsColor)
-    )
-  # 
-  if (do.plot || do.save) {
-    spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
-
-    spline_fit <- predict(spline_model)
-    # spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
-
-    plot <- ggplot(
-      bone %>% filter(Strain < 0.2),
-      # bone,
-       aes(x = Strain, y = Stress)) +
-      # labs(subtitle = plot.subtitle),
-      # highlighting the linear elastic region
-       geom_rect(
-        xmin = 0.0425,
-        xmax = 0.065,
-        ymin = 2.25,
-        ymax = 7.5,
-        fill = "#FFF77D"
-       ) +
-      geom_text(
-        aes(x = 0.05375, y = 2.95),
-        label = "Elastic (linear)\nregion",
-        size = 3.25,
-        family = "Droid Serif") +
-      # annotating the spline fit
-      geom_text(
-        aes(x = 0.1225, y = 11),
-        label = "Spline fit to data\nsegmented to strain < 0.2",
-        color = "#006eff",
-        size = 5,
-        lineheight = 0.75,
-        hjust = 0,
-        family = "Droid Serif"
-      ) +
-      # the raw data
-      geom_line(size = 1.5) +
-      geom_line(aes(y = spline_fit), color = "#006eff", size = 0.75) +
-      geom_point(
-        data = labels.df,
-        aes(x = Strain, y = Stress),
-        color = stress.df$color,
-        size = 4,
-        alpha = 0.8
-      ) +
-      # the segment from point to label
-      geom_segment(
-        data = labels.df,
-        aes(
-          x = Strain_lab,
-          y = Stress_lab,
-          xend = Strain,
-          yend = Stress
-        ),
-        color = labels.df$color,
-        linetype = "dotted"
-      ) +
-      # the method and ym labels
-      geom_richtext(
-        data = labels.df,
-        aes(x = Strain_lab, y = Stress_lab, label = label),
-        color = labels.df$color,
-        alpha = 0.85,
-        # size = 6.5,
-        fontface = "bold",
-        lineheight = 0.0001,
-        family = "Droid Serif"
-      ) +
-      labs(
-        title = getName(bone, sep = " "),
-        x = "Strain",
-        y = "Stress"
-      ) +
-      theme_classic() +
-      theme(
-        legend.position = "top",
-        axis.title.x = element_text(size = 22),
-        axis.text.x = element_text(size = 20),
-        axis.title.y = element_text(size = 22),
-        axis.text.y = element_text(size = 20),
-        plot.title = element_text(face = "bold", size = 24, hjust = 0.5)
-      )
-    
-    if (do.plot) {
-      print(plot)
-    }
-  }
-  if (do.save) {
-    image.save(bone, plot, directory = "ymResults/decisions2")
-  }
-}
+# names <- vector()
+# rsquared <- vector()
+# max.slope <- vector()
+# max.strain <- vector()
+# max.score <- vector()
+# inflection.slope <- vector()
+# inflection.strain <- vector()
+# inflection.score <- vector()
+# fds.slope <- vector()
+# fds.strain <- vector()
+# fds.score <- vector()
+# ```
+# 
+# NOTE The plot below looks good only for PF09UT1.
+# ```{r}
+# do.plot <- TRUE
+# do.save <- FALSE
+# for (bone in bones) {
+#   if (getName(bone) != "PF09UT1") next
+#   # if (getName(bone) != "PF05UT3") next
+#   result <- ym.calculate(bone)
+#   if (is.null(result)) next
+#   
+#   choose <- ym.calculateAndDetermine(bone)$choice
+#   if (is.null(choose)) next
+#   
+#   slope <- choose$slope[[1]]
+#   score <- choose$score[[1]]
+#   strain <- choose$strain[[1]]
+# 
+#   green <- "#228b22"
+#   red <- "#c60000"
+#   maxColor <- ifelse(choose$method == "max", green, red)
+#   inflectionColor <- ifelse(choose$method == "inflection", green, red)
+#   fdsColor <- ifelse(choose$method == "fds", green, red)
+#   
+#   names <- append(names, result$name)
+#   rsquared <- append(rsquared, result$r.squared)
+#   
+#   max.slope <- append(max.slope, result$max.slope)
+#   max.strain <- append(max.strain, result$max.strain)
+#   max.score <- append(max.score, result$max.score)
+#   
+#   inflection.slope <- append(inflection.slope, result$inflection.slope)
+#   inflection.strain <- append(inflection.strain, result$inflection.strain)
+#   inflection.score <- append(inflection.score, result$inflection.score)
+#   
+#   fds.slope <- append(fds.slope, result$fds.slope)
+#   fds.strain <- append(fds.strain, result$fds.strain)
+#   fds.score <- append(fds.score, result$fds.score)
+#   
+#    # TODO: result can return multiple values for slope and strain! bad!! slice-head fixes this but it could cause problems in other places
+#   max.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$max.strain))]) %>% slice_head()
+#   inflection.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$inflection.strain))]) %>% slice_head()
+#   fds.stress.df <- bone %>% filter(Stress == bone$Stress[which.min(abs(bone$Strain - result$fds.strain))]) %>% slice_head()
+#   
+#   max.stress <- max.stress.df %>% pull(Stress)
+#   inflection.stress <- inflection.stress.df %>% pull(Stress)
+#   fds.stress <- fds.stress.df %>% pull(Stress)
+#   # 
+#   labels.df <- rbind(max.stress.df, inflection.stress.df, fds.stress.df) %>% 
+#     mutate(
+#       Strain_lab = c(
+#         # max, inflection, fds
+#         max.stress.df$Strain[[1]], 0.12, 0.02
+#       ),
+#       Stress_lab = c(
+#         # max, inflection, fds
+#         13, inflection.stress, 9.5
+#       ),
+#       label = c(
+#         paste0(
+#           "<span style='font-size: 22px;'>Max<br><i>E</i>=",
+#           round(result$max.slope, 0),
+#           "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Maximum first<br>derivative of spline</span>"
+#         ),
+#         paste0(
+#           "<span style='font-size: 22px;'>Inflection<br><i>E</i>=",
+#           round(result$inflection.slope, 0),
+#           "</span><br>rejected<br><span style='font-size: 15px; color: black;'>Location where second derivative<br>of spline changes to negative value<br>taken from first derivatives of spline</span>"
+#         ),
+#         paste0(
+#           "<span style='font-size: 22px;'>FDS<br><i>E</i>=",
+#           round(result$fds.slope, 0),
+#           "</span><br>selected<br><span style='font-size: 15px; color: black;'>First max of spline fit to<br>first derivatives of raw data</span>"
+#         )
+#       ), 
+#       color = c(maxColor, inflectionColor, fdsColor)
+#     )
+#   # 
+#   if (do.plot || do.save) {
+#     spline_model <- lm(Stress ~ bSpline(Strain, df = 10), data = bone %>% filter(Strain < 0.2))
+# 
+#     spline_fit <- predict(spline_model)
+#     # spline_fit <- append(spline_fit, rep(NA, length.out = nrow(bone) - length(spline_fit)))
+# 
+#     plot <- ggplot(
+#       bone %>% filter(Strain < 0.2),
+#       # bone,
+#        aes(x = Strain, y = Stress)) +
+#       # labs(subtitle = plot.subtitle),
+#       # highlighting the linear elastic region
+#        geom_rect(
+#         xmin = 0.0425,
+#         xmax = 0.065,
+#         ymin = 2.25,
+#         ymax = 7.5,
+#         fill = "#FFF77D"
+#        ) +
+#       geom_text(
+#         aes(x = 0.05375, y = 2.95),
+#         label = "Elastic (linear)\nregion",
+#         size = 3.25,
+#         family = "Droid Serif") +
+#       # annotating the spline fit
+#       geom_text(
+#         aes(x = 0.1225, y = 11),
+#         label = "Spline fit to data\nsegmented to strain < 0.2",
+#         color = "#006eff",
+#         size = 5,
+#         lineheight = 0.75,
+#         hjust = 0,
+#         family = "Droid Serif"
+#       ) +
+#       # the raw data
+#       geom_line(size = 1.5) +
+#       geom_line(aes(y = spline_fit), color = "#006eff", size = 0.75) +
+#       geom_point(
+#         data = labels.df,
+#         aes(x = Strain, y = Stress),
+#         color = stress.df$color,
+#         size = 4,
+#         alpha = 0.8
+#       ) +
+#       # the segment from point to label
+#       geom_segment(
+#         data = labels.df,
+#         aes(
+#           x = Strain_lab,
+#           y = Stress_lab,
+#           xend = Strain,
+#           yend = Stress
+#         ),
+#         color = labels.df$color,
+#         linetype = "dotted"
+#       ) +
+#       # the method and ym labels
+#       geom_richtext(
+#         data = labels.df,
+#         aes(x = Strain_lab, y = Stress_lab, label = label),
+#         color = labels.df$color,
+#         alpha = 0.85,
+#         # size = 6.5,
+#         fontface = "bold",
+#         lineheight = 0.0001,
+#         family = "Droid Serif"
+#       ) +
+#       labs(
+#         title = getName(bone, sep = " "),
+#         x = "Strain",
+#         y = "Stress"
+#       ) +
+#       theme_classic() +
+#       theme(
+#         legend.position = "top",
+#         axis.title.x = element_text(size = 22),
+#         axis.text.x = element_text(size = 20),
+#         axis.title.y = element_text(size = 22),
+#         axis.text.y = element_text(size = 20),
+#         plot.title = element_text(face = "bold", size = 24, hjust = 0.5)
+#       )
+#     
+#     if (do.plot) {
+#       print(plot)
+#     }
+#   }
+#   if (do.save) {
+#     image.save(bone, plot, directory = "ymResults/decisions2")
+#   }
+# }
 ```
 
 ```{r}
