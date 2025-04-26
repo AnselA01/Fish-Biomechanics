@@ -2,24 +2,56 @@
 # perform Young's Modulus calculation and decision making for all data in
 # the "data" directory
 
+required_packages <- c(
+  "readr",
+  "tibble",
+  "coro",
+  "furrr",
+  "progressr",
+  "plyr",
+  "dplyr",
+  "stringr",
+  "stringi",
+  "ggplot2",
+  "gridExtra",
+  "ggtext",
+  "splines2",
+  "cowplot"
+)
 
-# in case only the automated function is run
-load_necessary_files <- function() {
-  library(readr)
-  library(tibble)
-  
-  source("./src/script/helpers/data.R")
-  source("./src/script/helpers/general.R")
-  source("./src/script/helpers/image.R")
-  source("./src/script/youngsModulus/youngsModulus.R")
-  source("./src/script/youngsModulus/youngsModulusDetermination.R")
-}
+required_sources <- c(
+  "./src/script/helpers/data.R",
+  "./src/script/helpers/general.R",
+  "./src/script/helpers/image.R",
+  "./src/script/helpers/plot.R",
+  "./src/script/youngsModulus/youngsModulus.R",
+  "./src/script/youngsModulus/youngsModulusDetermination.R"
+)
 
 current_date <- NULL
 
-# arg bone_data is optional
+# install if necessary and load all required packages and source our R files
+load_libraries_and_source <- function() {
+  # packages
+  for (package in required_packages) {
+    if (!requireNamespace(package, quietly = TRUE)) { 
+      install.packages(package)
+    }
+    library(package, character.only = TRUE)
+  }
+  
+  # sources
+  lapply(library, required_sources)
+}
+
+
+# Entry point for automated Young's modulus calculation. Handles data fetching, results calculation, and saving.
+# * arg bone_data is optional.
 automated_youngs_modulus_calculation <- function(bone_data) {
-  load_necessary_files()
+  load_libraries_and_source()
+  
+  current_date <<- Sys.Date() # set global date. format: YYYY-MM-DD
+  
   tryCatch({
     bone_data <- handle_data_fetch(bone_data)
   }, error = function(e) {
@@ -34,7 +66,7 @@ automated_youngs_modulus_calculation <- function(bone_data) {
   })
   
   tryCatch({
-    save_results_choices_inconclusives(results_and_choices$data, results_and_choices$results, results_and_choices$choices)
+    handle_save_results_choices_inconclusives(results_and_choices$data, results_and_choices$results, results_and_choices$choices)
   }, error = function(e) {
     stop("Error saving results. Stopping.", e)
   })
@@ -55,22 +87,30 @@ handle_data_fetch <- function(bone_data) {
 handle_calculate_results <- function(bone_data) {
   choices <- tibble()
   results <- tibble()
+  numBones <- length(bone_data)
   
-  for (bone in bone_data) {
-    res <- NULL
-    tryCatch({
-      res <- calculate_result_and_choose(bone)
-    }, error = function() {
-      next
-    })
-    
-    if (is.null(res)) {
-      next
+  message("\033[37mCalculating Young's modulus...\033[0m")
+
+  with_progress({
+    progress.bar <- progressor(steps = numBones)
+    for (bone in bone_data) {
+      res <- NULL
+      tryCatch({
+        res <- calculate_result_and_choose(bone)
+      }, error = function() {
+        next
+      })
+      
+      if (is.null(res)) {
+        progress.bar()
+        next
+      }
+      
+      choices <- bind_rows(choices, res$choice)
+      results <- bind_rows(results, res$result)
+      progress.bar()
     }
-    
-    choices <- bind_rows(choices, res$choice)
-    results <- bind_rows(results, res$result)
-  }
+  })
 
   data_filtered <- Filter(function(bone) { getName(bone) %in% results$name
     }, bone_data)
@@ -130,9 +170,7 @@ create_dir_safe <- function(path) {
 }
 
 # save the results, choices, inconclusives, and images.
-save_results_choices_inconclusives <- function(data, results, choices) {
-  current_date <<- Sys.Date() # set global date for use in other places in this file.
-  
+handle_save_results_choices_inconclusives <- function(data, results, choices) {
   output_dir <- file.path("results", "youngs-modulus", as.character(current_date))
   create_dir_safe(output_dir)
   
@@ -198,28 +236,28 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
 
 # saves images of data with young's modulus values and locations indicated
 save_images <- function(data, results, choices, images_dir) {
-  message("\033[32mSaving images...\033[0m")
   
-  plotList <- list()
   numBones <- length(data)
   
-  for (i in 1:numBones) {
-    plot <- plot.youngsModulusDecision(data[[i]], results[i, ], choices[i, ])
-  
-    name <- tolower(getName(data[[i]]))
-    matches <- str_match(name, "^([a-z]{2,})([0-9]{2,})") # first two+ lowercase letters and first two+ numbers for the folder name
-    individual <- paste0(matches[,2], matches[,3])
-    
-    individual_dir <- file.path(images_dir, individual)
-    create_dir_safe(individual_dir)
-    image_path <- file.path(individual_dir, paste0(name, ".jpg"))
-    
-    image.save2(plot, image_path)
-  }
+  message("\033[37mSaving images...\033[0m")
+  with_progress({
+    progress.bar <- progressor(steps = numBones)
+    for (i in 1:numBones) {
+      plot <- plot.youngsModulusDecision(data[[i]], results[i, ], choices[i, ])
+      
+      name <- tolower(getName(data[[i]]))
+      matches <- str_match(name, "^([a-z]{2,})([0-9]{2,})") # first two+ lowercase letters and first two+ numbers for the folder name
+      individual <- paste0(matches[,2], matches[,3])
+      
+      individual_dir <- file.path(images_dir, individual)
+      create_dir_safe(individual_dir)
+      image_path <- file.path(individual_dir, paste0(name, ".jpg"))
+      image.save2(plot, image_path)
+      progress.bar()
+    }
+  })
   
   cat("\n")
-  message("\033[32mImages saved to to ", image_dir, "\033[0m")
-  
 }
 
 

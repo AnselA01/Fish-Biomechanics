@@ -11,5 +11,5 @@ image.save <- function(df, plot, directory) {
 
 # use this one instead
 image.save2 <- function(plot, path) {
-  ggsave(path, plot)
+  ggsave(path, plot, width = 4, height = 3)
 }

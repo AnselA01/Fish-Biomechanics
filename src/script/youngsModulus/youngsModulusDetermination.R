@@ -16,7 +16,7 @@ global.name <- ""
 # returns: list of calculation result and choice
 ym.calculateAndDetermine <- function(bone) {
   global.name <<- getName(bone)
-  message(paste0("\033[37m", global.name, " calculating Young's modulus\033[0m"))
+  # message(paste0("\033[37m", global.name, " calculating Young's modulus\033[0m"))
   results <- ym.calculate(bone)
   if (is.null(results)) {
     message(global.name, " could not calculate young's modulus")
