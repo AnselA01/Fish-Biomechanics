@@ -60,15 +60,15 @@ algorithm runs properly as well as troubleshooting.
 The document **youngs_modulus_statistical_analysis_outline.Rmd** in the
 **statistical analysis folder** details the statistical analysis
 conducted on the bones of 21 perch. The statistical methods are
-described in detail and justification for the process in discussed. ADD
-GOOGLE DOC!
+described in detail and justification for the process in discussed in
+the **Statistical Analysis** document in the explanation folder.
 
 ## For Those Looking for Pre-Written Text for an Academic Paper Describing the Algorithm and/or Statistical Analysis
 
-The document **Algorithm - Final Write Up** in the **explanation
-folder** includes paragraphs written by the CIR fellows that may be used
-in an academic paper or other similar product. IN EACH DOCUMENT AT
-BOTTOM HAVE THE PAPER TEXT
+The document **Text for Academic Paper** in the **explanation folder**
+includes paragraphs written by the CIR fellows about the algorithm and
+statistical methods that may be used in an academic paper or other
+similar product.
 
 ## For Those Looking to Continue Working on This Project
 
@@ -92,7 +92,7 @@ project:
     conducted on the bones of 21 perch. The statistical methods are
     described in detail and justification for the process in discussed.
     Reading this document in full is the single best way to orient
-    yourself ot the details of the statistical analysis portion of the
+    yourself to the details of the statistical analysis portion of the
     project.\
 
 ## Repo - Methods for Tiding Data, Extracting Tensile Properties, Statistical Analysis.
