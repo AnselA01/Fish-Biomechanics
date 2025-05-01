@@ -35,9 +35,9 @@ area_data = fish area data from Takashi
 length_data = fish length data from Takashi
 
 ```{r}
-results <- read_csv("results/youngs-modulus/2025-04-17/choices.csv")
+results <- read_csv("results/youngs-modulus/2025-04-29/choices.csv")
 area_data <- read_csv("data/area.csv")
-length_data <- read.csv(("Perch study - MAIE Lab - Tally.csv"))
+length_data <- read.csv(("data/Perch study - MAIE Lab - Tally.csv"))
 
 area_clean <- area |>
   rename(bone_size = `Area (m^2)`,
@@ -45,7 +45,7 @@ area_clean <- area |>
          trial = `Trial # (at least 01-03)`) |>
   unite("fish_name", Individual, segment, trial, sep ="")
 
-decisions_good <- decisions |>
+decisions_good <- results |>
   mutate(misidentified_flag = if_else(name %in% misidentified, TRUE, FALSE)) |> 
   dplyr::filter(!inconclusive) %>%
   mutate(

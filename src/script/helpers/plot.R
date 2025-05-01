@@ -7,7 +7,7 @@ source("./src/script/helpers/general.R")
 plot.plot <- function(data, layers = c()) {
   
   base.plot <- ggplot(data, aes(x = Strain, y = Stress)) +
-    geom_line(size = 1) +
+    geom_line(linewidth = 1) +
     labs(
       title = getName(data, sep = " "),
       x = "Strain",

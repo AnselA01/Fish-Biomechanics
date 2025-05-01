@@ -27,6 +27,8 @@ library(readr)
 library(lme4)
 library(HLMdiag)
 library(ggResidpanel)
+library(mosaic)
+library(kableExtra)
 
 #setwd("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae")
 #data_directory <- "./data"
@@ -40,8 +42,8 @@ Need to make sure file path is accurate.
 
 ```{r}
 # data
-results <- read_csv("results/youngs-modulus/2025-04-22/choices.csv")
-length_data <- read.csv("data/Perch study - MAIE Lab - Tally.csv")
+results <- read_csv("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae/results/youngs-modulus/2025-04-30/choices.csv")
+length_data <- read.csv("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae/data/Perch study - MAIE Lab - Tally.csv")
 
 # filter results to contain only the fish that are not marked inconclusive and are the species PF, split the name to into different sections to differentiate the type (PF), number (01-21), bone number (1-4), and fish name (PF #) 
 results_good <- results |>
@@ -61,6 +63,15 @@ length_clean <- length_data |>
 
 # merge results good with length clean. Keep all rows from results_good even if a length is not found. There should be a length value for every fish
 results_final <- merge(results_good, length_clean, by.x = "fish_name", by.y = "Individual", all.x = T) 
+```
+
+## Summary Stats
+
+Summary statistics allow us to gain an initial peek into the data and identify possible trends.
+
+```{r}
+favstats(slope ~ bone_type, data = results_final) |>
+  kable(caption = "Youngs Modulus by Bone Type")
 ```
 
 ## Visualizations
@@ -169,13 +180,13 @@ a1 <- aov(slope~bone_type, data = results_final)
 summary(a1) 
 ```
 
-* We have significant evidence that bone type is associated with Youngs Modulus (p=0.0083).
+* We do not have significant evidence that bone type is associated with Youngs Modulus (p=0.105).
 
 ```{r}
 TukeyHSD(a1)
 ```
 
-* There is a significant difference in Youngs Modulus values for UT compared to MT bones (p=0.004).
+* There is almost a significant difference in Youngs Modulus values for UT compared to MT bones (p=0.06).
 
 *Multilevel model*
 
@@ -191,7 +202,7 @@ m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = results_final, REML = TR
 anova(m1, m0)
 ```
 
-Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p=0.002).
+Interpretation: The model with the bone type is significantly better at predicting the E values than the model with just the intercept (p=0.04).
 
 *Residuals*
 
@@ -214,7 +225,7 @@ summary(m11)
 anova(m11, m00)
 ```
 
-Interpretation: The log transformed model with the bone type is significantly better at predicting the E values than the log transformed model with just the intercept (p<0.001).
+Interpretation: The log transformed model with the bone type is significantly better at predicting the E values than the log transformed model with just the intercept (p=0.005).
 
 ```{r}
 resid_panel(m11)
@@ -237,7 +248,7 @@ m2.ut <- lmer(I(log(slope)) ~  relevel(bone_type, ref = "UT") + (1 | fish_name),
 summary(m2.ut)
 ```
 
-Interpretation: The E values for the UT bones are significantly greater than the values for the other bone types as seen by t values > |2|. Since E is logged, we can say that the MT bones have values 28.5% lower than UT ($1-e^{-0.33626}$), LT bones are 22.7% lower ($1-e^{-0.25781}$), and CP bones are 18.3% lower than UT ($1 - e^{-0.20214}$). 
+Interpretation: The E values for the UT bones are significantly greater than the values for the other bone types as seen by t values > |2|. Since E is logged, we can say that the MT bones have values 24.3% lower than UT ($1-e^{-0.27914}$), LT bones are 18.8% lower ($1-e^{-0.20917}$), and CP bones are 16.3% lower than UT ($1 - e^{-0.17852}$). 
 
 We can continue changing the reference level.
 

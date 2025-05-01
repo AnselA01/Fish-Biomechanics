@@ -1,8 +1,9 @@
 # A wrapper around youngsModulus.R and youngsModulusDetermination.R to 
 # perform Young's Modulus calculation and decision making for all data in
-# the "data" directory
+# the "data" directory as well as install and load all required packages and sources
 
 required_packages <- c(
+  "here",
   "readr",
   "tibble",
   "coro",
@@ -20,34 +21,62 @@ required_packages <- c(
 )
 
 required_sources <- c(
-  "./src/script/helpers/data.R",
-  "./src/script/helpers/general.R",
-  "./src/script/helpers/image.R",
-  "./src/script/helpers/plot.R",
-  "./src/script/youngsModulus/youngsModulus.R",
-  "./src/script/youngsModulus/youngsModulusDetermination.R"
+  "src/script/helpers/data.R",
+  "src/script/helpers/general.R",
+  "src/script/helpers/image.R",
+  "src/script/helpers/plot.R",
+  "src/script/youngsModulus/youngsModulus.R",
+  "src/script/youngsModulus/youngsModulusDetermination.R"
 )
 
 current_date <- NULL
 
 # install if necessary and load all required packages and source our R files
 load_libraries_and_source <- function() {
-  # packages
+  all_installed_flag <- TRUE
+  need_install <- c()
+  
   for (package in required_packages) {
     if (!requireNamespace(package, quietly = TRUE)) { 
-      install.packages(package)
+      all_installed_flag <- FALSE
+      need_install <- append(need_install, package)
+      next
     }
-    library(package, character.only = TRUE)
+    
+    successful_load <- library(package, 
+                       character.only = TRUE, 
+                       logical.return = TRUE)
+    
+    if (!successful_load) {
+      quit("Error loading package", package, "Exiting.")
+    }
   }
   
-  # sources
-  lapply(library, required_sources)
-}
+  if (!all_installed_flag) {
+    message("Installing required packages. This will happen only once.")
+    Sys.sleep(2) # give time to read the message
+  }
+  
+  # install uninstalled packages
+  for (needs_install in need_install) {
+    # library() returns boolean indicating whether package is installed
+    successful_install <- library(needs_install, 
+                                  character.only = TRUE,
+                                  logical.return = TRUE)
+    if (!successful_install) {
+      quit("Error installing package ", needs_install, " Exiting.")
+    }
+  }
+  
+  setwd(here::here()) # here() returns the "reasonable" (based on a heuristic) project root.
 
+  # load our R sources
+  lapply(required_sources, function(source) source(here::here(getwd(), source)))
+}
 
 # Entry point for automated Young's modulus calculation. Handles data fetching, results calculation, and saving.
 # * arg bone_data is optional.
-automated_youngs_modulus_calculation <- function(bone_data) {
+entry <- function(bone_data = NA) {
   load_libraries_and_source()
   
   current_date <<- Sys.Date() # set global date. format: YYYY-MM-DD
@@ -73,10 +102,9 @@ automated_youngs_modulus_calculation <- function(bone_data) {
 }
 
 handle_data_fetch <- function(bone_data) {
-  if (missing(bone_data) # if they did not provide data
-      || (!missing(bone_data) # of if the data they provide is bad
+  if (is.na(bone_data) # if they did not provide data
+      || (is.null(bone_data) # of if the data they provide is bad
           && ((length(bone_data) == 0)
-              || is.null(bone_data)
               || sum(is.na(bone_data)) == length(bone_data)))) {
     bone_data <- data.generator()
   }
@@ -87,18 +115,16 @@ handle_data_fetch <- function(bone_data) {
 handle_calculate_results <- function(bone_data) {
   choices <- tibble()
   results <- tibble()
-  numBones <- length(bone_data)
-  
+
   message("\033[37mCalculating Young's modulus...\033[0m")
 
   with_progress({
-    progress.bar <- progressor(steps = numBones)
+    progress.bar <- progressor(along = bone_data)
     for (bone in bone_data) {
-      res <- NULL
-      tryCatch({
-        res <- calculate_result_and_choose(bone)
-      }, error = function() {
-        next
+      res <- tryCatch({
+        calculate_result_and_choose(bone)
+      }, error = function(e) {
+        NULL
       })
       
       if (is.null(res)) {
@@ -112,8 +138,9 @@ handle_calculate_results <- function(bone_data) {
     }
   })
 
-  data_filtered <- Filter(function(bone) { getName(bone) %in% results$name
-    }, bone_data)
+  data_filtered <- Filter(function(bone) {
+    getName(bone) %in% results$name
+  }, bone_data)
   
   return(list(
     data = data_filtered,
@@ -194,16 +221,16 @@ handle_save_results_choices_inconclusives <- function(data, results, choices) {
     
     message("\033[32mResults saved to ", output_dir, "\033[0m")
   }, error = function(e) {
-    message("Error saving automated young's modulus results", e)
+    message("Error saving automated young's modulus results\n", e)
   })
 }
 
 save_results <- function(results, output_results_dir) {
-  write_csv(results, file.path(output_results_dir, "results.csv"))
+  write_csv(results, here::here(output_results_dir, "results.csv"))
 }
 
 save_choices <- function(choices, output_choices_dir) {
-  write_csv(choices, file.path(output_choices_dir, "choices.csv"))
+  write_csv(choices, here::here(output_choices_dir, "choices.csv"))
 }
 # saves inconclusive names to text file and copies original data to inconclusive folder
 save_inconclusives <- function(inconclusive_names, output_dir, output_inconclusives_dir) {
@@ -215,7 +242,7 @@ save_inconclusives <- function(inconclusive_names, output_dir, output_inconclusi
   copy_inconclusives(inconclusive_names, output_inconclusives_dir)
   
   inconclusive_txtfile_text <- c(paste("Generated on:", Sys.time()), inconclusive_names)
-  inconclusives_txt_path <- file.path(output_dir, "inconclusives.txt")
+  inconclusives_txt_path <- here(output_dir, "inconclusives.txt")
   writeLines(character(0), inconclusives_txt_path) # empty the file
   writeLines(inconclusive_txtfile_text, inconclusives_txt_path)
 }
@@ -228,7 +255,7 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
     dirname <- tolower(str_sub(bone_name, 0, 4))
     filename <- paste0(standardize_name(bone_name), ".csv")
     # find file name for bone name
-    raw_data_path <- file.path("data", dirname, filename)
+    raw_data_path <- here("data", dirname, filename)
     
     file.copy(raw_data_path, inconclusive_data_dir)
   }
@@ -249,7 +276,7 @@ save_images <- function(data, results, choices, images_dir) {
       matches <- str_match(name, "^([a-z]{2,})([0-9]{2,})") # first two+ lowercase letters and first two+ numbers for the folder name
       individual <- paste0(matches[,2], matches[,3])
       
-      individual_dir <- file.path(images_dir, individual)
+      individual_dir <- here(images_dir, individual)
       create_dir_safe(individual_dir)
       image_path <- file.path(individual_dir, paste0(name, ".jpg"))
       image.save2(plot, image_path)

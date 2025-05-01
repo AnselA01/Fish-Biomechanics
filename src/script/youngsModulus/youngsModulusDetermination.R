@@ -7,7 +7,7 @@ global.strain.similar.threshold.percent <- 5
 
 # inconclusive thresholds
 global.inconclusive.slope.threshold <- 20
-global.inconclusive.score.threshold <- 0.65
+global.inconclusive.score.threshold <- 0.70 # dont change this from 0.70
 
 global.name <- ""
 
@@ -19,7 +19,7 @@ ym.calculateAndDetermine <- function(bone) {
   # message(paste0("\033[37m", global.name, " calculating Young's modulus\033[0m"))
   results <- ym.calculate(bone)
   if (is.null(results)) {
-    message(global.name, " could not calculate young's modulus")
+    message(global.name, ": could not calculate young's modulus")
     return(NULL)
   }
   return(list(results = results, choice = ym.determine(results, bone)))
@@ -104,12 +104,6 @@ medianStrainSlope <- function(slopes, strains, scores) {
 # arg chosenMethods: chosen methods
 # returns slope of method with lowest score
 minScoreSlope <- function(slopes, strains, scores, chosenMethods) {
-  # check for one under 1 and two over.
-  # scores.under.one <- numUnderOneScore(scores = result.scores)
-  # if (length(scores.under.one) == 1) {
-  #   return(minScore(result.slopes, result.strain, result.scores))
-  # }
-  
   min.score.index <- which.min(unlist(scores[chosenMethods]))
   method.min = names(scores[chosenMethods][min.score.index])[[1]]
 

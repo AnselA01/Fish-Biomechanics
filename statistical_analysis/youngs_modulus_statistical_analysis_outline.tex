@@ -1,0 +1,1161 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Statistical Analysis Outline},
+  pdfauthor={Abby Hahs, Ansel Alldredge, Otto Schmidt},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Statistical Analysis Outline}
+\author{Abby Hahs, Ansel Alldredge, Otto Schmidt}
+\date{2025-02-13}
+
+\begin{document}
+\maketitle
+
+This rmd provides a walk through of how the statistical analysis was
+completed for the Youngs Modulus data.
+
+\section{Set up and Data Cleaning}\label{set-up-and-data-cleaning}
+
+Load in the required packages and set up document to obtain data from
+the directory.
+
+results = the latest results data length\_data = fish length data from
+Takashi
+
+Need to make sure file path is accurate.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# data}
+\NormalTok{results }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"/home/rstudio/users/hahs1/CIR\_2024\_25\_Fish\_Vertebrae/results/youngs{-}modulus/2025{-}04{-}29/choices.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Rows: 259 Columns: 6
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr (2): name, method
+## dbl (3): slope, score, strain
+## lgl (1): inconclusive
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{length\_data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"/home/rstudio/users/hahs1/CIR\_2024\_25\_Fish\_Vertebrae/data/Perch study {-} MAIE Lab {-} Tally.csv"}\NormalTok{)}
+
+\CommentTok{\# filter results to contain only the fish that are not marked inconclusive and are the species PF, split the name to into different sections to differentiate the type (PF), number (01{-}21), bone number (1{-}4), and fish name (PF \#) }
+\NormalTok{results\_good }\OtherTok{\textless{}{-}}\NormalTok{ results }\SpecialCharTok{|\textgreater{}}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{inconclusive) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{fish\_type =} \FunctionTok{str\_sub}\NormalTok{(name, }\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{),}
+    \AttributeTok{fish\_num =} \FunctionTok{str\_sub}\NormalTok{(name, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{),}
+    \AttributeTok{bone\_type =} \FunctionTok{str\_sub}\NormalTok{(name, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{),}
+    \AttributeTok{bone\_num =} \FunctionTok{str\_sub}\NormalTok{(name, }\DecValTok{7}\NormalTok{, }\DecValTok{8}\NormalTok{),}
+    \AttributeTok{fish\_name =} \FunctionTok{str\_sub}\NormalTok{(name, }\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{|\textgreater{}}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(fish\_type }\SpecialCharTok{!=} \StringTok{"SV"}\NormalTok{)}
+
+\CommentTok{\# change the fish to be uppercase to match the name format in results\_good}
+\NormalTok{length\_clean }\OtherTok{\textless{}{-}}\NormalTok{ length\_data }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Individual =} \FunctionTok{toupper}\NormalTok{(Individual))}
+
+\CommentTok{\# merge results good with length clean. Keep all rows from results\_good even if a length is not found. There should be a length value for every fish}
+\NormalTok{results\_final }\OtherTok{\textless{}{-}} \FunctionTok{merge}\NormalTok{(results\_good, length\_clean, }\AttributeTok{by.x =} \StringTok{"fish\_name"}\NormalTok{, }\AttributeTok{by.y =} \StringTok{"Individual"}\NormalTok{, }\AttributeTok{all.x =}\NormalTok{ T) }
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Summary Stats}\label{summary-stats}
+
+Summary statistics allow us to gain an initial peek into the data and
+identify possible trends.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{favstats}\NormalTok{(slope }\SpecialCharTok{\textasciitilde{}}\NormalTok{ bone\_type, }\AttributeTok{data =}\NormalTok{ results\_final) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{kable}\NormalTok{(}\AttributeTok{caption =} \StringTok{"Youngs Modulus by Bone Type"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1176}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1176}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.1059}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.0353}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 18\tabcolsep) * \real{0.0941}}@{}}
+\caption{Youngs Modulus by Bone Type}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+bone\_type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+max
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+sd
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+missing
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+bone\_type
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+min
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q1
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+median
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Q3
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+max
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+mean
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+sd
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+n
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+missing
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+CP & 28.11530 & 82.05008 & 111.2068 & 151.5038 & 353.4528 & 124.8527 &
+61.92450 & 60 & 0 \\
+LT & 22.16299 & 89.31507 & 126.9709 & 155.6629 & 301.9488 & 128.7669 &
+63.36566 & 44 & 0 \\
+MT & 37.28243 & 78.02041 & 104.1381 & 136.0453 & 235.2593 & 111.6013 &
+48.01087 & 57 & 0 \\
+UT & 53.49724 & 109.46961 & 133.8856 & 178.3608 & 501.1062 & 148.9233 &
+69.54218 & 69 & 0 \\
+\end{longtable}
+
+\subsection{Visualizations}\label{visualizations}
+
+\begin{itemize}
+\tightlist
+\item
+  Studying the E value for each bone. There will be variability both
+  within and between fish which will be addressed in a multilevel linear
+  model. The most useful visualizations to capture these relationships
+  are scatter plots.
+\end{itemize}
+
+\emph{Within Fish Variability}
+
+Since most fish have \textgreater{} 1 observation for each bone type,
+checking the within fish variability determines if the observations for
+each fish are similar or different. Checking this helps determine if any
+of the values look ``off'' which would result in checking the algorithm
+or if the use of a multilevel model is justified.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{results\_final }\SpecialCharTok{|\textgreater{}}
+  \CommentTok{\# order x axis by fish length}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{fish\_name =} \FunctionTok{fct\_reorder}\NormalTok{(}\FunctionTok{as.factor}\NormalTok{(fish\_name), Length..cm.)) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Length..cm., }\AttributeTok{y =}\NormalTok{ slope, }\AttributeTok{color =}\NormalTok{ fish\_name, }\AttributeTok{group =}\NormalTok{ fish\_name)) }\SpecialCharTok{+}
+  \CommentTok{\# add lines for various y intercepts}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{125}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{250}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{375}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+}
+  \CommentTok{\# scatterplot with a line connecting the points for each fish}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.85}\NormalTok{, }\AttributeTok{show.legend =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.75}\NormalTok{, }\AttributeTok{show.legend =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Fish Length (cm)"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Young\textquotesingle{}s Modulus (N/m\^{}2)"}\NormalTok{, }\AttributeTok{color =} \StringTok{"Fish}\SpecialCharTok{\textbackslash{}n}\StringTok{Name"}\NormalTok{) }\SpecialCharTok{+}
+  \CommentTok{\# theme and formatting}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}
+    \AttributeTok{angle =} \DecValTok{45}\NormalTok{,}
+    \AttributeTok{vjust =} \DecValTok{1}\NormalTok{,}
+    \AttributeTok{hjust =} \DecValTok{1}
+\NormalTok{  )) }\SpecialCharTok{+}
+  \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{breaks =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{250}\NormalTok{, }\DecValTok{500}\NormalTok{), }\AttributeTok{limits =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{500}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{axis.title.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{),}
+    \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{20}\NormalTok{),}
+    \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{),}
+    \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{20}\NormalTok{),}
+    \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{face =} \StringTok{"bold"}\NormalTok{, }\AttributeTok{size =} \DecValTok{20}\NormalTok{),}
+    \AttributeTok{panel.grid =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{panel.border =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{2}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{( }\SpecialCharTok{\textasciitilde{}} \FunctionTok{fct\_relevel}\NormalTok{(bone\_type, }\StringTok{"UT"}\NormalTok{, }\StringTok{"MT"}\NormalTok{, }\StringTok{"LT"}\NormalTok{, }\StringTok{"CP"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+## i Please use `linewidth` instead.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 1 row containing missing values or values outside the scale range
+## (`geom_point()`).
+\end{verbatim}
+
+\includegraphics{youngs_modulus_statistical_analysis_outline_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+This plot depicts the variability within fish for E values. The x axis
+is the fish length, the y axis is the E value, and each fish has a
+different color. Generally, the UT and CP bones have more variation than
+the MT and LT bones. There is also evidence of E values increasing with
+length for MT, LT, and CP bones. E values for UT do not seem to have a
+relationship with length.
+
+\emph{Between Fish Variability}
+
+The between fish variability is useful in that we can easily compare
+between fish and catch discrepancies in E values or expected shape.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{results\_final }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{xlabel =} \FunctionTok{ifelse}\NormalTok{(}\FunctionTok{as.numeric}\NormalTok{(fish\_num) }\SpecialCharTok{\textgreater{}=} \DecValTok{8} \SpecialCharTok{\&}\NormalTok{ fish\_num }\SpecialCharTok{\textless{}=} \DecValTok{14}\NormalTok{, bone\_type, }\ConstantTok{NA}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \CommentTok{\# order each plot by fish length}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{fish\_name =} \FunctionTok{fct\_reorder}\NormalTok{(}\FunctionTok{as.factor}\NormalTok{(fish\_name), Length..cm.)) }\SpecialCharTok{|\textgreater{}}
+\FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \FunctionTok{fct\_relevel}\NormalTok{(bone\_type, }\StringTok{"UT"}\NormalTok{, }\StringTok{"MT"}\NormalTok{, }\StringTok{"LT"}\NormalTok{, }\StringTok{"CP"}\NormalTok{), }\AttributeTok{y =}\NormalTok{ slope, }\AttributeTok{color =}\NormalTok{ fish\_name)) }\SpecialCharTok{+}
+  \CommentTok{\# add lines for chosen y intercepts}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{125}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{250}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{375}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+} 
+  \CommentTok{\# scatterplot with a smooth line for the average}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{show.legend =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_smooth}\NormalTok{(}
+    \FunctionTok{aes}\NormalTok{(}\AttributeTok{group =}\NormalTok{ fish\_name),}
+    \AttributeTok{se =}\NormalTok{ F,}
+    \AttributeTok{size =} \FloatTok{0.75}\NormalTok{,}
+    \AttributeTok{show.legend =} \ConstantTok{FALSE}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# create one plot for each fish}
+  \FunctionTok{facet\_wrap}\NormalTok{( }\SpecialCharTok{\textasciitilde{}}\NormalTok{ fish\_name,}
+              \AttributeTok{nrow =} \DecValTok{3}\NormalTok{,}
+              \AttributeTok{labeller =} \FunctionTok{labeller}\NormalTok{(}\AttributeTok{fish\_name =}\NormalTok{ toupper)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Bone Type"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Young\textquotesingle{}s Modulus (N/m\^{}2)"}\NormalTok{) }\SpecialCharTok{+}
+ \FunctionTok{scale\_y\_continuous}\NormalTok{(}
+    \AttributeTok{breaks =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{250}\NormalTok{, }\DecValTok{500}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{+}
+  \CommentTok{\# theme and formatting}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{axis.title.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{),}
+    \AttributeTok{axis.title.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{),}
+    \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{20}\NormalTok{),}
+    \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{20}\NormalTok{),}
+    \AttributeTok{panel.spacing =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.2}\NormalTok{, }\StringTok{"lines"}\NormalTok{),}
+    \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{panel.grid.major =} \FunctionTok{element\_blank}\NormalTok{(),}
+    \AttributeTok{panel.border =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \ConstantTok{NA}\NormalTok{, }\AttributeTok{color =} \StringTok{"gray"}\NormalTok{),}
+    \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold"}\NormalTok{)}
+\NormalTok{  )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 1.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 9.0902
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 4.6401e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 4.6401e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 1.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 7.4807e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 7.4807e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 1.7007e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 8.7689e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 4.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 1.0592e-16
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 7.5433e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 2.4171e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 0
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 7.4807e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 4.0602
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : pseudoinverse used at 0.985
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : neighborhood radius 2.015
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : reciprocal condition number 4.6401e-17
+\end{verbatim}
+
+\begin{verbatim}
+## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+## : There are other near singularities as well. 1
+\end{verbatim}
+
+\includegraphics{youngs_modulus_statistical_analysis_outline_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+This plot depicts the variability between fish for E vales. The x axis
+is bone type, ordered by location in the spine (UT, MT, LT, CP), the y
+axis is E, the fish are ordered according to length and the colors
+correspond to the same fish in within fish variability. We expect to see
+a ``U'' shape with higher UT and CP values compared to MT and LT. About
+50\% of the fish display this trend, while others show no trend or the
+opposite trend, thus indicating variability between fish.
+
+\subsection{Statistical Analysis}\label{statistical-analysis}
+
+\begin{itemize}
+\tightlist
+\item
+  Statistical Analysis focuses on determining if the bone type (UT, MT,
+  LT, CP) is a significant predictor of E value.
+\end{itemize}
+
+\emph{Initial Statistical Analysis}
+
+\begin{itemize}
+\tightlist
+\item
+  An Analysis of Variance test determines if there is an initial
+  association between bone type and E value before adding effects of the
+  individual fish.
+\item
+  Tukey test looks at each bone type and determines if there are
+  significant differences comparatively.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a1 }\OtherTok{\textless{}{-}} \FunctionTok{aov}\NormalTok{(slope}\SpecialCharTok{\textasciitilde{}}\NormalTok{bone\_type, }\AttributeTok{data =}\NormalTok{ results\_final)}
+\FunctionTok{summary}\NormalTok{(a1) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##              Df Sum Sq Mean Sq F value Pr(>F)   
+## bone_type     3  45611   15204    4.01 0.0083 **
+## Residuals   226 856836    3791                  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  We have significant evidence that bone type is associated with Youngs
+  Modulus (p=0.0083).
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{TukeyHSD}\NormalTok{(a1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = slope ~ bone_type, data = results_final)
+## 
+## $bone_type
+##             diff        lwr      upr     p adj
+## LT-CP   3.914257 -27.716908 35.54542 0.9886104
+## MT-CP -13.251359 -42.728161 16.22544 0.6504478
+## UT-CP  24.070586  -4.061061 52.20223 0.1223736
+## MT-LT -17.165616 -49.147011 14.81578 0.5074095
+## UT-LT  20.156329 -10.589685 50.90234 0.3277560
+## UT-MT  37.321945   8.797068 65.84682 0.0046055
+\end{verbatim}
+
+\begin{itemize}
+\tightlist
+\item
+  There is a significant difference in Youngs Modulus values for UT
+  compared to MT bones (p=0.004).
+\end{itemize}
+
+\emph{Multilevel model}
+
+A multilevel model allows us to introduce a random intercept for each
+fish and take into account that each fish is different.
+
+\begin{itemize}
+\tightlist
+\item
+  We first create a model with only the intercept (m0) and then compare
+  it to the model where we add bone type as a predictor (m1). An ANOVA
+  test tells us if the model with bone type is significantly better at
+  predicting E values than the model with only the intercept.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{m0 }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(slope }\SpecialCharTok{\textasciitilde{}}  \DecValTok{1} \SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ results\_final, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{m1 }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(slope }\SpecialCharTok{\textasciitilde{}}\NormalTok{  bone\_type }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ results\_final, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{anova}\NormalTok{(m1, m0)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## refitting model(s) with ML (instead of REML)
+\end{verbatim}
+
+\begin{verbatim}
+## Data: results_final
+## Models:
+## m0: slope ~ 1 + (1 | fish_name)
+## m1: slope ~ bone_type + (1 | fish_name)
+##    npar    AIC    BIC  logLik deviance Chisq Df Pr(>Chisq)   
+## m0    3 2552.2 2562.6 -1273.1   2546.2                       
+## m1    6 2543.5 2564.1 -1265.8   2531.5 14.73  3   0.002062 **
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+Interpretation: The model with the bone type is significantly better at
+predicting the E values than the model with just the intercept
+(p=0.002).
+
+\emph{Residuals}
+
+We check residuals to make sure the model fit is good and to see if any
+of the variables need to be transformed.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{resid\_panel}\NormalTok{(m1)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{youngs_modulus_statistical_analysis_outline_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+Interpretation: The histogram of residuals is right skewed and the QQ
+plot is not linear at the right end. As a result, we will log transform
+the response variable(E).
+
+\emph{log(E)}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{m00 }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(}\FunctionTok{I}\NormalTok{(}\FunctionTok{log}\NormalTok{(slope)) }\SpecialCharTok{\textasciitilde{}}  \DecValTok{1} \SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ results\_final, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{m11 }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(}\FunctionTok{I}\NormalTok{(}\FunctionTok{log}\NormalTok{(slope)) }\SpecialCharTok{\textasciitilde{}}\NormalTok{  bone\_type }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ results\_final, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{summary}\NormalTok{(m11)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: I(log(slope)) ~ bone_type + (1 | fish_name)
+##    Data: results_final
+## 
+## REML criterion at convergence: 302.4
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7078 -0.5249  0.0502  0.6147  2.7285 
+## 
+## Random effects:
+##  Groups    Name        Variance Std.Dev.
+##  fish_name (Intercept) 0.03897  0.1974  
+##  Residual              0.18769  0.4332  
+## Number of obs: 230, groups:  fish_name, 20
+## 
+## Fixed effects:
+##              Estimate Std. Error t value
+## (Intercept)  4.706565   0.071433  65.888
+## bone_typeLT -0.007715   0.087136  -0.089
+## bone_typeMT -0.103897   0.080759  -1.287
+## bone_typeUT  0.213662   0.076718   2.785
+## 
+## Correlation of Fixed Effects:
+##             (Intr) bn_tLT bn_tMT
+## bone_typeLT -0.507              
+## bone_typeMT -0.548  0.459       
+## bone_typeUT -0.574  0.469  0.510
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{anova}\NormalTok{(m11, m00)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## refitting model(s) with ML (instead of REML)
+\end{verbatim}
+
+\begin{verbatim}
+## Data: results_final
+## Models:
+## m00: I(log(slope)) ~ 1 + (1 | fish_name)
+## m11: I(log(slope)) ~ bone_type + (1 | fish_name)
+##     npar    AIC    BIC  logLik deviance  Chisq Df Pr(>Chisq)    
+## m00    3 311.66 321.98 -152.83   305.66                         
+## m11    6 300.11 320.74 -144.05   288.11 17.553  3  0.0005438 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+Interpretation: The log transformed model with the bone type is
+significantly better at predicting the E values than the log transformed
+model with just the intercept (p\textless0.001).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{resid\_panel}\NormalTok{(m11)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{youngs_modulus_statistical_analysis_outline_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+Interpretation: The histogram of the residuals is a normal distribution
+and the QQ plot is linear. The log-transformation successfully enhanced
+the model.
+
+\emph{Changing the reference level }
+
+By changing the reference level from the default (CP), we can see if
+there are significant differences when compared to a different bone
+type.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# create new data and manually relevel the bone types}
+\NormalTok{decisions\_relevel\_UT }\OtherTok{\textless{}{-}}\NormalTok{ results\_final }\SpecialCharTok{|\textgreater{}}
+   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{bone\_type =} \FunctionTok{fct\_relevel}\NormalTok{(bone\_type, }\StringTok{"UT"}\NormalTok{, }\StringTok{"CP"}\NormalTok{, }\StringTok{"LT"}\NormalTok{, }\StringTok{"MT"}\NormalTok{))}
+
+\CommentTok{\# run the model}
+\NormalTok{m2.ut }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(}\FunctionTok{I}\NormalTok{(}\FunctionTok{log}\NormalTok{(slope)) }\SpecialCharTok{\textasciitilde{}}  \FunctionTok{relevel}\NormalTok{(bone\_type, }\AttributeTok{ref =} \StringTok{"UT"}\NormalTok{) }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ decisions\_relevel\_UT, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(m2.ut)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: I(log(slope)) ~ relevel(bone_type, ref = "UT") + (1 | fish_name)
+##    Data: decisions_relevel_UT
+## 
+## REML criterion at convergence: 302.4
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.7078 -0.5249  0.0502  0.6147  2.7285 
+## 
+## Random effects:
+##  Groups    Name        Variance Std.Dev.
+##  fish_name (Intercept) 0.03897  0.1974  
+##  Residual              0.18769  0.4332  
+## Number of obs: 230, groups:  fish_name, 20
+## 
+## Fixed effects:
+##                                  Estimate Std. Error t value
+## (Intercept)                       4.92023    0.06854  71.788
+## relevel(bone_type, ref = "UT")CP -0.21366    0.07672  -2.785
+## relevel(bone_type, ref = "UT")LT -0.22138    0.08492  -2.607
+## relevel(bone_type, ref = "UT")MT -0.31756    0.07802  -4.070
+## 
+## Correlation of Fixed Effects:
+##              (Intr) r(_,r="UT")C r(_,r="UT")L
+## r(_,r="UT")C -0.521                          
+## r(_,r="UT")L -0.474  0.422                   
+## r(_,r="UT")M -0.513  0.455        0.425
+\end{verbatim}
+
+Interpretation: The E values for the UT bones are significantly greater
+than the values for the other bone types as seen by t values
+\textgreater{} \textbar2\textbar. Since E is logged, we can say that the
+MT bones have values 27.2\% lower than UT (\(1-e^{-0.31756}\)), LT bones
+are 19.6\% lower (\(1-e^{-0.22138}\)), and CP bones are 19.2\% lower
+than UT (\(1 - e^{-0.21366}\)).
+
+We can continue changing the reference level.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{decisions\_relevel\_LT }\OtherTok{\textless{}{-}}\NormalTok{ results\_final }\SpecialCharTok{|\textgreater{}}
+   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{bone\_type =} \FunctionTok{fct\_relevel}\NormalTok{(bone\_type, }\StringTok{"LT"}\NormalTok{, }\StringTok{"CP"}\NormalTok{, }\StringTok{"MT"}\NormalTok{, }\StringTok{"UT"}\NormalTok{))}
+
+\NormalTok{m2.lt }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(slope }\SpecialCharTok{\textasciitilde{}}  \FunctionTok{relevel}\NormalTok{(bone\_type, }\AttributeTok{ref =} \StringTok{"LT"}\NormalTok{) }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ decisions\_relevel\_LT, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(m2.lt)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: slope ~ relevel(bone_type, ref = "LT") + (1 | fish_name)
+##    Data: decisions_relevel_LT
+## 
+## REML criterion at convergence: 2506.9
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.3219 -0.5965 -0.1569  0.4777  5.8018 
+## 
+## Random effects:
+##  Groups    Name        Variance Std.Dev.
+##  fish_name (Intercept)  473.2   21.75   
+##  Residual              3301.8   57.46   
+## Number of obs: 230, groups:  fish_name, 20
+## 
+## Fixed effects:
+##                                  Estimate Std. Error t value
+## (Intercept)                       125.128     10.070  12.426
+## relevel(bone_type, ref = "LT")CP   -0.318     11.540  -0.028
+## relevel(bone_type, ref = "LT")MT  -16.102     11.599  -1.388
+## relevel(bone_type, ref = "LT")UT   23.376     11.243   2.079
+## 
+## Correlation of Fixed Effects:
+##              (Intr) r(_,r="LT")C r(_,r="LT")M
+## r(_,r="LT")C -0.669                          
+## r(_,r="LT")M -0.657  0.572                   
+## r(_,r="LT")U -0.688  0.602        0.591
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{decisions\_relevel\_MT }\OtherTok{\textless{}{-}}\NormalTok{ results\_final }\SpecialCharTok{|\textgreater{}}
+   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{bone\_type =} \FunctionTok{fct\_relevel}\NormalTok{(bone\_type, }\StringTok{"MT"}\NormalTok{, }\StringTok{"CP"}\NormalTok{, }\StringTok{"LT"}\NormalTok{, }\StringTok{"UT"}\NormalTok{))}
+
+\NormalTok{m2.mt }\OtherTok{\textless{}{-}} \FunctionTok{lmer}\NormalTok{(slope }\SpecialCharTok{\textasciitilde{}}  \FunctionTok{relevel}\NormalTok{(bone\_type, }\AttributeTok{ref =} \StringTok{"MT"}\NormalTok{) }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{|}\NormalTok{ fish\_name), }\AttributeTok{data =}\NormalTok{ decisions\_relevel\_MT, }\AttributeTok{REML =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(m2.mt)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linear mixed model fit by REML ['lmerMod']
+## Formula: slope ~ relevel(bone_type, ref = "MT") + (1 | fish_name)
+##    Data: decisions_relevel_MT
+## 
+## REML criterion at convergence: 2506.9
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.3219 -0.5965 -0.1569  0.4777  5.8018 
+## 
+## Random effects:
+##  Groups    Name        Variance Std.Dev.
+##  fish_name (Intercept)  473.2   21.75   
+##  Residual              3301.8   57.46   
+## Number of obs: 230, groups:  fish_name, 20
+## 
+## Fixed effects:
+##                                  Estimate Std. Error t value
+## (Intercept)                       109.026      9.085  12.000
+## relevel(bone_type, ref = "MT")CP   15.784     10.702   1.475
+## relevel(bone_type, ref = "MT")LT   16.102     11.599   1.388
+## relevel(bone_type, ref = "MT")UT   39.478     10.340   3.818
+## 
+## Correlation of Fixed Effects:
+##              (Intr) r(_,r="MT")C r(_,r="MT")L
+## r(_,r="MT")C -0.607                          
+## r(_,r="MT")L -0.549  0.467                   
+## r(_,r="MT")U -0.625  0.533        0.480
+\end{verbatim}
+
+Interpretation: All t values for bones not including UT were \textless=
+\textbar2\textbar, thus indicating that there are no significant
+differences between any of the other bone pairs.
+
+\end{document}
