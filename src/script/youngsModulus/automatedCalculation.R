@@ -4,6 +4,7 @@
 
 required_packages <- c(
   "here",
+  "splines2",
   "readr",
   "tibble",
   "coro",
@@ -16,7 +17,6 @@ required_packages <- c(
   "ggplot2",
   "gridExtra",
   "ggtext",
-  "splines2",
   "cowplot"
 )
 
@@ -242,7 +242,7 @@ save_inconclusives <- function(inconclusive_names, output_dir, output_inconclusi
   copy_inconclusives(inconclusive_names, output_inconclusives_dir)
   
   inconclusive_txtfile_text <- c(paste("Generated on:", Sys.time()), inconclusive_names)
-  inconclusives_txt_path <- here(output_dir, "inconclusives.txt")
+  inconclusives_txt_path <- here::here(output_dir, "inconclusives.txt")
   writeLines(character(0), inconclusives_txt_path) # empty the file
   writeLines(inconclusive_txtfile_text, inconclusives_txt_path)
 }
@@ -255,7 +255,7 @@ copy_inconclusives <- function(bone_names, inconclusive_data_dir) {
     dirname <- tolower(str_sub(bone_name, 0, 4))
     filename <- paste0(standardize_name(bone_name), ".csv")
     # find file name for bone name
-    raw_data_path <- here("data", dirname, filename)
+    raw_data_path <- here::here("data", dirname, filename)
     
     file.copy(raw_data_path, inconclusive_data_dir)
   }
@@ -276,7 +276,7 @@ save_images <- function(data, results, choices, images_dir) {
       matches <- str_match(name, "^([a-z]{2,})([0-9]{2,})") # first two+ lowercase letters and first two+ numbers for the folder name
       individual <- paste0(matches[,2], matches[,3])
       
-      individual_dir <- here(images_dir, individual)
+      individual_dir <- here::here(images_dir, individual)
       create_dir_safe(individual_dir)
       image_path <- file.path(individual_dir, paste0(name, ".jpg"))
       image.save2(plot, image_path)

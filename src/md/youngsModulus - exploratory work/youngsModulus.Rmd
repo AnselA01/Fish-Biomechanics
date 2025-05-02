@@ -273,3 +273,22 @@ results <- tibble(names, max.slope, inflection.slope, fds.slope,  max.strain, in
 ```{r}
 res <- automated_youngs_modulus_calculation()
 ```
+
+```{r}
+bone <- data.fetch(subject = "pf01cp1")
+
+choose <- ym.calculateAndDetermine(bone)
+
+
+minval <- which.min(abs(bone$Strain - choose$choice$strain$inflection[[1]]))
+
+stressval <- bone$Stress[minval]
+
+
+layer1 <- geom_abline(slope = choose$choice$slope$inflection, intercept = c(choose$choice$strain$inflection, stressval*-0.5), color = "red", size = 1.5)
+
+layer2 <- geom_abline(slope = choose$choice$slope$inflection, intercept = c(0.2, 5), color = "red", size = 1.5)
+
+plot.plot(bone, c(layer1))
+```
+
