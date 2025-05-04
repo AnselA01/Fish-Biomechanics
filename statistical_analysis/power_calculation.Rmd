@@ -1,0 +1,86 @@
+---
+title: "Power Calculation"
+author: "Abby Hahs, Ansel Alldredge, Otto Schmidt"
+output: pdf_document
+date: "2025-05-03"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+```{r}
+# data
+results <- read_csv("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae/results/youngs-modulus/2025-04-30/choices.csv")
+length_data <- read.csv("/home/rstudio/users/hahs1/CIR_2024_25_Fish_Vertebrae/data/Perch study - MAIE Lab - Tally.csv")
+
+# filter results to contain only the fish that are not marked inconclusive and are the species PF, split the name to into different sections to differentiate the type (PF), number (01-21), bone number (1-4), and fish name (PF #) 
+results_good <- results |>
+  dplyr::filter(!inconclusive) %>%
+  mutate(
+    fish_type = str_sub(name, 1, 2),
+    fish_num = str_sub(name, 3, 4),
+    bone_type = str_sub(name, 5, 6),
+    bone_num = str_sub(name, 7, 8),
+    fish_name = str_sub(name, 1, 4)
+  ) |>
+  dplyr::filter(fish_type != "SV")
+
+# change the fish to be uppercase to match the name format in results_good
+length_clean <- length_data |>
+  mutate(Individual = toupper(Individual))
+
+# merge results good with length clean. Keep all rows from results_good even if a length is not found. There should be a length value for every fish
+results_final <- merge(results_good, length_clean, by.x = "fish_name", by.y = "Individual", all.x = T) 
+```
+
+
+Generate simulated HEIGHT for n.trees per each of n.transects. (Total sample size is n.trees*n.transects)
+mu is the overall mean value (assumed to be the same for all transects)
+sd.between is between transects
+sd.within is within transects
+
+tree = bones
+transects = fish
+
+```{r}
+mu <- mean(results_final$slope)
+
+# Step 1: compute the mean HEIGHT for each transect
+fish_means <- tapply(results_final$slope, results_final$fish_name, mean)
+
+# Step 2: compute the standard deviation of those means
+sd.between <- sd(fish_means)
+
+# Step 1: compute the standard deviation within each transect
+within_sds <- tapply(results_final$slope, results_final$fish_name, sd)
+
+# Step 2: take the mean of these SDs (or use pooled SD, see note below)
+sd.within <- mean(within_sds)
+
+
+simulate.bones <- function(n.bones, n.fish, mu = 133.77, sd.between = 30.03, sd.within = 57.84){
+  bones.sim <- data.frame(matrix(NA, n.bones, n.fish))
+  colnames(bones.sim) <- NA
+  fish.mu <- rep(NA, n.fish)
+ 
+  for(i in 1:n.fish){
+    fish.mu[i] <- rnorm(1, mu, sd.between)
+    bones.sim[, i] <- rnorm(n.bones, fish.mu[i], sd.within)
+  }
+  colnames(bones.sim) <- paste("fish", 1:n.fish, sep = "")
+ 
+  bones.sim %>%
+    pivot_longer(everything(),
+                 names_to = "Fish",
+                 values_to = "E",
+                 names_prefix = "fish") %>%
+    arrange(Fish)
+}
+
+
+simulate.bones(235, 21)
+```
+
