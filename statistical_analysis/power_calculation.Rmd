@@ -9,7 +9,13 @@ editor_options:
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(simr)
+library(ggplot2)
+library(gridExtra)
 ```
+
+
+#Simulation
 
 ```{r}
 # data
@@ -61,26 +67,111 @@ within_sds <- tapply(results_final$slope, results_final$fish_name, sd)
 sd.within <- mean(within_sds)
 
 
-simulate.bones <- function(n.bones, n.fish, mu = 133.77, sd.between = 30.03, sd.within = 57.84){
+simulate.bones <- function(n.bones,
+                           n.fish,
+                           bone.type.mus,
+                           bone.type.sds,
+                           mu = 133.77,
+                           sd.between = 30.03,
+                           # sd.within = 57.84,
+                           bone.types = c("UT", "MT", "LT", "CP")) {
+  
+  # assign bone types with same proportions as original data
+  bone_type_props <- prop.table(table(results_good$bone_type))
+  bone.type.assignments <- sample(names(bone_type_props), n.bones, replace = TRUE, prob = bone_type_props)  
+  
   bones.sim <- data.frame(matrix(NA, n.bones, n.fish))
-  colnames(bones.sim) <- NA
-  fish.mu <- rep(NA, n.fish)
- 
-  for(i in 1:n.fish){
-    fish.mu[i] <- rnorm(1, mu, sd.between)
-    bones.sim[, i] <- rnorm(n.bones, fish.mu[i], sd.within)
-  }
   colnames(bones.sim) <- paste("fish", 1:n.fish, sep = "")
+  
+  fish.mu <- rnorm(n.fish, mu, sd.between)
+  
+  for(i in 1:n.fish) {
+    means <- fish.mu[i] + bone.type.mus[bone.type.assignments]
+    # instead of within-fish sd, we use bone-type sd.
+    sds <- bone.type.sds[bone.type.assignments]
+    
+    bones.sim[, i] <- rnorm(n.bones, means, sds)    
+  }
+  
+  # colnames(bones.sim) <- paste("fish", 1:n.fish, sep = "")
  
-  bones.sim %>%
-    pivot_longer(everything(),
-                 names_to = "Fish",
-                 values_to = "E",
-                 names_prefix = "fish") %>%
-    arrange(Fish)
+   bones.sim %>%
+    mutate(bone_type = bone.type.assignments,
+           id = 1:n.bones) %>%
+    pivot_longer(cols = starts_with("fish"),
+                 names_to = "fish_name",
+                 values_to = "E") %>%
+    arrange(fish_name)
 }
 
 
-simulate.bones(235, 21)
+# simulate.bones <- simulate.bones(235, 21)
+
+# bone-specific E deviation from mean. is added to overall fish mean
+bone_type_mu_deviations <- sapply(split(results_good$slope, results_good$bone_type), mean) - mu
+# sds for each bone replaces within_sd
+bone_type_sds <- tapply(results_final$slope, results_final$bone_type, sd)
+
+simulate.bones <- simulate.bones(235, 21, bone_type_mu_deviations, bone_type_sds)
 ```
+
+Evaluating results of simulation. Looks good? Yes
+```{r}
+summary(simulate.bones$E)
+summary(results_good$slope)
+
+sd(simulate.bones$E)
+sd(results_good$slope)
+
+grid.arrange(
+ ggplot(results_good, aes(x = slope)) + 
+  geom_boxplot() +
+   xlim(c(0, 400)) +
+  facet_wrap(~ bone_type),
+
+ggplot(simulate.bones, aes(x = E)) + 
+  geom_boxplot() + 
+  xlim(c(0, 400)) +
+  facet_wrap(~ bone_type) ,
+nrow = 2
+)
+
+ggplot(bind_rows(
+  results_good %>% dplyt::select(slope) %>% mutate(from = "original"),
+  simulate.bones %>% dplyr::select(E) %>% mutate(from = "simulated", slope = E)
+), aes(x = slope, , fill = from)) +
+  geom_density(alpha = 0.5) +
+  theme_minimal()
+```
+
+All of this seems unnecessary since we are using the simr package below.
+
+
+
+# Power Calculation
+
+```{r}
+m1 <- lmer(slope ~  bone_type + (1 | fish_name), data = results_good, REML = TRUE)
+
+power_analysis <- powerSim(m1, seed = 123)
+
+summary(power_analysis) # 65% power at our current sample size (21)
+```
+
+# increasing sample size 
+
+```{r}
+m1.ext <- extend(m1, within = "fish_name", n = 50) # 50 fish. Assumes all other variation stays the same. Seems right, unless we can be more selective with more fish, i.e. have the same number of bones per type.
+power_analysis_ext <- powerSim(m1.ext)
+summary(power_analysis_ext) # 99% power.
+```
+
+## a range of sample sizes
+
+```{r}
+plot(powerCurve(m1.ext, within="fish_name", breaks=c(20, 25, 30, 35, 40)))
+```
+
+
+
 
