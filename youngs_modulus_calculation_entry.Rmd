@@ -1,0 +1,18 @@
+---
+title: "Automated Young's Modulus Calculation"
+editor_options: 
+  chunk_output_type: console
+---
+
+# Automated Young's Modulus calculation
+
+Click the green arrow below or Ctrl+Alt+R to perform Young's Modulus calculation for all bone Stress/Strain in the "data" folder!
+
+All results are saved in the "results/youngs-modulus" folder. See the README in that folder for a detailed description of its contents.
+
+
+```{r}
+source("./src/script/youngsModulus/automatedCalculation.R")
+entry()
+```
+

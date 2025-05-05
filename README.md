@@ -28,6 +28,8 @@ Underagraduate CIR fellows
 -   Otto Schmidt (CIR) -
     [ottohschmidt4\@gmail.com](mailto:ottohschmidt4@gmail.com){.email}
     \| 651-402-6313
+    
+GitHub Repository - [AnselA01/Fish-Biomechanics](https://github.com/AnselA01/Fish-Biomechanics)
 
 ## Project Overview
 
